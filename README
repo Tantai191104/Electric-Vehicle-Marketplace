@@ -1,0 +1,13 @@
+# 🚲 Electric Vehicle Marketplace Backend
+
+Backend for a used electric vehicles and battery trading platform.
+Similar to Craigslist, but dedicated to electric vehicles.
+
+## 🚀 Tech Stack
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT Authentication
+- Zod Validation
+- Cloudinary (image uploads - future)
+- ZaloPay Sandbox (transactions - future)
+
