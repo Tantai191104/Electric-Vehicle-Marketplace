@@ -1,0 +1,29 @@
+@keyframes fadeSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    text-shadow: 0 0 8px rgba(255, 255, 200, 0.6);
+  }
+  50% {
+    text-shadow: 0 0 16px rgba(255, 255, 200, 1);
+  }
+}
+
+.animate-fadeSlideIn {
+  animation: fadeSlideIn 1s ease-out forwards;
+  animation-delay: 0.3s;
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 2s infinite;
+}
