@@ -24,6 +24,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customSiteTitle: "EV Server API Documentation"
 }));
 
+// Redirect root to Swagger UI (useful for Render/hosting)
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
+});
+
 /**
  * @swagger
  * /health:
