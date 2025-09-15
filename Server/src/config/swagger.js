@@ -25,13 +25,10 @@ const options = {
       }
     },
     servers: [
+      // Relative URL allows Swagger UI to use current origin (works locally and on Render)
       {
-        url: 'http://localhost:5000',
-        description: 'Development server'
-      },
-      {
-        url: 'https://api.ev.com',
-        description: 'Production server'
+        url: process.env.API_BASE_URL || '/',
+        description: 'Current origin'
       }
     ],
     components: {
