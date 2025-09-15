@@ -7,7 +7,9 @@ import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import { specs, swaggerUi } from "./config/swagger.js";
 
 dotenv.config();
 await connectDB(process.env.MONGO_URI);
@@ -20,6 +22,13 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/products", productRoutes);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "EV Marketplace API"
+}));
 
 app.use(errorHandler);
 

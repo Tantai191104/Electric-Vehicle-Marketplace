@@ -25,7 +25,14 @@ const productSchema = new mongoose.Schema(
       chargingTime: { type: String },
       power: { type: String },
       weight: { type: String },
-      dimensions: { type: String }
+      dimensions: { type: String },
+      batteryType: { type: String },
+      voltage: { type: String },
+      capacity: { type: String },
+      cycleLife: { type: String },
+      operatingTemperature: { type: String },
+      warranty: { type: String },
+      compatibility: { type: String }
     },
     location: {
       city: { type: String, required: true },
