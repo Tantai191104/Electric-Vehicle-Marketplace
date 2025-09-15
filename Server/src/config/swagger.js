@@ -32,6 +32,48 @@ const options = {
           bearerFormat: 'JWT',
         },
       },
+      responses: {
+        UnauthorizedError: {
+          description: 'Unauthorized',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  errorCode: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        BadRequestError: {
+          description: 'Bad request / validation error',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        NotFoundError: {
+          description: 'Resource not found',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' }
+                }
+              }
+            }
+          }
+        }
+      },
       schemas: {
         Product: {
           type: 'object',

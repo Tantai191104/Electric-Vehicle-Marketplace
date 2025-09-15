@@ -11,12 +11,17 @@ export const updateProfileValidation = z.object({
     gender: z.enum(['male', 'female', 'other']).optional(),
     
     address: z.object({
-      street: z.string().max(200).optional(),
-      city: z.string().max(50).optional(),
-      province: z.string().max(50).optional(),
-      zipCode: z.string().max(10).optional(),
-      country: z.string().max(50).optional()
-    }).optional(),
+      houseNumber: z.string().max(200).optional(),
+      provinceCode: z.string().max(20).optional(),
+      districtCode: z.string().max(20).optional(),
+      wardCode: z.string().max(20).optional()
+    }).partial().refine((val) => {
+      if (!val) return true;
+      const hasAny = !!(val.provinceCode || val.districtCode || val.wardCode || val.houseNumber);
+      const hasAllCodes = !!(val.provinceCode && val.districtCode && val.wardCode);
+      // Allow only houseNumber alone, or all three codes together (with optional houseNumber)
+      return !hasAny || hasAllCodes || (val.houseNumber && !val.provinceCode && !val.districtCode && !val.wardCode) ? true : hasAllCodes;
+    }, { message: 'When updating address, provide all of provinceCode, districtCode, wardCode together (houseNumber optional).' }).optional(),
     
     identityCard: z.string().regex(/^[0-9]{9,12}$/).optional(),
     

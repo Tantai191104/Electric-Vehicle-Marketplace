@@ -15,11 +15,13 @@ const userSchema = new mongoose.Schema(
       dateOfBirth: { type: Date, default: null },
       gender: { type: String, enum: ["male", "female", "other"], default: null },
       address: {
-        street: { type: String, default: null },
-        city: { type: String, default: null },
+        houseNumber: { type: String, default: null },
+        provinceCode: { type: String, default: null },
+        districtCode: { type: String, default: null },
+        wardCode: { type: String, default: null },
         province: { type: String, default: null },
-        zipCode: { type: String, default: null },
-        country: { type: String, default: "Vietnam" }
+        district: { type: String, default: null },
+        ward: { type: String, default: null }
       },
       identityCard: { type: String, default: null },
       bankAccount: {

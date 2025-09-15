@@ -21,7 +21,7 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [name, email, password]
+ *             required: [name, email, password, phone]
  *             properties:
  *               name:
  *                 type: string
@@ -30,6 +30,9 @@ const router = express.Router();
  *                 format: email
  *               password:
  *                 type: string
+ *               phone:
+ *                 type: string
+ *                 description: 10-11 digit phone number
  *               role:
  *                 type: string
  *                 enum: [customer, admin]

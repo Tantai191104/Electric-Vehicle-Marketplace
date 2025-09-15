@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { specs, swaggerUi } from "./config/swagger.js";
 
@@ -23,6 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   explorer: true,

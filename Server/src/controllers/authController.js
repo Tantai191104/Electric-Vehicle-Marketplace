@@ -28,14 +28,14 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = registerSchema.parse(req.body);
+    const { name, email, password, role, phone } = registerSchema.parse(req.body);
 
     const exists = await User.findOne({ email });
     if (exists) throw new BadRequestException("Email already in use");
 
     const hashed = await hashPassword(password);
     const user = await User.create({
-      name, email, password: hashed, role: role || "customer", isActive: true,
+      name, email, password: hashed, phone: phone || null, role: role || "customer", isActive: true,
     });
 
     const accessToken = signJwt({ userId: user._id, role: user.role }, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES || "15m" });

@@ -11,6 +11,16 @@ import {
   getOrderDetailsService,
   updateOrderStatusService
 } from "../services/profileService.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const provinces = JSON.parse(fs.readFileSync(path.join(__dirname, "../constants/location/provinces.json"), "utf8"));
+const districts = JSON.parse(fs.readFileSync(path.join(__dirname, "../constants/location/districts.json"), "utf8"));
+const wards = JSON.parse(fs.readFileSync(path.join(__dirname, "../constants/location/wards.json"), "utf8"));
 import {
   updateProfileValidation,
   updatePreferencesValidation,
@@ -49,6 +59,33 @@ export async function updateUserProfile(req, res) {
     delete profileData.role;
     delete profileData.isActive;
     
+    // Map location codes to names if provided
+    const addr = profileData?.profile?.address;
+    if (addr && addr.provinceCode && addr.districtCode && addr.wardCode) {
+      const province = provinces.find(
+        (p) => String(p.Code) === String(addr.provinceCode) || String(p.ProvinceID) === String(addr.provinceCode)
+      );
+      const provinceId = province ? province.ProvinceID : null;
+
+      const district = districts.find(
+        (d) => (
+          String(d.DistrictID) === String(addr.districtCode) || String(d.Code || '') === String(addr.districtCode)
+        ) && (provinceId == null || Number(d.ProvinceID) === Number(provinceId))
+      );
+
+      const ward = wards.find(
+        (w) => String(w.WardCode) === String(addr.wardCode) && (
+          !district || Number(w.DistrictID) === Number(district.DistrictID)
+        )
+      );
+
+      profileData.profile = profileData.profile || {};
+      profileData.profile.address = profileData.profile.address || {};
+      profileData.profile.address.province = province ? province.ProvinceName : null;
+      profileData.profile.address.district = district ? district.DistrictName : null;
+      profileData.profile.address.ward = ward ? ward.WardName : null;
+    }
+
     const updatedProfile = await updateUserProfileService(userId, profileData);
     res.json(updatedProfile);
   } catch (error) {
