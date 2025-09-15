@@ -42,6 +42,28 @@ export async function getUserProfile(req, res) {
   }
 }
 
+export async function getProvinces(req, res) {
+  res.json(provinces);
+}
+
+export async function getDistricts(req, res) {
+  const { provinceCode } = req.query;
+  if (!provinceCode) return res.status(400).json({ error: "provinceCode is required" });
+  const province = provinces.find((p) => String(p.Code) === String(provinceCode) || String(p.ProvinceID) === String(provinceCode));
+  if (!province) return res.status(404).json({ error: "Province not found" });
+  const list = districts.filter((d) => Number(d.ProvinceID) === Number(province.ProvinceID));
+  res.json(list);
+}
+
+export async function getWards(req, res) {
+  const { districtId } = req.query;
+  if (!districtId) return res.status(400).json({ error: "districtId is required" });
+  const district = districts.find((d) => String(d.DistrictID) === String(districtId) || String(d.Code || '') === String(districtId));
+  if (!district) return res.status(404).json({ error: "District not found" });
+  const list = wards.filter((w) => Number(w.DistrictID) === Number(district.DistrictID));
+  res.json(list);
+}
+
 export async function updateUserProfile(req, res) {
   try {
     const result = updateProfileValidation.safeParse(req.body);

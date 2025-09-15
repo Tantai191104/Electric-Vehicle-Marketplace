@@ -75,6 +75,19 @@ const options = {
         }
       },
       schemas: {
+        Address: {
+          type: 'object',
+          properties: {
+            houseNumber: { type: 'string', description: 'Free-text house number' },
+            provinceCode: { type: 'string', description: 'Code or ProvinceID from provinces.json' },
+            districtCode: { type: 'string', description: 'DistrictID or Code from districts.json' },
+            wardCode: { type: 'string', description: 'WardCode from wards.json' },
+            province: { type: 'string', readOnly: true },
+            district: { type: 'string', readOnly: true },
+            ward: { type: 'string', readOnly: true }
+          },
+          description: 'Provide all three codes together when setting address; houseNumber is optional'
+        },
         Product: {
           type: 'object',
           properties: {
@@ -106,14 +119,6 @@ const options = {
                 compatibility: { type: 'string' }
               }
             },
-            location: {
-              type: 'object',
-              properties: {
-                city: { type: 'string' },
-                province: { type: 'string' },
-                address: { type: 'string' }
-              }
-            },
             seller: { type: 'string' },
             status: { type: 'string', enum: ['active', 'sold', 'inactive'] },
             isFeatured: { type: 'boolean' },
@@ -125,7 +130,7 @@ const options = {
         },
         CreateProduct: {
           type: 'object',
-          required: ['title', 'description', 'price', 'category', 'brand', 'model', 'year', 'condition', 'location'],
+          required: ['title', 'description', 'price', 'category', 'brand', 'model', 'year', 'condition'],
           properties: {
             title: { type: 'string' },
             description: { type: 'string' },
@@ -152,15 +157,6 @@ const options = {
                 operatingTemperature: { type: 'string' },
                 warranty: { type: 'string' },
                 compatibility: { type: 'string' }
-              }
-            },
-            location: {
-              type: 'object',
-              required: ['city', 'province'],
-              properties: {
-                city: { type: 'string' },
-                province: { type: 'string' },
-                address: { type: 'string' }
               }
             }
           }
@@ -193,14 +189,6 @@ const options = {
                 operatingTemperature: { type: 'string' },
                 warranty: { type: 'string' },
                 compatibility: { type: 'string' }
-              }
-            },
-            location: {
-              type: 'object',
-              properties: {
-                city: { type: 'string' },
-                province: { type: 'string' },
-                address: { type: 'string' }
               }
             },
             status: { type: 'string', enum: ['active', 'sold', 'inactive'] },

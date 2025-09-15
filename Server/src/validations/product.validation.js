@@ -25,11 +25,6 @@ export const createProductValidation = z.object({
     warranty: z.string().optional(),
     compatibility: z.string().optional()
   }).optional(),
-  location: z.object({
-    city: z.string().min(1, "City is required"),
-    province: z.string().min(1, "Province is required"),
-    address: z.string().optional()
-  }),
   status: z.enum(["active", "sold", "inactive"]).optional(),
   isFeatured: z.boolean().optional()
 });

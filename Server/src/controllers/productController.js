@@ -30,7 +30,8 @@ export async function createProduct(req, res) {
     const product = await createProductService(productData);
     res.status(201).json(product);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    const status = err.statusCode || 400;
+    res.status(status).json({ error: err.message });
   }
 }
 

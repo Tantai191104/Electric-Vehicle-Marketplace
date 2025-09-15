@@ -11,13 +11,67 @@ import {
   getUserOrders,
   getOrderDetails,
   updateOrderStatus,
-  uploadAvatar
+  uploadAvatar,
+  getProvinces,
+  getDistricts,
+  getWards
 } from "../controllers/profileController.js";
 import { authenticate } from "../middlewares/authenticate.js";
 
 const router = express.Router();
 
 router.use(authenticate);
+/**
+ * @swagger
+ * /profile/locations/provinces:
+ *   get:
+ *     summary: List provinces
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Provinces
+ */
+router.get("/locations/provinces", getProvinces);
+
+/**
+ * @swagger
+ * /profile/locations/districts:
+ *   get:
+ *     summary: List districts by provinceCode (Code or ProvinceID)
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: provinceCode
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Districts
+ */
+router.get("/locations/districts", getDistricts);
+
+/**
+ * @swagger
+ * /profile/locations/wards:
+ *   get:
+ *     summary: List wards by districtId (DistrictID or Code)
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: districtId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Wards
+ */
+router.get("/locations/wards", getWards);
 
 /**
  * @swagger
@@ -53,6 +107,14 @@ router.get("/profile", getUserProfile);
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               phone: { type: string }
+ *               profile:
+ *                 type: object
+ *                 properties:
+ *                   address:
+ *                     $ref: '#/components/schemas/Address'
  *     responses:
  *       200:
  *         description: Updated

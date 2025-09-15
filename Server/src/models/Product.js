@@ -34,11 +34,6 @@ const productSchema = new mongoose.Schema(
       warranty: { type: String },
       compatibility: { type: String }
     },
-    location: {
-      city: { type: String, required: true },
-      province: { type: String, required: true },
-      address: { type: String }
-    },
     seller: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: "User", 

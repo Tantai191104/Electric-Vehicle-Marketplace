@@ -3,6 +3,16 @@ import User from "../models/User.js";
 
 export async function createProductService(productData) {
   try {
+    // Ensure seller has address configured in account profile
+    const seller = await User.findById(productData.seller).select("profile.address");
+    const addr = seller?.profile?.address || {};
+    const hasCodes = !!(addr.provinceCode && addr.districtCode && addr.wardCode);
+    if (!hasCodes) {
+      const err = new Error("Please set your address in profile before creating a product");
+      err.statusCode = 400;
+      throw err;
+    }
+
     const product = await Product.create(productData);
     return product;
   } catch (error) {
