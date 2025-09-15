@@ -4,93 +4,151 @@ const router = express.Router();
 
 /**
  * @swagger
- * tags:
- *   name: Auth
- *   description: Authentication endpoints
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterRequest'
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *         headers:
+ *           Set-Cookie:
+ *             description: Sets accessToken and refreshToken as httpOnly cookies
+ *             schema:
+ *               type: string
+ *               example: accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Path=/; Max-Age=900
+ *       400:
+ *         description: Bad request - validation error or email already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
+router.post("/register", register);
 
 /**
  * @swagger
- * /auth/register:
+ * /api/auth/login:
  *   post:
- *     summary: Register a new user
- *     tags: [Auth]
+ *     summary: Login user
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [name, email, password, phone]
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *               phone:
- *                 type: string
- *                 description: 10-11 digit phone number
- *               role:
- *                 type: string
- *                 enum: [user, admin]
- *     responses:
- *       201:
- *         description: User registered
- *       400:
- *         description: Validation error
- */
-router.post("/register", register);
-/**
- * @swagger
- * /auth/login:
- *   post:
- *     summary: Login with email and password
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [email, password]
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
+ *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
- *         description: Logged in successfully
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *         headers:
+ *           Set-Cookie:
+ *             description: Sets accessToken and refreshToken as httpOnly cookies
+ *             schema:
+ *               type: string
+ *               example: accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Path=/; Max-Age=900
  *       401:
- *         description: Invalid credentials
+ *         description: Unauthorized - invalid credentials or account disabled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       400:
+ *         description: Bad request - validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/login", login);
+
 /**
  * @swagger
- * /auth/logout:
+ * /api/auth/logout:
  *   post:
- *     summary: Logout current user
- *     tags: [Auth]
+ *     summary: Logout user
+ *     tags: [Authentication]
  *     responses:
  *       200:
- *         description: Logged out
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LogoutResponse'
+ *         headers:
+ *           Set-Cookie:
+ *             description: Clears accessToken and refreshToken cookies
+ *             schema:
+ *               type: string
+ *               example: accessToken=; HttpOnly; Path=/; Max-Age=0
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/logout", logout);
+
 /**
  * @swagger
- * /auth/refresh-token:
+ * /api/auth/refresh-token:
  *   post:
- *     summary: Refresh access token using refresh token cookie
- *     tags: [Auth]
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     security:
+ *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: New access token
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RefreshTokenResponse'
+ *         headers:
+ *           Set-Cookie:
+ *             description: Sets new accessToken as httpOnly cookie
+ *             schema:
+ *               type: string
+ *               example: accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Path=/; Max-Age=900
  *       401:
- *         description: Invalid refresh token
+ *         description: Unauthorized - no refresh token or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/refresh-token", refreshToken);
 
