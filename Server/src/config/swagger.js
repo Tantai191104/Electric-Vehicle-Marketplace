@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -14,16 +16,15 @@ const options = {
       version: '1.0.0',
       description: 'API documentation for Electric Vehicle Marketplace',
     },
-    servers: [
-      {
-        url: 'http://localhost:5000/api',
-        description: 'Development server',
-      },
-      {
-        url: 'https://electric-vehicle-marketplace.onrender.com/api',
-        description: 'Production server',
-      },
-    ],
+    servers: isProd
+      ? [
+          { url: 'https://electric-vehicle-marketplace.onrender.com/api', description: 'Production server' },
+          { url: 'http://localhost:5000/api', description: 'Development server' },
+        ]
+      : [
+          { url: 'http://localhost:5000/api', description: 'Development server' },
+          { url: 'https://electric-vehicle-marketplace.onrender.com/api', description: 'Production server' },
+        ],
     components: {
       securitySchemes: {
         bearerAuth: {
