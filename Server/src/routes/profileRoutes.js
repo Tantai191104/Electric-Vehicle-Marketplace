@@ -14,7 +14,8 @@ import {
   uploadAvatar,
   getProvinces,
   getDistricts,
-  getWards
+  getWards,
+  updateUserAddress
 } from "../controllers/profileController.js";
 import { authenticate } from "../middlewares/authenticate.js";
 
@@ -72,6 +73,26 @@ router.get("/locations/districts", getDistricts);
  *         description: Wards
  */
 router.get("/locations/wards", getWards);
+
+/**
+ * @swagger
+ * /profile/locations:
+ *   put:
+ *     summary: Update user's address using codes
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Address'
+ *     responses:
+ *       200:
+ *         description: Updated
+ */
+router.put("/locations", updateUserAddress);
 
 /**
  * @swagger

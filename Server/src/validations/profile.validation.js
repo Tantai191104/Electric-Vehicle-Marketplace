@@ -73,3 +73,10 @@ export const getOrdersValidation = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional()
 });
+
+export const updateAddressValidation = z.object({
+  houseNumber: z.string().max(200).optional(),
+  provinceCode: z.string().min(1),
+  districtCode: z.string().min(1),
+  wardCode: z.string().min(1)
+});
