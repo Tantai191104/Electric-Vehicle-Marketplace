@@ -101,15 +101,15 @@ export async function listProductsService(filters, page = 1, limit = 10) {
 
 export async function getProductByIdService(productId) {
   try {
-    const product = await Product.findById(productId).populate("seller", "name email phone avatar profile.address");
-    if (!product) {
+    const updated = await Product.findByIdAndUpdate(
+      productId,
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate("seller", "name email phone avatar profile.address");
+    if (!updated) {
       throw new Error("Product not found");
     }
-    
-    product.views += 1;
-    await product.save();
-    
-    return formatProductWithAddress(product);
+    return formatProductWithAddress(updated);
   } catch (error) {
     throw error;
   }
