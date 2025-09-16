@@ -19,14 +19,17 @@ const productSchema = new mongoose.Schema(
       required: true 
     },
     images: [{ type: String }],
+    // Physical package dimensions/weight for shipping (light service)
+    length: { type: Number, required: true }, // cm
+    width: { type: Number, required: true },
+    height: { type: Number, required: true },
+    weight: { type: Number, required: true }, // grams
     // Shipping-related package info is no longer stored on the product
     specifications: {
       batteryCapacity: { type: String },
       range: { type: String },
       chargingTime: { type: String },
       power: { type: String },
-      weight: { type: String },
-      dimensions: { type: String },
       batteryType: { type: String },
       voltage: { type: String },
       capacity: { type: String },

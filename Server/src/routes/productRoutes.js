@@ -159,6 +159,22 @@ router.use(authenticate);
  *               specifications:
  *                 type: object
  *                 additionalProperties: true
+ *               length:
+ *                 type: integer
+ *                 description: Chiều dài (cm) 1-200
+ *                 example: 150
+ *               width:
+ *                 type: integer
+ *                 description: Chiều rộng (cm) 1-200
+ *                 example: 60
+ *               height:
+ *                 type: integer
+ *                 description: Chiều cao (cm) 1-200
+ *                 example: 90
+ *               weight:
+ *                 type: integer
+ *                 description: Khối lượng (gram) 1-1600000
+ *                 example: 50000
  *     responses:
  *       201:
  *         description: Product created successfully

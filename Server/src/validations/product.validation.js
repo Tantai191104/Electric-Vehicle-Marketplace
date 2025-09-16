@@ -7,8 +7,6 @@ const specificationsSchema = z.object({
   range: z.string().optional(),
   chargingTime: z.string().optional(),
   power: z.string().optional(),
-  weight: z.string().optional(),
-  dimensions: z.string().optional(),
   batteryType: z.string().optional(),
   voltage: z.string().optional(),
   capacity: z.string().optional(),
@@ -28,6 +26,11 @@ export const createProductValidation = z.object({
   year: z.coerce.number().int().min(2000).max(new Date().getFullYear() + 1),
   condition: z.enum(["new", "used", "refurbished"], { message: "Invalid condition" }),
   images: z.array(z.string().url("Invalid image URL")).optional(),
+  // Required shipping dimensions/weight (light service)
+  length: z.coerce.number().int().min(1).max(200),
+  width: z.coerce.number().int().min(1).max(200),
+  height: z.coerce.number().int().min(1).max(200),
+  weight: z.coerce.number().int().min(1).max(1600000),
   // Removed GHN-specific package info from product creation
   specifications: z.preprocess((val) => {
     if (typeof val === 'string') {
