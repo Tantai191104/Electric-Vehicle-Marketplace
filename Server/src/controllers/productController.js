@@ -18,8 +18,8 @@ export async function createProduct(req, res) {
     const result = createProductValidation.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({ 
-        error: result.error.errors[0]?.message || "Validation error", 
-        details: result.error.errors 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
       });
     }
 
@@ -62,8 +62,8 @@ export async function listProducts(req, res) {
     const result = getProductsValidation.safeParse(req.query);
     if (!result.success) {
       return res.status(400).json({ 
-        error: result.error.errors[0]?.message || "Validation error", 
-        details: result.error.errors 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
       });
     }
 
@@ -89,8 +89,8 @@ export async function updateProduct(req, res) {
     const result = updateProductValidation.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({ 
-        error: result.error.errors[0]?.message || "Validation error", 
-        details: result.error.errors 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
       });
     }
 
@@ -123,8 +123,8 @@ export async function getUserProducts(req, res) {
     const result = getProductsValidation.safeParse(req.query);
     if (!result.success) {
       return res.status(400).json({ 
-        error: result.error.errors[0]?.message || "Validation error", 
-        details: result.error.errors 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
       });
     }
 
