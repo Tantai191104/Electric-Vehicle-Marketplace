@@ -41,7 +41,8 @@ export async function createTopupOrder(req, res) {
     if (!zaloPayResult.success) {
       return res.status(400).json({
         error: 'ZaloPay order creation failed',
-        message: zaloPayResult.error
+        message: zaloPayResult.error,
+        zalopay: zaloPayResult.zalopay || zaloPayResult.details
       });
     }
 

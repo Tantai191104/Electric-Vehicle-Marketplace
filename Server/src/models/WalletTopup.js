@@ -69,8 +69,6 @@ const walletTopupSchema = new mongoose.Schema(
 );
 
 walletTopupSchema.index({ userId: 1, status: 1 });
-walletTopupSchema.index({ app_trans_id: 1 });
-walletTopupSchema.index({ orderId: 1 });
 walletTopupSchema.index({ createdAt: -1 });
 
 export default mongoose.model("WalletTopup", walletTopupSchema);

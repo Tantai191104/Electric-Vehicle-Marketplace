@@ -1,6 +1,9 @@
 import crypto from 'crypto';
 import moment from 'moment';
 import axios from 'axios';
+import dotenv from 'dotenv';
+// Ensure env vars are loaded even if this module is imported before index.ts sets them up
+dotenv.config();
 
 // ZaloPay Sandbox Configuration
 export const ZALOPAY_CONFIG = {
@@ -11,6 +14,13 @@ export const ZALOPAY_CONFIG = {
     query_endpoint: "https://sb-openapi.zalopay.vn/v2/query",
     callback_url: process.env.ZALOPAY_CALLBACK_URL
 };
+
+function assertConfig() {
+    const { app_id, key1, key2, callback_url } = ZALOPAY_CONFIG;
+    if (!app_id || !key1 || !key2 || !callback_url) {
+        throw new Error("Missing ZaloPay ENV. Required: ZALOPAY_APP_ID, ZALOPAY_KEY1, ZALOPAY_KEY2, ZALOPAY_CALLBACK_URL");
+    }
+}
 
 /**
  * Generate MAC signature for ZaloPay
@@ -29,34 +39,35 @@ export async function createZaloPayOrder({
     userId
 }) {
     try {
-        const app_trans_id = `${moment().format("YYMMDD")}_${orderId}`;
-        const embed_data = {
-            userId,
-            type: 'wallet_topup'
-        };
-        const item = [{
-            itemid: "wallet_coins",
-            itemname: "Nạp xu vào ví",
-            itemprice: amount,
-            itemquantity: 1
-        }];
+        assertConfig();
+        // Build values following ZaloPay spec constraints
+        // app_trans_id must be in format YYMMDD_XXXXX (one underscore, limited length, safe chars)
+        const uniqueNumeric = `${Date.now()}`.slice(-10); // last 10 digits
+        const app_trans_id = `${moment().format("YYMMDD")}_${uniqueNumeric}`;
+
+        // app_user: only [A-Za-z0-9_], reasonable length
+        const rawUser = `user_${userId}`;
+        const app_user_sanitized = rawUser.replace(/[^A-Za-z0-9_]/g, '').slice(0, 32);
+        // Use minimal embed_data and item to avoid validation issues
+        const embed_data = {};
+        const item = [];
 
         const orderData = {
-            app_id: ZALOPAY_CONFIG.app_id,
+            app_id: Number(ZALOPAY_CONFIG.app_id),
             app_trans_id,
-            app_user: `user_${userId}`,
+            app_user: app_user_sanitized,
             app_time: Date.now(),
             item: JSON.stringify(item),
             embed_data: JSON.stringify(embed_data),
-            amount,
-            description: description || `Nạp ${amount} xu vào ví`,
+            amount: Number(amount),
+            description: String(description || `Nạp ${amount} xu vào ví`).slice(0, 200),
             bank_code: "",
             callback_url: ZALOPAY_CONFIG.callback_url,
         };
 
         // Create MAC signature
         const dataStr = [
-            ZALOPAY_CONFIG.app_id,
+            Number(ZALOPAY_CONFIG.app_id),
             orderData.app_trans_id,
             orderData.app_user,
             orderData.amount,
@@ -94,7 +105,8 @@ export async function createZaloPayOrder({
         } else {
             return {
                 success: false,
-                error: response.data.return_message || 'Unknown error'
+                error: response.data.return_message || 'Unknown error',
+                zalopay: response.data
             };
         }
     } catch (error) {
