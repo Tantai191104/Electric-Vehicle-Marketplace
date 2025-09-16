@@ -158,7 +158,41 @@ router.use(authenticate);
  *                 type: string
  *               specifications:
  *                 type: object
- *                 additionalProperties: true
+ *                 description: Thông số kỹ thuật sản phẩm (không dùng cho tính ship)
+ *                 properties:
+ *                   batteryCapacity:
+ *                     type: string
+ *                     example: "3.5 kWh"
+ *                   range:
+ *                     type: string
+ *                     example: "203 km"
+ *                   chargingTime:
+ *                     type: string
+ *                     example: "6-7 giờ"
+ *                   power:
+ *                     type: string
+ *                     example: "2,500 W"
+ *                   batteryType:
+ *                     type: string
+ *                     example: "LFP"
+ *                   voltage:
+ *                     type: string
+ *                     example: "48V"
+ *                   capacity:
+ *                     type: string
+ *                     example: "34.6 Ah"
+ *                   cycleLife:
+ *                     type: string
+ *                     example: "2000 chu kỳ"
+ *                   operatingTemperature:
+ *                     type: string
+ *                     example: "-10°C đến 45°C"
+ *                   warranty:
+ *                     type: string
+ *                     example: "3 năm hoặc 30,000 km"
+ *                   compatibility:
+ *                     type: string
+ *                     example: "Tương thích trạm sạc VinFast"
  *               length:
  *                 type: integer
  *                 description: Chiều dài (cm) 1-200

@@ -1,5 +1,8 @@
 import { ghnClient, getGhnHeaders } from "../config/ghn.js";
 import Product from "../models/Product.js";
+import Order from "../models/Order.js";
+import User from "../models/User.js";
+import WalletTransaction from "../models/WalletTransaction.js";
 import { z } from "zod";
 
 const feeBodySchema = z.object({
@@ -114,6 +117,9 @@ export async function calcShippingFee(req, res) {
 
 // Create GHN order (light service) with minimal fields
 const createOrderSchema = z.object({
+  // Internal reference
+  product_id: z.string().optional(),
+  shipping_fee: z.coerce.number().int().min(0).optional(),
   // From (seller). If omitted, GHN will use ShopId store defaults
   from_name: z.string().optional(),
   from_phone: z.string().optional(),
@@ -233,6 +239,93 @@ export async function createShippingOrder(req, res) {
         } catch {}
       }
     }
+
+    // Persist internal order and deduct wallet if possible
+    try {
+      const orderCode = payload?.data?.order_code || payload?.order_code;
+      const buyerId = req.user?.sub;
+      const productId = parsed.data && parsed.data.product_id ? parsed.data.product_id : undefined;
+      const providedShippingFee = Number(parsed.data && parsed.data.shipping_fee ? parsed.data.shipping_fee : 0) || 0;
+
+      if (orderCode && buyerId && productId) {
+        const prod = await Product.findById(productId).select("_id price seller title");
+        if (prod) {
+          const sellerId = (prod && typeof prod.seller === 'object' && prod.seller && 'toString' in prod.seller) ? (prod.seller) : prod.seller;
+          const unitPrice = Number(prod.price) || 0;
+          const quantity = 1;
+          const totalAmount = unitPrice * quantity;
+          const shippingFee = providedShippingFee;
+          const finalAmount = totalAmount + shippingFee;
+
+          // Wallet deduction and order creation
+          const buyer = await User.findById(buyerId);
+          if (buyer) {
+            const balanceBefore = Number(buyer.wallet?.balance || 0);
+            if (balanceBefore >= finalAmount) {
+              buyer.wallet.balance = balanceBefore - finalAmount;
+              buyer.wallet.totalSpent = Number(buyer.wallet.totalSpent || 0) + finalAmount;
+              await buyer.save();
+
+              await WalletTransaction.create({
+                userId: buyerId,
+                type: 'purchase',
+                amount: finalAmount,
+                balanceBefore,
+                balanceAfter: buyer.wallet.balance,
+                description: `Mua hàng: ${prod.title} (GHN ${orderCode})`,
+                status: 'completed',
+                reference: String(orderCode),
+                paymentMethod: 'internal',
+                metadata: { orderId: String(orderCode), productId: String(prod._id) }
+              });
+
+              const orderDoc = await Order.create({
+                buyerId,
+                sellerId,
+                productId: prod._id,
+                quantity,
+                unitPrice,
+                totalAmount,
+                shippingFee,
+                commission: 0,
+                finalAmount,
+                status: 'pending',
+                shipping: {
+                  method: 'GHN',
+                  trackingNumber: orderCode,
+                  carrier: 'GHN'
+                },
+                shippingAddress: {
+                  fullName: b.to_name,
+                  phone: b.to_phone,
+                  address: b.to_address,
+                  city: b.to_district_name,
+                  province: b.to_province_name,
+                  zipCode: null
+                },
+                payment: {
+                  method: 'wallet',
+                  status: 'paid',
+                  transactionId: orderCode,
+                  paidAt: new Date()
+                },
+                timeline: [
+                  { status: 'pending', description: 'Đã tạo đơn GHN', timestamp: new Date(), updatedBy: buyerId }
+                ],
+              });
+
+              return res.json({ ...payload, order: orderDoc });
+            } else {
+              return res.status(400).json({ error: 'Số dư ví không đủ', code: 'INSUFFICIENT_BALANCE' });
+            }
+          }
+        }
+      }
+    } catch (persistErr) {
+      // Fallthrough to return GHN payload with warning
+      return res.json({ ...payload, warning: persistErr?.message || 'Order saved with warning' });
+    }
+
     return res.json(payload);
   } catch (err) {
     const status = err.response?.status || 500;
