@@ -244,8 +244,6 @@ router.get("/wallet/transactions", getWalletTransactions);
  *                         type: string
  *                       productId:
  *                         type: string
- *                       notes:
- *                         type: string
  *                       addedAt:
  *                         type: string
  *                         format: date-time
@@ -285,11 +283,6 @@ router.get("/wishlist", getUserWishlist);
  *                 type: string
  *                 description: ID of the product to add to wishlist
  *                 example: "60d5ecb74b24c1234567890a"
- *               notes:
- *                 type: string
- *                 maxLength: 500
- *                 description: Optional notes about the product
- *                 example: "Want to buy this for my birthday"
  *     responses:
  *       201:
  *         description: Item added to wishlist successfully
@@ -303,8 +296,6 @@ router.get("/wishlist", getUserWishlist);
  *                 userId:
  *                   type: string
  *                 productId:
- *                   type: string
- *                 notes:
  *                   type: string
  *                 addedAt:
  *                   type: string

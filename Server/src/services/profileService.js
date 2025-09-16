@@ -161,7 +161,7 @@ export async function getWalletTransactionsService(userId, page = 1, limit = 20)
 }
 
 
-export async function addToWishlistService(userId, productId, notes = null) {
+export async function addToWishlistService(userId, productId) {
   try {
     const existingItem = await Wishlist.findOne({ userId, productId });
     if (existingItem) {
@@ -171,7 +171,6 @@ export async function addToWishlistService(userId, productId, notes = null) {
     const wishlistItem = await Wishlist.create({
       userId,
       productId,
-      notes,
       addedAt: new Date()
     });
     

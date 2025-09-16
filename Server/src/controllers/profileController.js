@@ -189,9 +189,9 @@ export async function addToWishlist(req, res) {
     }
     
     const userId = req.user.sub;
-    const { productId, notes } = wishlistResult.data;
+    const { productId } = wishlistResult.data;
     
-    const wishlistItem = await addToWishlistService(userId, productId, notes);
+    const wishlistItem = await addToWishlistService(userId, productId);
     res.status(201).json(wishlistItem);
   } catch (error) {
     res.status(400).json({ error: error.message });
