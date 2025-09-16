@@ -198,9 +198,12 @@ export async function createShippingOrder(req, res) {
       } catch {}
     }
 
-    // If we have pricing context, pre-check wallet balance BEFORE creating GHN order
+    // Require pricing context and pre-check wallet balance BEFORE creating GHN order
     const buyerId = req.user?.sub || req.user?.id;
     let finalAmount = null;
+    if (!(typeof unitPrice === 'number' && typeof shippingFee === 'number')) {
+      return res.status(400).json({ error: 'Thiếu unit_price hoặc shipping_fee' });
+    }
     if (typeof unitPrice === 'number' && typeof shippingFee === 'number') {
       finalAmount = Math.max(0, Math.round(unitPrice) + Math.max(0, Math.round(shippingFee)));
       try {
@@ -368,4 +371,41 @@ export async function createShippingOrder(req, res) {
   }
 }
 
+
+// Get GHN order detail by order_code
+const detailSchema = z.object({ order_code: z.string().min(1) });
+export async function getShippingOrderDetail(req, res) {
+  try {
+    const parsed = detailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: parsed.error.issues?.[0]?.message || 'Validation error',
+        details: parsed.error.issues,
+      });
+    }
+    const headers = getGhnHeaders();
+    const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code: parsed.data.order_code }, {
+      headers,
+      responseType: 'text',
+      transformResponse: [(x) => x],
+    });
+    let payload;
+    try { payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data; }
+    catch { return res.status(400).json({ code: 400, message: String(resp.data || ''), data: null }); }
+    if (payload && typeof payload.message === 'string') {
+      const msg = payload.message.trim();
+      if ((msg.startsWith('{') && msg.endsWith('}')) || (msg.startsWith('[') && msg.endsWith(']'))) {
+        try { const inner = JSON.parse(msg); if (inner && typeof inner === 'object') payload = inner; } catch {}
+      }
+    }
+    return res.json(payload);
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const raw = err.response?.data;
+    if (typeof raw === 'string') {
+      try { return res.status(status).json(JSON.parse(raw)); } catch { return res.status(status).json({ code: status, message: raw, data: null }); }
+    }
+    return res.status(status).json(err.response?.data || { error: err.message });
+  }
+}
 

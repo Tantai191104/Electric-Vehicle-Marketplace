@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
-import { calcShippingFee, createShippingOrder } from "../controllers/shippingController.js";
+import { calcShippingFee, createShippingOrder, getShippingOrderDetail } from "../controllers/shippingController.js";
 
 const router = express.Router();
 
@@ -252,6 +252,30 @@ router.post("/fee", calcShippingFee);
  *         description: GHN order creation response
  */
 router.post("/order", createShippingOrder);
+
+/**
+ * @swagger
+ * /shipping/order/detail:
+ *   post:
+ *     summary: Get GHN order details by order_code
+ *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               order_code:
+ *                 type: string
+ *                 example: L3A4NQ
+ *     responses:
+ *       200:
+ *         description: GHN order detail
+ */
+router.post("/order/detail", getShippingOrderDetail);
 
 export default router;
 
