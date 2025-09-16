@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import shippingRoutes from "./routes/shippingRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import zalopayRoutes from "./routes/zalopayRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/shipping", shippingRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/zalopay", zalopayRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {

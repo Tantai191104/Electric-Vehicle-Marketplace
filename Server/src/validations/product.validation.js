@@ -28,6 +28,7 @@ export const createProductValidation = z.object({
   year: z.coerce.number().int().min(2000).max(new Date().getFullYear() + 1),
   condition: z.enum(["new", "used", "refurbished"], { message: "Invalid condition" }),
   images: z.array(z.string().url("Invalid image URL")).optional(),
+  // Removed GHN-specific package info from product creation
   specifications: z.preprocess((val) => {
     if (typeof val === 'string') {
       try { return JSON.parse(val); } catch { return {}; }

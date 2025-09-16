@@ -19,6 +19,7 @@ const productSchema = new mongoose.Schema(
       required: true 
     },
     images: [{ type: String }],
+    // Shipping-related package info is no longer stored on the product
     specifications: {
       batteryCapacity: { type: String },
       range: { type: String },
