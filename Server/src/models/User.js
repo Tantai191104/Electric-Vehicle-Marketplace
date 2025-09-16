@@ -72,20 +72,28 @@ userSchema.pre("save", function(next) {
     const addr = this.profile?.address;
     if (!addr) return next();
 
-    // Only allow free text for houseNumber; codes must exist in datasets
-    if (addr.provinceCode || addr.districtCode || addr.wardCode) {
+    // Only process if we have location codes but missing names (backup validation)
+    if ((addr.provinceCode || addr.districtCode || addr.wardCode) && 
+        (!addr.province || !addr.district || !addr.ward)) {
+      
       const province = provinces.find((p) => String(p.Code) === String(addr.provinceCode) || String(p.ProvinceID) === String(addr.provinceCode));
-      if (!province) throw new Error("Invalid provinceCode");
+      if (!province) throw new Error(`Invalid provinceCode: ${addr.provinceCode}`);
 
       const district = districts.find((d) => (String(d.DistrictID) === String(addr.districtCode) || String(d.Code || '') === String(addr.districtCode)) && Number(d.ProvinceID) === Number(province.ProvinceID));
-      if (!district) throw new Error("Invalid districtCode for selected province");
+      if (!district) throw new Error(`Invalid districtCode: ${addr.districtCode} for province: ${province.ProvinceName}`);
 
       const ward = wards.find((w) => String(w.WardCode) === String(addr.wardCode) && Number(w.DistrictID) === Number(district.DistrictID));
-      if (!ward) throw new Error("Invalid wardCode for selected district");
+      if (!ward) throw new Error(`Invalid wardCode: ${addr.wardCode} for district: ${district.DistrictName}`);
 
-      this.profile.address.province = province.ProvinceName;
-      this.profile.address.district = district.DistrictName;
-      this.profile.address.ward = ward.WardName;
+      // Only set names if they're not already set (backup)
+      this.profile.address.province = this.profile.address.province || province.ProvinceName;
+      this.profile.address.district = this.profile.address.district || district.DistrictName;
+      this.profile.address.ward = this.profile.address.ward || ward.WardName;
+      
+      // Ensure codes are consistent
+      this.profile.address.provinceCode = String(province.Code || province.ProvinceID);
+      this.profile.address.districtCode = String(district.DistrictID);
+      this.profile.address.wardCode = String(ward.WardCode);
     }
     next();
   } catch (e) {

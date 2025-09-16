@@ -2,6 +2,7 @@ import {
   getUserProfileService,
   updateUserProfileService,
   updateUserPreferencesService,
+  updateUserAddressService,
   getWalletBalanceService,
   getWalletTransactionsService,
   addToWishlistService,
@@ -118,31 +119,18 @@ export async function updateUserProfile(req, res) {
 
 export async function updateUserAddress(req, res) {
   try {
-    const body = updateAddressValidation.parse(req.body);
+    const result = updateAddressValidation.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ 
+        error: result.error.errors[0]?.message || "Validation error"
+      });
+    }
+    
     const userId = req.user.sub;
-
-    const province = provinces.find((p) => String(p.Code) === String(body.provinceCode) || String(p.ProvinceID) === String(body.provinceCode));
-    if (!province) return res.status(400).json({ error: "Invalid provinceCode" });
-    const district = districts.find((d) => (String(d.DistrictID) === String(body.districtCode) || String(d.Code || '') === String(body.districtCode)) && Number(d.ProvinceID) === Number(province.ProvinceID));
-    if (!district) return res.status(400).json({ error: "Invalid districtCode for province" });
-    const ward = wards.find((w) => String(w.WardCode) === String(body.wardCode) && Number(w.DistrictID) === Number(district.DistrictID));
-    if (!ward) return res.status(400).json({ error: "Invalid wardCode for district" });
-
-    const update = {
-      profile: {
-        address: {
-          houseNumber: body.houseNumber || null,
-          provinceCode: String(body.provinceCode),
-          districtCode: String(body.districtCode),
-          wardCode: String(body.wardCode),
-          province: province.ProvinceName,
-          district: district.DistrictName,
-          ward: ward.WardName
-        }
-      }
-    };
-
-    const updated = await updateUserProfileService(userId, update);
+    const addressData = result.data;
+    
+    // Use the new service function that handles validation and mapping
+    const updated = await updateUserAddressService(userId, addressData);
     res.json(updated);
   } catch (error) {
     res.status(400).json({ error: error.message });

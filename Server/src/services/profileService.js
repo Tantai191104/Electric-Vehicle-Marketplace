@@ -2,6 +2,16 @@ import User from "../models/User.js";
 import WalletTransaction from "../models/WalletTransaction.js";
 import Wishlist from "../models/Wishlist.js";
 import Order from "../models/Order.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const provinces = JSON.parse(fs.readFileSync(path.join(__dirname, "../constants/location/provinces.json"), "utf8"));
+const districts = JSON.parse(fs.readFileSync(path.join(__dirname, "../constants/location/districts.json"), "utf8"));
+const wards = JSON.parse(fs.readFileSync(path.join(__dirname, "../constants/location/wards.json"), "utf8"));
 
 export async function getUserProfileService(userId) {
   try {
@@ -48,6 +58,66 @@ export async function updateUserPreferencesService(userId, preferences) {
       throw new Error("User not found");
     }
     return user;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function updateUserAddressService(userId, addressData) {
+  try {
+    // Validate location codes first
+    const province = provinces.find((p) => 
+      String(p.Code) === String(addressData.provinceCode) || 
+      String(p.ProvinceID) === String(addressData.provinceCode)
+    );
+    if (!province) {
+      throw new Error(`Invalid provinceCode: ${addressData.provinceCode}`);
+    }
+
+    const district = districts.find((d) => 
+      (String(d.DistrictID) === String(addressData.districtCode) || 
+       String(d.Code || '') === String(addressData.districtCode)) && 
+      Number(d.ProvinceID) === Number(province.ProvinceID)
+    );
+    if (!district) {
+      throw new Error(`Invalid districtCode: ${addressData.districtCode} for province: ${province.ProvinceName}`);
+    }
+
+    const ward = wards.find((w) => 
+      String(w.WardCode) === String(addressData.wardCode) && 
+      Number(w.DistrictID) === Number(district.DistrictID)
+    );
+    if (!ward) {
+      throw new Error(`Invalid wardCode: ${addressData.wardCode} for district: ${district.DistrictName}`);
+    }
+
+    // Prepare address data with both codes and names
+    const fullAddressData = {
+      houseNumber: addressData.houseNumber || null,
+      provinceCode: String(province.Code || province.ProvinceID),
+      districtCode: String(district.DistrictID),
+      wardCode: String(ward.WardCode),
+      province: province.ProvinceName,
+      district: district.DistrictName,
+      ward: ward.WardName
+    };
+
+    // Use findById and save to trigger pre-save hooks
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Update the address
+    user.profile = user.profile || {};
+    user.profile.address = fullAddressData;
+    
+    // Save to trigger pre-save hooks
+    await user.save();
+    
+    // Return user without password
+    const updatedUser = await User.findById(userId).select('-password');
+    return updatedUser;
   } catch (error) {
     throw error;
   }
