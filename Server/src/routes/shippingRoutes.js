@@ -17,7 +17,7 @@ router.use(authenticate);
  * @swagger
  * /shipping/fee:
  *   post:
- *     summary: Calculate shipping fee via GHN
+ *     summary: Calculate shipping fee via GHN (Light service only)
  *     tags: [Shipping]
  *     security:
  *       - bearerAuth: []
@@ -31,6 +31,7 @@ router.use(authenticate);
  *               service_type_id:
  *                 type: integer
  *                 default: 2
+ *                 description: Fixed to 2 (Light service)
  *               from_district_id:
  *                 type: integer
  *               from_ward_code:
@@ -60,6 +61,18 @@ router.use(authenticate);
  *               coupon:
  *                 nullable: true
  *                 type: string
+ *           example:
+ *             service_type_id: 2
+ *             from_district_id: 1442
+ *             from_ward_code: "21211"
+ *             to_district_id: 1820
+ *             to_ward_code: "030712"
+ *             length: 30
+ *             width: 40
+ *             height: 20
+ *             weight: 3000
+ *             insurance_value: 0
+ *             coupon: null
  *     responses:
  *       200:
  *         description: GHN fee response
