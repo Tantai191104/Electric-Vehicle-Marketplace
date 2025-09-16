@@ -1,6 +1,26 @@
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 
+// Helper function to format product with seller address
+function formatProductWithAddress(product) {
+  const productObj = product.toObject();
+  if (productObj.seller?.profile?.address) {
+    productObj.seller.address = {
+      houseNumber: productObj.seller.profile.address.houseNumber || null,
+      provinceCode: productObj.seller.profile.address.provinceCode || null,
+      districtCode: productObj.seller.profile.address.districtCode || null,
+      wardCode: productObj.seller.profile.address.wardCode || null,
+      province: productObj.seller.profile.address.province || null,
+      district: productObj.seller.profile.address.district || null,
+      ward: productObj.seller.profile.address.ward || null
+    };
+  }
+  if (productObj.seller?.profile) {
+    delete productObj.seller.profile;
+  }
+  return productObj;
+}
+
 export async function createProductService(productData) {
   try {
     // Ensure seller has address configured in account profile
@@ -55,15 +75,18 @@ export async function listProductsService(filters, page = 1, limit = 10) {
     }
 
     const products = await Product.find(query)
-      .populate("seller", "name email phone avatar")
+      .populate("seller", "name email phone avatar profile.address")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
     const total = await Product.countDocuments(query);
 
+    // Format products to include seller address in a clean format
+    const formattedProducts = products.map(formatProductWithAddress);
+
     return {
-      products,
+      products: formattedProducts,
       pagination: {
         page,
         limit,
@@ -78,7 +101,7 @@ export async function listProductsService(filters, page = 1, limit = 10) {
 
 export async function getProductByIdService(productId) {
   try {
-    const product = await Product.findById(productId).populate("seller", "name email phone avatar");
+    const product = await Product.findById(productId).populate("seller", "name email phone avatar profile.address");
     if (!product) {
       throw new Error("Product not found");
     }
@@ -86,7 +109,7 @@ export async function getProductByIdService(productId) {
     product.views += 1;
     await product.save();
     
-    return product;
+    return formatProductWithAddress(product);
   } catch (error) {
     throw error;
   }
@@ -107,9 +130,9 @@ export async function updateProductService(productId, productData, userId) {
       productId, 
       productData, 
       { new: true, runValidators: true }
-    ).populate("seller", "name email phone avatar");
+    ).populate("seller", "name email phone avatar profile.address");
     
-    return updatedProduct;
+    return formatProductWithAddress(updatedProduct);
   } catch (error) {
     throw error;
   }
@@ -138,15 +161,18 @@ export async function getUserProductsService(userId, page = 1, limit = 10) {
     const skip = (page - 1) * limit;
     
     const products = await Product.find({ seller: userId })
-      .populate("seller", "name email phone avatar")
+      .populate("seller", "name email phone avatar profile.address")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
     const total = await Product.countDocuments({ seller: userId });
 
+    // Format products to include seller address in a clean format
+    const formattedProducts = products.map(formatProductWithAddress);
+
     return {
-      products,
+      products: formattedProducts,
       pagination: {
         page,
         limit,
