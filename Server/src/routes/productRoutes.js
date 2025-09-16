@@ -8,6 +8,7 @@ import {
   getUserProducts,
 } from "../controllers/productController.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { productUpload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
@@ -127,9 +128,37 @@ router.use(authenticate);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/CreateProduct'
+ *             type: object
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 description: Video (nếu có) và ảnh sản phẩm. Video sẽ được ưu tiên đứng đầu danh sách.
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               title:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               category:
+ *                 type: string
+ *                 enum: [vehicle, battery]
+ *               brand:
+ *                 type: string
+ *               model:
+ *                 type: string
+ *               year:
+ *                 type: integer
+ *               condition:
+ *                 type: string
+ *                 enum: [new, used, refurbished]
+ *               description:
+ *                 type: string
+ *               specifications:
+ *                 type: object
+ *                 additionalProperties: true
  *     responses:
  *       201:
  *         description: Product created successfully
@@ -147,7 +176,7 @@ router.use(authenticate);
  *       401:
  *         description: Unauthorized
  */
-router.post("/", createProduct);
+router.post("/", productUpload.array('files', 10), createProduct);
 
 /**
  * @swagger
