@@ -4,7 +4,7 @@ import { z } from "zod";
 import Order from "../models/Order.js";
 import User from "../models/User.js";
 import WalletTransaction from "../models/WalletTransaction.js";
-import Product from "../models/Product.js";
+
 
 const feeBodySchema = z.object({
   product_id: z.string().optional(),
