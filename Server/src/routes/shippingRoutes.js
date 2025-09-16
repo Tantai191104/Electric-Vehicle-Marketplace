@@ -41,16 +41,16 @@ router.use(authenticate);
  *                 type: string
  *               length:
  *                 type: integer
- *                 default: 200
+ *                 default: 150
  *               width:
  *                 type: integer
- *                 default: 200
+ *                 default: 60
  *               height:
  *                 type: integer
- *                 default: 200
+ *                 default: 90
  *               weight:
  *                 type: integer
- *                 default: 1600000
+ *                 default: 50000
  *               insurance_value:
  *                 type: integer
  *                 default: 5000000
