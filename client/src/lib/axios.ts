@@ -1,71 +1,95 @@
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/store/auth";
-import axios, {
-  AxiosError,
-  type CreateAxiosDefaults,
-  type InternalAxiosRequestConfig,
-} from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const options: CreateAxiosDefaults = {
-  baseURL: BASE_URL,
-  headers: { "Content-Type": "application/json" },
-  withCredentials: true,
+const API = axios.create({ baseURL: BASE_URL, withCredentials: true });
+const APIRefresh = axios.create({ baseURL: BASE_URL, withCredentials: true });
+
+let isRefreshing = false;
+let failedQueue: {
+  resolve: (value?: unknown) => void;
+  reject: (error: unknown) => void;
+  originalRequest: InternalAxiosRequestConfig;
+}[] = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject, originalRequest }) => {
+    if (token) {
+      if (originalRequest.headers)
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+      resolve(API(originalRequest));
+    } else {
+      reject(error);
+    }
+  });
+  failedQueue = [];
 };
 
-const API = axios.create(options);
-const APIRefresh = axios.create(options);
-
-// ----------------------
-// Request interceptor: attach token
-// ----------------------
+// Attach accessToken
 API.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const { accessToken } = useAuthStore.getState();
+  if (accessToken && config.headers) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
 
-// ----------------------
 // Response interceptor
-// ----------------------
 API.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
+    const { accessToken, isAuthenticated, user, setAuth, clearAuth } =
+      useAuthStore.getState();
 
     if (
       error.response?.status === 401 &&
       originalRequest &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      isAuthenticated && // chỉ refresh khi đã login
+      accessToken // phải có accessToken
     ) {
       originalRequest._retry = true;
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject, originalRequest });
+        });
+      }
+
+      isRefreshing = true;
 
       try {
         interface RefreshResponse {
           accessToken: string;
         }
-        const res = await APIRefresh.post<RefreshResponse>("/auth/refresh", {});
+
+        const res = await APIRefresh.post<RefreshResponse>(
+          "/auth/refresh-token",
+          {}
+        );
         const newAccessToken = res.data.accessToken;
 
-        // update accessToken vào store
-        const { user, setAuth } = useAuthStore.getState();
-        setAuth({ user, accessToken: newAccessToken });
+        setAuth({ user: user!, accessToken: newAccessToken });
 
-        if (originalRequest.headers) {
+        if (originalRequest.headers)
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        }
 
-        return API(originalRequest); // retry request
+        processQueue(null, newAccessToken);
+        return API(originalRequest);
       } catch (refreshError) {
-        useAuthStore.getState().clearAuth();
-        window.location.href = "/login";
+        processQueue(refreshError, null);
+        clearAuth();
+        window.location.href = "/auth/login";
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   }
 );

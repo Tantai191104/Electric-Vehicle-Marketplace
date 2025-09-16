@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button";
+import EVProductGrid from "./components/EVProductGrid";
 
 export default function HomePage() {
   return (
     <div>
-      <Button>Click me</Button>
+      <EVProductGrid />
     </div>
   );
 }

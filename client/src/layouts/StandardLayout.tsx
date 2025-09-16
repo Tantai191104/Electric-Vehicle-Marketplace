@@ -1,11 +1,12 @@
+// StandardLayout.tsx
 import { Outlet } from "react-router-dom";
 import React from "react";
-import Header from "./components/base/Header";
+import FixedHeader from "./components/base/FixedHeader";
 
-const BaseLayout: React.FC = () => {
+const StandardLayout: React.FC = () => {
   return (
     <div className="subpixel-antialiased">
-      <Header />
+      <FixedHeader />
       <main>
         <Outlet />
       </main>
@@ -13,4 +14,4 @@ const BaseLayout: React.FC = () => {
   );
 };
 
-export default BaseLayout;
+export default StandardLayout;
