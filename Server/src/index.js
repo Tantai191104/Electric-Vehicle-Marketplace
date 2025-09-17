@@ -86,7 +86,7 @@ io.on('connection', (socket) => {
   socket.on('send_message', async (data) => {
     try {
       console.log('Received send_message:', data);
-      const { conversationId, text } = data;
+      const { conversationId, text, tempId } = data;
       
       if (!conversationId || !text) {
         socket.emit('error', { message: 'Missing conversationId or text' });
@@ -100,7 +100,8 @@ io.on('connection', (socket) => {
         text,
         senderId: socket.userId,
         conversationId,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        tempId // Include tempId for frontend confirmation
       };
       
       console.log('Broadcasting message to conversation:', conversationId);
