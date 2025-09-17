@@ -17,6 +17,23 @@ export async function getMyConversations(req, res) {
 export async function postMessage(req, res) {
   const { conversationId, text, files = [] } = sendMessageValidation.parse(req.body);
   const message = await sendMessage(conversationId, req.user.sub, text, files);
+  try {
+    const io = req.app.get('io');
+    if (io) {
+      const payload = {
+        _id: message._id,
+        text: message.text,
+        senderId: message.senderId,
+        conversationId: message.conversationId,
+        createdAt: message.createdAt,
+        files: message.files || [],
+        type: message.type,
+      };
+      // Broadcast to room and participants
+      io.to(`conversation_${conversationId}`).emit('new_message', { conversationId, message: payload });
+      io.to(`conversation_${conversationId}`).emit('conversation_updated', { conversationId, lastMessage: payload, unreadCount: 1 });
+    }
+  } catch {}
   res.status(201).json(message);
 }
 
@@ -36,6 +53,22 @@ export async function postMessageWithFiles(req, res) {
     })) : [];
     
     const message = await sendMessage(conversationId, req.user.sub, text, files);
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        const payload = {
+          _id: message._id,
+          text: message.text,
+          senderId: message.senderId,
+          conversationId: message.conversationId,
+          createdAt: message.createdAt,
+          files: message.files || [],
+          type: message.type,
+        };
+        io.to(`conversation_${conversationId}`).emit('new_message', { conversationId, message: payload });
+        io.to(`conversation_${conversationId}`).emit('conversation_updated', { conversationId, lastMessage: payload, unreadCount: 1 });
+      }
+    } catch {}
     res.status(201).json({ message });
   } catch (error) {
     console.error('Error uploading chat files:', error);

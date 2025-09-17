@@ -62,6 +62,9 @@ const io = new Server(server, {
   allowEIO3: true
 });
 
+// Expose io to routes/controllers
+app.set('io', io);
+
 // Socket.IO authentication middleware
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
