@@ -65,33 +65,49 @@ const io = new Server(server, {
 // Socket.IO authentication middleware
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
-  console.log('Socket auth attempt with token:', token ? 'Present' : 'Missing');
-  console.log('JWT_SECRET available:', !!process.env.JWT_SECRET);
+  const jwtSecret = process.env.JWT_SECRET || 'dev-secret';
+  
+  console.log('=== SOCKET AUTH ATTEMPT ===');
+  console.log('Socket ID:', socket.id);
+  console.log('Token present:', token ? 'Yes' : 'No');
+  console.log('JWT_SECRET available:', !!jwtSecret);
+  console.log('JWT_SECRET value:', jwtSecret);
+  console.log('==========================');
   
   if (!token) {
-    console.log('No token provided');
+    console.log('No token provided - rejecting connection');
     return next(new Error('Authentication error'));
   }
   
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Token verified for user:', decoded.userId);
+    const decoded = jwt.verify(token, jwtSecret);
+    console.log('=== SOCKET AUTH SUCCESS ===');
+    console.log('User ID:', decoded.userId);
+    console.log('Socket ID:', socket.id);
+    console.log('============================');
     socket.userId = decoded.userId;
     socket.user = decoded;
     next();
   } catch (err) {
-    console.log('Token verification failed:', err.message);
+    console.log('=== SOCKET AUTH FAILED ===');
+    console.log('Error:', err.message);
     console.log('Token content:', token.substring(0, 50) + '...');
+    console.log('JWT_SECRET used:', jwtSecret);
+    console.log('===========================');
     next(new Error('Authentication error'));
   }
 });
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log(`User ${socket.userId} connected`);
+  console.log('=== SOCKET CONNECTION ESTABLISHED ===');
+  console.log('User ID:', socket.userId);
+  console.log('Socket ID:', socket.id);
+  console.log('=====================================');
   
   // Join user to their personal room
   socket.join(`user_${socket.userId}`);
+  console.log(`User ${socket.userId} joined personal room: user_${socket.userId}`);
   
   // Handle sending messages
   socket.on('send_message', async (data) => {
@@ -182,12 +198,25 @@ io.on('connection', (socket) => {
     console.log(`Room: conversation_${conversationId}`);
     console.log(`===============================`);
     
+    if (!conversationId) {
+      console.log('ERROR: No conversationId provided');
+      return;
+    }
+    
     socket.join(`conversation_${conversationId}`);
     console.log(`User ${socket.userId} joined conversation ${conversationId}`);
     
     // Debug: List all rooms this socket is in
     const rooms = Array.from(socket.rooms);
     console.log(`User ${socket.userId} is now in rooms:`, rooms);
+    
+    // Debug: Check if room exists
+    const room = io.sockets.adapter.rooms.get(`conversation_${conversationId}`);
+    if (room) {
+      console.log(`Room conversation_${conversationId} now has ${room.size} users:`, Array.from(room));
+    } else {
+      console.log(`ERROR: Room conversation_${conversationId} not found after join`);
+    }
   });
   
   // Handle leaving conversation
@@ -197,8 +226,21 @@ io.on('connection', (socket) => {
     console.log(`User ${socket.userId} left conversation ${conversationId}`);
   });
   
+  // Handle WebSocket errors
+  socket.on('error', (error) => {
+    console.log('=== SOCKET ERROR ===');
+    console.log('User ID:', socket.userId);
+    console.log('Socket ID:', socket.id);
+    console.log('Error:', error);
+    console.log('===================');
+  });
+
   socket.on('disconnect', (reason) => {
-    console.log(`User ${socket.userId} disconnected:`, reason);
+    console.log('=== SOCKET DISCONNECTED ===');
+    console.log('User ID:', socket.userId);
+    console.log('Socket ID:', socket.id);
+    console.log('Reason:', reason);
+    console.log('===========================');
   });
 });
 
