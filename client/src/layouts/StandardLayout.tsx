@@ -2,6 +2,7 @@
 import { Outlet } from "react-router-dom";
 import React from "react";
 import FixedHeader from "./components/base/FixedHeader";
+import Footer from "@/components/Footer";
 
 const StandardLayout: React.FC = () => {
   return (
@@ -10,6 +11,7 @@ const StandardLayout: React.FC = () => {
       <main>
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 };

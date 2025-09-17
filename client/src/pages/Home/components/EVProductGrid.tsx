@@ -78,42 +78,59 @@ const products = [
 
 export default function EVProductGrid() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-2 max-w-7xl mx-auto">
-      {products.map((product) => (
-        <Card
-          key={product.id}
-          className="overflow-hidden shadow-sm hover:shadow-xl transition-all rounded-xl border border-yellow-100 bg-white"
+    <section className="max-w-7xl mx-auto px-2 py-6">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-2xl font-bold text-yellow-900">
+            Khám phá xe điện nổi bật
+          </h2>
+        </div>
+        <Button
+          variant="outline"
+          className="rounded-full border-black text-black font-semibold px-6 py-2 hover:bg-black hover:text-white transition"
         >
-          <CardHeader className="p-0">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-32 object-cover rounded-t-xl"
-              loading="lazy"
-            />
-          </CardHeader>
-          <CardContent className="p-3">
-            <CardTitle className="text-sm font-bold text-yellow-900 mb-1 truncate">
-              {product.id} - {product.name}
-            </CardTitle>
-            <div className="text-xs text-gray-500 mb-1 flex flex-wrap gap-x-2">
-              <span className="font-medium text-gray-700">{product.type}</span>
-              <span className="text-gray-300">|</span>
-              <span className="font-medium text-gray-700">{product.year}</span>
-            </div>
-            <div className="text-xs text-gray-500 mb-1">
-              <span className="font-medium text-yellow-700">{product.status}</span>
-            </div>
-            <div className="text-base font-bold text-yellow-700 mt-2">{product.price}</div>
-            <Button
-              size="sm"
-              className="w-full mt-3 bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-semibold rounded-lg"
-            >
-              Xem chi tiết
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          Xem thêm &rarr;
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {products.map((product) => (
+          <Card
+            key={product.id}
+            className="overflow-hidden shadow-md hover:shadow-xl transition-all rounded-2xl border border-yellow-100 bg-white group"
+          >
+            <CardHeader className="p-0 relative">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-40 object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+              <span className="absolute top-2 left-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-md shadow">
+                {product.status}
+              </span>
+            </CardHeader>
+            <CardContent className="p-4 flex flex-col justify-between">
+              <div>
+                <CardTitle className="text-base font-bold text-yellow-900 mb-1 line-clamp-1">
+                  {product.id} - {product.name}
+                </CardTitle>
+                <div className="text-xs text-gray-500 mb-1 flex flex-wrap gap-x-2">
+                  <span className="font-medium text-gray-700">
+                    {product.type}
+                  </span>
+                  <span className="text-gray-300">|</span>
+                  <span className="font-medium text-gray-700">
+                    {product.year}
+                  </span>
+                </div>
+                <div className="text-base font-bold text-yellow-700 mt-2">
+                  {product.price}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -27,13 +27,13 @@ const Header: React.FC = () => {
   const [showStickySearch, setShowStickySearch] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setShowStickySearch(window.scrollY > 120);
+    const handleScroll = () => setShowStickySearch(window.scrollY > 140);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <header className="w-full bg-gradient-to-r from-yellow-300 to-yellow-400 py-2 px-2 md:py-4 md:px-6 flex flex-col gap-2 md:gap-4 shadow-lg mb-4 relative z-20 ">
+    <header className="w-full bg-gradient-to-r from-yellow-300 to-yellow-400 py-2 px-2 md:py-4 md:px-6 flex flex-col gap-2 md:gap-4 shadow-lg mb-4 relative z-100 ">
       {/* Main header row */}
       <div className="flex items-center justify-between w-full flex-wrap gap-y-2">
         {/* Logo + Seller */}
