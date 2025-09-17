@@ -121,7 +121,20 @@ io.on('connection', (socket) => {
         tempId // Include tempId for frontend confirmation
       };
       
-      console.log('Broadcasting message to conversation:', conversationId);
+      console.log('=== SERVER: BROADCASTING MESSAGE ===');
+      console.log(`Conversation ID: ${conversationId}`);
+      console.log(`Room: conversation_${conversationId}`);
+      console.log(`Sender: ${socket.userId}`);
+      console.log(`Message: ${message.text}`);
+      console.log(`====================================`);
+      
+      // Debug: Check who is in the conversation room
+      const room = io.sockets.adapter.rooms.get(`conversation_${conversationId}`);
+      if (room) {
+        console.log(`Users in conversation_${conversationId}:`, Array.from(room));
+      } else {
+        console.log(`No users in conversation_${conversationId}`);
+      }
       
       // Broadcast to all users in the conversation
       socket.to(`conversation_${conversationId}`).emit('new_message', {
@@ -162,9 +175,19 @@ io.on('connection', (socket) => {
   
   // Handle joining conversation
   socket.on('join_conversation', (conversationId) => {
-    console.log(`User ${socket.userId} joining conversation ${conversationId}`);
+    console.log(`=== SERVER: JOIN CONVERSATION ===`);
+    console.log(`User ID: ${socket.userId}`);
+    console.log(`Conversation ID: ${conversationId}`);
+    console.log(`Socket ID: ${socket.id}`);
+    console.log(`Room: conversation_${conversationId}`);
+    console.log(`===============================`);
+    
     socket.join(`conversation_${conversationId}`);
     console.log(`User ${socket.userId} joined conversation ${conversationId}`);
+    
+    // Debug: List all rooms this socket is in
+    const rooms = Array.from(socket.rooms);
+    console.log(`User ${socket.userId} is now in rooms:`, rooms);
   });
   
   // Handle leaving conversation
