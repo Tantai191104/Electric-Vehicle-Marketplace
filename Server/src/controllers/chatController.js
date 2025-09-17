@@ -20,6 +20,8 @@ export async function postMessage(req, res) {
   try {
     const io = req.app.get('io');
     if (io) {
+      const { default: Conversation } = await import('../models/Conversation.js');
+      const conv = await Conversation.findById(conversationId).lean();
       const payload = {
         _id: message._id,
         text: message.text,
@@ -32,6 +34,15 @@ export async function postMessage(req, res) {
       // Broadcast to room and participants
       io.to(`conversation_${conversationId}`).emit('new_message', { conversationId, message: payload });
       io.to(`conversation_${conversationId}`).emit('conversation_updated', { conversationId, lastMessage: payload, unreadCount: 1 });
+      if (conv) {
+        const buyerId = conv.buyerId?.toString?.();
+        const sellerId = conv.sellerId?.toString?.();
+        if (buyerId) io.to(`user_${buyerId}`).emit('conversation_updated', { conversationId, lastMessage: payload, unreadCount: 1 });
+        if (sellerId) io.to(`user_${sellerId}`).emit('conversation_updated', { conversationId, lastMessage: payload, unreadCount: 1 });
+        // Also emit new_message to personal rooms as a fallback
+        if (buyerId) io.to(`user_${buyerId}`).emit('new_message', { conversationId, message: payload });
+        if (sellerId) io.to(`user_${sellerId}`).emit('new_message', { conversationId, message: payload });
+      }
     }
   } catch {}
   res.status(201).json(message);
