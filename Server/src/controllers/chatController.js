@@ -1,4 +1,4 @@
-import { startConversation, listConversations, sendMessage, listMessages } from "../services/chatService.js";
+import { startConversation, listConversations, sendMessage, listMessages, markConversationAsRead } from "../services/chatService.js";
 import { startChatValidation, sendMessageValidation, listMessagesValidation } from "../validations/chat.validation.js";
 
 export async function startChat(req, res) {
@@ -40,6 +40,19 @@ export async function postMessageWithFiles(req, res) {
   } catch (error) {
     console.error('Error uploading chat files:', error);
     res.status(500).json({ error: 'Failed to upload files' });
+  }
+}
+
+export async function markAsRead(req, res) {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user.sub;
+    
+    await markConversationAsRead(conversationId, userId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error marking conversation as read:', error);
+    res.status(500).json({ error: 'Failed to mark conversation as read' });
   }
 }
 

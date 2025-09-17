@@ -142,6 +142,18 @@ io.on('connection', (socket) => {
         unreadCount: 1
       });
       
+      // Emit to the recipient's personal room for real-time updates
+      const { Conversation } = await import('./models/Conversation.js');
+      const conversation = await Conversation.findById(conversationId);
+      if (conversation) {
+        const recipientId = conversation.buyerId.toString() === socket.userId ? conversation.sellerId : conversation.buyerId;
+        io.to(`user_${recipientId}`).emit('conversation_updated', {
+          conversationId,
+          lastMessage: message,
+          unreadCount: 1
+        });
+      }
+      
     } catch (error) {
       console.error('Error handling send_message:', error);
       socket.emit('error', { message: 'Failed to send message' });

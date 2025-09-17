@@ -1,7 +1,7 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
 import { chatFileUpload } from "../middlewares/upload.js";
-import { startChat, getMyConversations, postMessage, getMessages, postMessageWithFiles } from "../controllers/chatController.js";
+import { startChat, getMyConversations, postMessage, getMessages, postMessageWithFiles, markAsRead } from "../controllers/chatController.js";
 
 const router = express.Router();
 
@@ -110,6 +110,27 @@ router.post("/messages", postMessage);
  *         description: Message with files
  */
 router.post("/messages/files", chatFileUpload.array('files', 5), postMessageWithFiles);
+
+/**
+ * @swagger
+ * /chat/{conversationId}/read:
+ *   post:
+ *     summary: Mark conversation as read
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Conversation marked as read
+ *       500:
+ *         description: Server error
+ */
+router.post("/:conversationId/read", markAsRead);
 
 /**
  * @swagger
