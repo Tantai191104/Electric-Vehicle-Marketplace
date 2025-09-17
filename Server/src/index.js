@@ -7,6 +7,16 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { connectDB } from "./config/db.js";
 
+// Load environment variables
+dotenv.config();
+
+// Fallback JWT_SECRET if not set
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️  JWT_SECRET not found in environment variables');
+  console.warn('⚠️  Using fallback JWT_SECRET (NOT SECURE FOR PRODUCTION)');
+  process.env.JWT_SECRET = 'fallback-jwt-secret-for-development-only';
+}
+
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
@@ -17,7 +27,6 @@ import zalopayRoutes from "./routes/zalopayRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { specs, swaggerUi } from "./config/swagger.js";
 
-dotenv.config();
 await connectDB(process.env.MONGO_URI);
 
 const app = express();
@@ -57,6 +66,7 @@ const io = new Server(server, {
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   console.log('Socket auth attempt with token:', token ? 'Present' : 'Missing');
+  console.log('JWT_SECRET available:', !!process.env.JWT_SECRET);
   
   if (!token) {
     console.log('No token provided');
@@ -71,6 +81,7 @@ io.use((socket, next) => {
     next();
   } catch (err) {
     console.log('Token verification failed:', err.message);
+    console.log('Token content:', token.substring(0, 50) + '...');
     next(new Error('Authentication error'));
   }
 });
