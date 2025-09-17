@@ -1,6 +1,7 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
-import { startChat, getMyConversations, postMessage, getMessages } from "../controllers/chatController.js";
+import { chatFileUpload } from "../middlewares/upload.js";
+import { startChat, getMyConversations, postMessage, getMessages, postMessageWithFiles } from "../controllers/chatController.js";
 
 const router = express.Router();
 
@@ -81,6 +82,34 @@ router.get("/", getMyConversations);
  *         description: Message
  */
 router.post("/messages", postMessage);
+
+/**
+ * @swagger
+ * /chat/messages/files:
+ *   post:
+ *     summary: Send a message with files
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               conversationId: { type: string }
+ *               text: { type: string }
+ *               files: 
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Message with files
+ */
+router.post("/messages/files", chatFileUpload.array('files', 5), postMessageWithFiles);
 
 /**
  * @swagger

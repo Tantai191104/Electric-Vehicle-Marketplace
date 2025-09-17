@@ -5,7 +5,12 @@ const messageSchema = new mongoose.Schema(
     conversationId: { type: mongoose.Schema.Types.ObjectId, ref: "Conversation", required: true, index: true },
     senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     text: { type: String, default: "" },
-    type: { type: String, enum: ["text", "image"], default: "text" },
+    type: { type: String, enum: ["text", "image", "file"], default: "text" },
+    files: [{ 
+      url: String, 
+      name: String, 
+      type: String 
+    }],
     isRead: { type: Boolean, default: false }
   },
   { timestamps: true }

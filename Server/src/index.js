@@ -97,21 +97,27 @@ io.on('connection', (socket) => {
   socket.on('send_message', async (data) => {
     try {
       console.log('Received send_message:', data);
-      const { conversationId, text, tempId } = data;
+      const { conversationId, text, tempId, files = [] } = data;
       
-      if (!conversationId || !text) {
-        socket.emit('error', { message: 'Missing conversationId or text' });
+      if (!conversationId || (!text && files.length === 0)) {
+        socket.emit('error', { message: 'Missing conversationId or content' });
         return;
       }
       
-      // Here you would save the message to database
-      // For now, we'll just broadcast it
+      // Import sendMessage function
+      const { sendMessage } = await import('./services/chatService.js');
+      
+      // Save message to database
+      const savedMessage = await sendMessage(conversationId, socket.userId, text || '', files);
+      
       const message = {
-        _id: Date.now().toString(),
-        text,
-        senderId: socket.userId,
-        conversationId,
-        createdAt: new Date().toISOString(),
+        _id: savedMessage._id,
+        text: savedMessage.text,
+        senderId: savedMessage.senderId,
+        conversationId: savedMessage.conversationId,
+        createdAt: savedMessage.createdAt,
+        files: savedMessage.files || [],
+        type: savedMessage.type,
         tempId // Include tempId for frontend confirmation
       };
       

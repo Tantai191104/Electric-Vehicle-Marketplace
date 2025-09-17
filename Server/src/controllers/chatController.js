@@ -15,8 +15,8 @@ export async function getMyConversations(req, res) {
 }
 
 export async function postMessage(req, res) {
-  const { conversationId, text } = sendMessageValidation.parse(req.body);
-  const message = await sendMessage(conversationId, req.user.sub, text);
+  const { conversationId, text, files = [] } = sendMessageValidation.parse(req.body);
+  const message = await sendMessage(conversationId, req.user.sub, text, files);
   res.status(201).json(message);
 }
 
@@ -24,6 +24,23 @@ export async function getMessages(req, res) {
   const { conversationId, page = 1, limit = 50 } = listMessagesValidation.parse({ ...req.query, conversationId: req.params.conversationId });
   const result = await listMessages(conversationId, Number(page), Number(limit));
   res.json(result);
+}
+
+export async function postMessageWithFiles(req, res) {
+  try {
+    const { conversationId, text = '' } = req.body;
+    const files = req.files ? req.files.map(file => ({
+      url: `/uploads/chat/${file.filename}`,
+      name: file.originalname,
+      type: file.mimetype
+    })) : [];
+    
+    const message = await sendMessage(conversationId, req.user.sub, text, files);
+    res.status(201).json({ message });
+  } catch (error) {
+    console.error('Error uploading chat files:', error);
+    res.status(500).json({ error: 'Failed to upload files' });
+  }
 }
 
 
