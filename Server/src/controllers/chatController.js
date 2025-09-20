@@ -56,23 +56,38 @@ export async function getMessages(req, res) {
 
 export async function postMessageWithFiles(req, res) {
   try {
+    console.log('=== POST MESSAGE WITH FILES DEBUG ===');
+    console.log('Request body:', req.body);
+    console.log('Request files:', req.files);
+    console.log('User:', req.user);
+    
     const { conversationId, text = '' } = req.body;
     
     // Validate required fields
     if (!conversationId) {
+      console.log('ERROR: conversationId is missing');
       return res.status(400).json({ error: 'conversationId is required' });
     }
     
-    // Process uploaded files
-    const files = req.files ? req.files.map(file => ({
-      url: `/uploads/chat/${file.filename}`,
-      name: file.originalname,
-      type: file.mimetype
-    })) : [];
+    if (!req.user || !req.user.sub) {
+      console.log('ERROR: User authentication missing');
+      return res.status(401).json({ error: 'User authentication required' });
+    }
     
-    console.log('Uploaded files:', files);
+    // Process uploaded files
+    const files = req.files ? req.files.map(file => {
+      console.log('Processing file:', file);
+      return {
+        url: `/uploads/chat/${file.filename}`,
+        name: file.originalname,
+        type: file.mimetype
+      };
+    }) : [];
+    
+    console.log('Processed files:', files);
     
     const message = await sendMessage(conversationId, req.user.sub, text, files);
+    console.log('Message created:', message);
     
     try {
       const io = req.app.get('io');
@@ -93,9 +108,12 @@ export async function postMessageWithFiles(req, res) {
       console.error('Socket error:', socketError);
     }
     
+    console.log('=== SUCCESS: Message sent ===');
     res.status(201).json({ message });
   } catch (error) {
-    console.error('Error uploading chat files:', error);
+    console.error('=== ERROR: Failed to upload files ===');
+    console.error('Error details:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ error: 'Failed to upload files' });
   }
 }
