@@ -1,5 +1,6 @@
 import { startConversation, listConversations, sendMessage, listMessages, markConversationAsRead } from "../services/chatService.js";
 import { startChatValidation, sendMessageValidation, listMessagesValidation } from "../validations/chat.validation.js";
+import cloudinary from "../config/cloudinary.js";
 
 export async function startChat(req, res) {
   const { productId, sellerId } = startChatValidation.parse(req.body);
@@ -74,17 +75,39 @@ export async function postMessageWithFiles(req, res) {
       return res.status(401).json({ error: 'User authentication required' });
     }
     
-    // Process uploaded files
-    const files = req.files ? req.files.map(file => {
-      console.log('Processing file:', file);
-      return {
-        url: `/uploads/chat/${file.filename}`,
-        name: file.originalname,
-        type: file.mimetype
-      };
-    }) : [];
-    
-    console.log('Processed files:', files);
+    // Process uploaded files - upload to Cloudinary
+    let files = [];
+    if (req.files && req.files.length > 0) {
+      console.log('Uploading files to Cloudinary...');
+      const uploadPromises = req.files.map((file) => new Promise((resolve) => {
+        const resource_type = file.mimetype.startsWith('video') ? 'video' : 'image';
+        cloudinary.uploader.upload_stream({ 
+          resource_type,
+          folder: 'chat-files' // Organize chat files in a separate folder
+        }, (err, uploaded) => {
+          if (err) {
+            console.error('Cloudinary upload error:', err);
+            return resolve({ success: false, error: err.message });
+          }
+          resolve({ 
+            success: true, 
+            url: uploaded.secure_url, 
+            name: file.originalname,
+            type: file.mimetype,
+            resource_type 
+          });
+        }).end(file.buffer);
+      }));
+
+      const results = await Promise.all(uploadPromises);
+      const successes = results.filter(r => r.success);
+      files = successes.map(result => ({
+        url: result.url,
+        name: result.name,
+        type: result.type
+      }));
+      console.log('Files uploaded to Cloudinary:', files);
+    }
     
     // Validate conversation exists
     const { default: Conversation } = await import('../models/Conversation.js');
