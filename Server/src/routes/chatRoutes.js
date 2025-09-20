@@ -110,14 +110,14 @@ router.post("/messages", postMessage);
  *         description: Message with files
  */
 router.post("/messages/files", (req, res, next) => {
-  chatFileUpload.array('files', 5)(req, res, (err) => {
+  chatFileUpload.array('files', 10)(req, res, (err) => {
     if (err) {
       console.error('Multer error:', err);
       if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'File too large. Maximum size is 10MB per file.' });
+        return res.status(400).json({ error: 'File too large. Maximum size is 50MB per file.' });
       }
       if (err.code === 'LIMIT_FILE_COUNT') {
-        return res.status(400).json({ error: 'Too many files. Maximum is 5 files.' });
+        return res.status(400).json({ error: 'Too many files. Maximum is 10 files.' });
       }
       if (err.code === 'LIMIT_UNEXPECTED_FILE') {
         return res.status(400).json({ error: 'Unexpected field name for file upload.' });
