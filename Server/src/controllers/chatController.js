@@ -106,10 +106,8 @@ export async function postMessageWithFiles(req, res) {
       }
     }
     
-    // Validate that we have either text or files
-    if (!text && files.length === 0) {
-      return res.status(400).json({ error: 'Either text or files must be provided' });
-    }
+    // Allow sending with just text, just files, or both
+    // No validation needed - both text and files can be empty
     
     // Validate conversation exists
     const { default: Conversation } = await import('../models/Conversation.js');

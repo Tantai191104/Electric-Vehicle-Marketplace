@@ -49,13 +49,20 @@ export async function listConversations(userId, page = 1, limit = 20) {
   return { items: conversationsWithUnread, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
 }
 
-export async function sendMessage(conversationId, senderId, text, files = []) {
-  const messageType = files.length > 0 ? (files.some(f => f.type?.startsWith('image/')) ? 'image' : 'file') : 'text';
+export async function sendMessage(conversationId, senderId, text = '', files = []) {
+  // Determine message type based on content
+  let messageType = 'text';
+  if (files.length > 0) {
+    messageType = files.some(f => f.type?.startsWith('image/')) ? 'image' : 'file';
+  }
+  
+  // If no text and no files, use a default message
+  const messageText = text || (files.length > 0 ? '' : '');
   
   const message = await Message.create({ 
     conversationId, 
     senderId, 
-    text, 
+    text: messageText, 
     type: messageType,
     files: files
   });
