@@ -57,13 +57,23 @@ export async function getMessages(req, res) {
 export async function postMessageWithFiles(req, res) {
   try {
     const { conversationId, text = '' } = req.body;
+    
+    // Validate required fields
+    if (!conversationId) {
+      return res.status(400).json({ error: 'conversationId is required' });
+    }
+    
+    // Process uploaded files
     const files = req.files ? req.files.map(file => ({
       url: `/uploads/chat/${file.filename}`,
       name: file.originalname,
       type: file.mimetype
     })) : [];
     
+    console.log('Uploaded files:', files);
+    
     const message = await sendMessage(conversationId, req.user.sub, text, files);
+    
     try {
       const io = req.app.get('io');
       if (io) {
@@ -79,7 +89,10 @@ export async function postMessageWithFiles(req, res) {
         io.to(`conversation_${conversationId}`).emit('new_message', { conversationId, message: payload });
         io.to(`conversation_${conversationId}`).emit('conversation_updated', { conversationId, lastMessage: payload, unreadCount: 1 });
       }
-    } catch {}
+    } catch (socketError) {
+      console.error('Socket error:', socketError);
+    }
+    
     res.status(201).json({ message });
   } catch (error) {
     console.error('Error uploading chat files:', error);
