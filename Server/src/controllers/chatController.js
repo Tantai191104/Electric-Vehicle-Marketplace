@@ -86,6 +86,22 @@ export async function postMessageWithFiles(req, res) {
     
     console.log('Processed files:', files);
     
+    // Validate conversation exists
+    const { default: Conversation } = await import('../models/Conversation.js');
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      console.log('ERROR: Conversation not found');
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+    
+    // Check if user is part of this conversation
+    const isParticipant = conversation.buyerId.toString() === req.user.sub || 
+                          conversation.sellerId.toString() === req.user.sub;
+    if (!isParticipant) {
+      console.log('ERROR: User not authorized for this conversation');
+      return res.status(403).json({ error: 'Not authorized for this conversation' });
+    }
+    
     const message = await sendMessage(conversationId, req.user.sub, text, files);
     console.log('Message created:', message);
     
