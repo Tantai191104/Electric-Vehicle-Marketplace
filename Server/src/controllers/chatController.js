@@ -57,71 +57,48 @@ export async function getMessages(req, res) {
 
 export async function postMessageWithFiles(req, res) {
   try {
-    console.log('=== POST MESSAGE WITH FILES DEBUG ===');
-    console.log('Request body:', req.body);
-    console.log('Request files:', req.files);
-    console.log('User:', req.user);
-    
     const { conversationId, text = '' } = req.body;
     
     // Validate required fields
     if (!conversationId) {
-      console.log('ERROR: conversationId is missing');
       return res.status(400).json({ error: 'conversationId is required' });
     }
     
     if (!req.user || !req.user.sub) {
-      console.log('ERROR: User authentication missing');
       return res.status(401).json({ error: 'User authentication required' });
     }
     
     // Process uploaded files - upload to Cloudinary
     let files = [];
     if (req.files && req.files.length > 0) {
-      console.log('Uploading files to Cloudinary...');
-      console.log('Files to upload:', req.files.map(f => ({ name: f.originalname, size: f.size, mimetype: f.mimetype })));
-      
       try {
         const uploadPromises = req.files.map((file) => new Promise((resolve) => {
-          console.log(`Uploading file: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`);
           const resource_type = file.mimetype.startsWith('video') ? 'video' : 'image';
           cloudinary.uploader.upload_stream({ 
             resource_type,
-            folder: 'chat-files' // Organize chat files in a separate folder
+            folder: 'chat-files'
           }, (err, uploaded) => {
             if (err) {
-              console.error('Cloudinary upload error for file:', file.originalname, err);
               return resolve({ success: false, error: err.message });
             }
-            console.log('Successfully uploaded to Cloudinary:', uploaded.secure_url);
             resolve({ 
               success: true, 
               url: uploaded.secure_url, 
               name: file.originalname,
-              type: file.mimetype,
-              resource_type 
+              type: file.mimetype
             });
           }).end(file.buffer);
         }));
 
         const results = await Promise.all(uploadPromises);
-        console.log('Upload results:', results);
-        
         const successes = results.filter(r => r.success);
-        const failures = results.filter(r => !r.success);
-        
-        if (failures.length > 0) {
-          console.error('Some files failed to upload:', failures);
-        }
         
         files = successes.map(result => ({
           url: result.url,
           name: result.name,
           type: result.type
         }));
-        console.log('Successfully uploaded files:', files);
       } catch (uploadError) {
-        console.error('Error during Cloudinary upload process:', uploadError);
         return res.status(500).json({ 
           error: 'Failed to upload files to cloud storage',
           details: uploadError.message 
@@ -131,7 +108,6 @@ export async function postMessageWithFiles(req, res) {
     
     // Validate that we have either text or files
     if (!text && files.length === 0) {
-      console.log('ERROR: No content provided (text or files required)');
       return res.status(400).json({ error: 'Either text or files must be provided' });
     }
     
@@ -139,7 +115,6 @@ export async function postMessageWithFiles(req, res) {
     const { default: Conversation } = await import('../models/Conversation.js');
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
-      console.log('ERROR: Conversation not found');
       return res.status(404).json({ error: 'Conversation not found' });
     }
     
@@ -147,22 +122,10 @@ export async function postMessageWithFiles(req, res) {
     const isParticipant = conversation.buyerId.toString() === req.user.sub || 
                           conversation.sellerId.toString() === req.user.sub;
     if (!isParticipant) {
-      console.log('ERROR: User not authorized for this conversation');
       return res.status(403).json({ error: 'Not authorized for this conversation' });
     }
     
-    console.log('Creating message with:', { conversationId, text, files });
-    let message;
-    try {
-      message = await sendMessage(conversationId, req.user.sub, text, files);
-      console.log('Message created:', message);
-    } catch (messageError) {
-      console.error('Error creating message:', messageError);
-      return res.status(500).json({ 
-        error: 'Failed to create message',
-        details: messageError.message 
-      });
-    }
+    const message = await sendMessage(conversationId, req.user.sub, text, files);
     
     try {
       const io = req.app.get('io');
@@ -183,12 +146,9 @@ export async function postMessageWithFiles(req, res) {
       console.error('Socket error:', socketError);
     }
     
-    console.log('=== SUCCESS: Message sent ===');
     res.status(201).json({ message });
   } catch (error) {
-    console.error('=== ERROR: Failed to upload files ===');
-    console.error('Error details:', error);
-    console.error('Error stack:', error.stack);
+    console.error('Error uploading chat files:', error);
     res.status(500).json({ error: 'Failed to upload files' });
   }
 }

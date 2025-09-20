@@ -50,34 +50,15 @@ export async function listConversations(userId, page = 1, limit = 20) {
 }
 
 export async function sendMessage(conversationId, senderId, text, files = []) {
-  console.log('=== SEND MESSAGE DEBUG ===');
-  console.log('conversationId:', conversationId);
-  console.log('senderId:', senderId);
-  console.log('text:', text);
-  console.log('files:', files);
-  console.log('files type:', typeof files);
-  console.log('files is array:', Array.isArray(files));
-  
   const messageType = files.length > 0 ? (files.some(f => f.type?.startsWith('image/')) ? 'image' : 'file') : 'text';
-  console.log('messageType:', messageType);
   
-  // Ensure files is properly formatted
-  const formattedFiles = files.map(file => ({
-    url: String(file.url),
-    name: String(file.name),
-    type: String(file.type)
-  }));
-  
-  const messageData = { 
+  const message = await Message.create({ 
     conversationId, 
     senderId, 
     text, 
     type: messageType,
-    files: formattedFiles
-  };
-  console.log('messageData:', JSON.stringify(messageData, null, 2));
-  
-  const message = await Message.create(messageData);
+    files: files
+  });
   
   // Get conversation to determine who should get unread count
   const conversation = await Conversation.findById(conversationId);
