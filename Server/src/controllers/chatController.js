@@ -79,34 +79,60 @@ export async function postMessageWithFiles(req, res) {
     let files = [];
     if (req.files && req.files.length > 0) {
       console.log('Uploading files to Cloudinary...');
-      const uploadPromises = req.files.map((file) => new Promise((resolve) => {
-        const resource_type = file.mimetype.startsWith('video') ? 'video' : 'image';
-        cloudinary.uploader.upload_stream({ 
-          resource_type,
-          folder: 'chat-files' // Organize chat files in a separate folder
-        }, (err, uploaded) => {
-          if (err) {
-            console.error('Cloudinary upload error:', err);
-            return resolve({ success: false, error: err.message });
-          }
-          resolve({ 
-            success: true, 
-            url: uploaded.secure_url, 
-            name: file.originalname,
-            type: file.mimetype,
-            resource_type 
-          });
-        }).end(file.buffer);
-      }));
+      console.log('Files to upload:', req.files.map(f => ({ name: f.originalname, size: f.size, mimetype: f.mimetype })));
+      
+      try {
+        const uploadPromises = req.files.map((file) => new Promise((resolve) => {
+          console.log(`Uploading file: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`);
+          const resource_type = file.mimetype.startsWith('video') ? 'video' : 'image';
+          cloudinary.uploader.upload_stream({ 
+            resource_type,
+            folder: 'chat-files' // Organize chat files in a separate folder
+          }, (err, uploaded) => {
+            if (err) {
+              console.error('Cloudinary upload error for file:', file.originalname, err);
+              return resolve({ success: false, error: err.message });
+            }
+            console.log('Successfully uploaded to Cloudinary:', uploaded.secure_url);
+            resolve({ 
+              success: true, 
+              url: uploaded.secure_url, 
+              name: file.originalname,
+              type: file.mimetype,
+              resource_type 
+            });
+          }).end(file.buffer);
+        }));
 
-      const results = await Promise.all(uploadPromises);
-      const successes = results.filter(r => r.success);
-      files = successes.map(result => ({
-        url: result.url,
-        name: result.name,
-        type: result.type
-      }));
-      console.log('Files uploaded to Cloudinary:', files);
+        const results = await Promise.all(uploadPromises);
+        console.log('Upload results:', results);
+        
+        const successes = results.filter(r => r.success);
+        const failures = results.filter(r => !r.success);
+        
+        if (failures.length > 0) {
+          console.error('Some files failed to upload:', failures);
+        }
+        
+        files = successes.map(result => ({
+          url: result.url,
+          name: result.name,
+          type: result.type
+        }));
+        console.log('Successfully uploaded files:', files);
+      } catch (uploadError) {
+        console.error('Error during Cloudinary upload process:', uploadError);
+        return res.status(500).json({ 
+          error: 'Failed to upload files to cloud storage',
+          details: uploadError.message 
+        });
+      }
+    }
+    
+    // Validate that we have either text or files
+    if (!text && files.length === 0) {
+      console.log('ERROR: No content provided (text or files required)');
+      return res.status(400).json({ error: 'Either text or files must be provided' });
     }
     
     // Validate conversation exists
@@ -125,8 +151,18 @@ export async function postMessageWithFiles(req, res) {
       return res.status(403).json({ error: 'Not authorized for this conversation' });
     }
     
-    const message = await sendMessage(conversationId, req.user.sub, text, files);
-    console.log('Message created:', message);
+    console.log('Creating message with:', { conversationId, text, files });
+    let message;
+    try {
+      message = await sendMessage(conversationId, req.user.sub, text, files);
+      console.log('Message created:', message);
+    } catch (messageError) {
+      console.error('Error creating message:', messageError);
+      return res.status(500).json({ 
+        error: 'Failed to create message',
+        details: messageError.message 
+      });
+    }
     
     try {
       const io = req.app.get('io');
