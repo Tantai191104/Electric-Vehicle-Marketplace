@@ -110,6 +110,11 @@ router.post("/messages", postMessage);
  *         description: Message with files
  */
 router.post("/messages/files", (req, res, next) => {
+  console.log('=== MULTER MIDDLEWARE DEBUG ===');
+  console.log('Content-Type:', req.headers['content-type']);
+  console.log('Content-Length:', req.headers['content-length']);
+  console.log('================================');
+  
   chatFileUpload.array('files', 10)(req, res, (err) => {
     if (err) {
       console.error('Multer error:', err);
@@ -124,6 +129,12 @@ router.post("/messages/files", (req, res, next) => {
       }
       return res.status(400).json({ error: 'File upload error: ' + err.message });
     }
+    
+    console.log('=== MULTER SUCCESS ===');
+    console.log('Files received:', req.files ? req.files.length : 0);
+    console.log('Body:', req.body);
+    console.log('======================');
+    
     next();
   });
 }, postMessageWithFiles);
