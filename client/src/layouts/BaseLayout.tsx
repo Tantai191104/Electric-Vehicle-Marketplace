@@ -7,7 +7,7 @@ const BaseLayout: React.FC = () => {
   return (
     <div className="subpixel-antialiased bg-gray-100 min-h-screen">
       <Header />
-      <main>
+      <main className="min-h-screen">
         <Outlet />
       </main>
       <Footer />

@@ -6,6 +6,11 @@ import HomePage from "@/pages/Home/HomePage";
 import ProfilePage from "@/pages/profile/ProfilePage";
 import type { JSX } from "react";
 import StandardLayout from "@/layouts/StandardLayout";
+import CarDetailPage from "@/pages/detail/Car/CarDetailPage";
+import CarProductList from "@/pages/Product/Car/CarProductList";
+import MotorbikeProductList from "@/pages/Product/Motorbike/MotorbikeProductList";
+import MotorbikeDetailPage from "@/pages/detail/Motorbike/MotorbikeDetailPage";
+
 
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
@@ -48,7 +53,11 @@ export default function App() {
           <Route path="/" element={animatePage(<HomePage />)} />
         </Route>
         <Route element={<StandardLayout />}>
+          <Route path="/cars" element={animatePage(<CarProductList />)} />
+          <Route path="/motorbikes" element={animatePage(<MotorbikeProductList />)} />
+          <Route path="/motorbikes/detail/:id" element={animatePage(<MotorbikeDetailPage />)} />
           <Route path="/profile" element={animatePage(<ProfilePage />)} />
+          <Route path="/cars/detail/:id" element={animatePage(<CarDetailPage />)} />
         </Route>
       </Routes>
     </AnimatePresence>

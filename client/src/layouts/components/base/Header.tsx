@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   AiOutlineMenu,
-  AiOutlineHeart,
   AiOutlineUser,
   AiOutlineBell,
   AiOutlinePlusCircle,
@@ -13,6 +12,7 @@ import UserDropdown from "./header/UserDropdown";
 import CategoryDropdown from "./header/CategoryDropdown";
 import LocationDropdown from "./header/LocationDropdown";
 import StickySearchBar from "./header/StickySearchBar";
+import { IoCartOutline } from "react-icons/io5";
 
 const navLinks = [
   { label: "Chợ Tốt", href: "#" },
@@ -78,7 +78,7 @@ const Header: React.FC = () => {
             size="icon"
             className="text-yellow-900 h-12 w-12"
           >
-            <AiOutlineHeart size={32} />
+            <IoCartOutline size={32} />
           </Button>
           <Button
             variant="ghost"
