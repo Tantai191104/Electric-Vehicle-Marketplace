@@ -8,7 +8,7 @@ const StandardLayout: React.FC = () => {
   return (
     <div className="subpixel-antialiased">
       <FixedHeader />
-      <main>
+      <main className="min-h-screen">
         <Outlet />
       </main>
       <Footer />
