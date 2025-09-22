@@ -6,10 +6,10 @@ const messageSchema = new mongoose.Schema(
     senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     text: { type: String, default: "" },
     type: { type: String, enum: ["text", "image", "file"], default: "text" },
-    files: [{ 
-      url: String, 
-      name: String, 
-      type: String 
+    files: [{
+      url: { type: String, required: true },
+      name: { type: String, required: true },
+      type: { type: String, required: true }
     }],
     isRead: { type: Boolean, default: false }
   },

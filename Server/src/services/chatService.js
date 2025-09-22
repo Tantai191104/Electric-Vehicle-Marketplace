@@ -49,15 +49,31 @@ export async function listConversations(userId, page = 1, limit = 20) {
   return { items: conversationsWithUnread, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
 }
 
-export async function sendMessage(conversationId, senderId, text, files = []) {
-  const messageType = files.length > 0 ? (files.some(f => f.type?.startsWith('image/')) ? 'image' : 'file') : 'text';
+export async function sendMessage(conversationId, senderId, text = '', files = []) {
+  console.log('=== SEND MESSAGE DEBUG ===');
+  console.log('conversationId:', conversationId);
+  console.log('senderId:', senderId);
+  console.log('text:', text);
+  console.log('files:', files);
+  console.log('files length:', files.length);
+  
+  // Determine message type based on content
+  let messageType = 'text';
+  if (files && files.length > 0) {
+    messageType = files.some(f => f.type?.startsWith('image/')) ? 'image' : 'file';
+  }
+  
+  console.log('messageType:', messageType);
+  
   const message = await Message.create({ 
     conversationId, 
     senderId, 
-    text, 
+    text: text || '', 
     type: messageType,
-    files: files
+    files: files || []
   });
+  
+  console.log('Created message:', message);
   
   // Get conversation to determine who should get unread count
   const conversation = await Conversation.findById(conversationId);

@@ -109,7 +109,35 @@ router.post("/messages", postMessage);
  *       201:
  *         description: Message with files
  */
-router.post("/messages/files", chatFileUpload.array('files', 5), postMessageWithFiles);
+router.post("/messages/files", (req, res, next) => {
+  console.log('=== MULTER MIDDLEWARE DEBUG ===');
+  console.log('Content-Type:', req.headers['content-type']);
+  console.log('Content-Length:', req.headers['content-length']);
+  console.log('================================');
+  
+  chatFileUpload.array('files', 10)(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large. Maximum size is 50MB per file.' });
+      }
+      if (err.code === 'LIMIT_FILE_COUNT') {
+        return res.status(400).json({ error: 'Too many files. Maximum is 10 files.' });
+      }
+      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({ error: 'Unexpected field name for file upload.' });
+      }
+      return res.status(400).json({ error: 'File upload error: ' + err.message });
+    }
+    
+    console.log('=== MULTER SUCCESS ===');
+    console.log('Files received:', req.files ? req.files.length : 0);
+    console.log('Body:', req.body);
+    console.log('======================');
+    
+    next();
+  });
+}, postMessageWithFiles);
 
 /**
  * @swagger
