@@ -67,11 +67,12 @@ export async function calcShippingFee(req, res) {
     try {
       payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
     } catch (e) {
-      return res.status(400).json({
-        code: 400,
-        message: `Lỗi gọi API: corev2_tenant_order_calculate_fee - ${String(e?.message || 'Phản hồi không phải JSON')}`,
-        data: String(resp.data || ''),
-      });
+      // Cloudflare challenge returns HTML; detect and map to 502
+      const text = String(resp.data || '');
+      if (/<!DOCTYPE html>/i.test(text) && /Just a moment/i.test(text)) {
+        return res.status(502).json({ code: 502, message: 'GATEWAY_BLOCKED: Cloudflare challenge khi gọi GHN', data: null });
+      }
+      return res.status(400).json({ code: 400, message: `Lỗi gọi API: corev2_tenant_order_calculate_fee - ${String(e?.message || 'Phản hồi không phải JSON')}`, data: text });
     }
     // Some environments wrap JSON into a JSON string; attempt a second parse if needed
     if (payload && typeof payload.message === 'string') {
@@ -92,6 +93,9 @@ export async function calcShippingFee(req, res) {
     // Attempt to surface raw text when GHN returns non-JSON error
     const raw = err.response?.data;
     if (typeof raw === 'string') {
+      if (/<!DOCTYPE html>/i.test(raw) && /Just a moment/i.test(raw)) {
+        return res.status(502).json({ code: 502, message: 'GATEWAY_BLOCKED: Cloudflare challenge khi gọi GHN', data: null });
+      }
       let msg = raw;
       try {
         const inner = JSON.parse(raw);
@@ -265,7 +269,11 @@ export async function createShippingOrder(req, res) {
     try {
       payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
     } catch (e) {
-      return res.status(400).json({ code: 400, message: String(resp.data || ''), data: null });
+      const text = String(resp.data || '');
+      if (/<!DOCTYPE html>/i.test(text) && /Just a moment/i.test(text)) {
+        return res.status(502).json({ code: 502, message: 'GATEWAY_BLOCKED: Cloudflare challenge khi tạo đơn GHN', data: null });
+      }
+      return res.status(400).json({ code: 400, message: text, data: null });
     }
     if (payload && typeof payload.message === 'string') {
       const msg = payload.message.trim();
@@ -365,6 +373,9 @@ export async function createShippingOrder(req, res) {
     const status = err.response?.status || 500;
     const raw = err.response?.data;
     if (typeof raw === 'string') {
+      if (/<!DOCTYPE html>/i.test(raw) && /Just a moment/i.test(raw)) {
+        return res.status(502).json({ code: 502, message: 'GATEWAY_BLOCKED: Cloudflare challenge khi tạo đơn GHN', data: null });
+      }
       try { return res.status(status).json(JSON.parse(raw)); } catch { return res.status(status).json({ code: status, message: raw, data: null }); }
     }
     return res.status(status).json(err.response?.data || { error: err.message });
