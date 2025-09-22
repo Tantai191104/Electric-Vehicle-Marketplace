@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
-import { calcShippingFee, createShippingOrder, getShippingOrderDetail, proxyGhnFee } from "../controllers/shippingController.js";
+import { calcShippingFee, createShippingOrder, getShippingOrderDetail } from "../controllers/shippingController.js";
 
 const router = express.Router();
 
@@ -89,86 +89,6 @@ router.use(authenticate);
  *         description: Unauthorized
  */
 router.post("/fee", calcShippingFee);
-
-/**
- * @swagger
- * /shipping/fee-proxy:
- *   post:
- *     summary: Calculate shipping fee via GHN (Proxy endpoint for Swagger)
- *     description: This endpoint acts as a proxy to GHN API, avoiding Cloudflare protection issues when called from Swagger UI
- *     tags: [Shipping]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               product_id:
- *                 type: string
- *                 description: Optional. If provided, server uses product's length/width/height/weight
- *               service_type_id:
- *                 type: integer
- *                 default: 2
- *                 description: Fixed to 2 (Light service)
- *               from_district_id:
- *                 type: integer
- *               from_ward_code:
- *                 type: string
- *               to_district_id:
- *                 type: integer
- *               to_ward_code:
- *                 type: string
- *               length:
- *                 type: integer
- *                 default: 150
- *               width:
- *                 type: integer
- *                 default: 60
- *               height:
- *                 type: integer
- *                 default: 90
- *               weight:
- *                 type: integer
- *                 default: 50000
- *               insurance_value:
- *                 type: integer
- *                 default: 5000000
- *               cod_value:
- *                 type: integer
- *                 default: 0
- *               coupon:
- *                 nullable: true
- *                 type: string
- *           example:
- *             service_type_id: 2
- *             from_district_id: 1442
- *             from_ward_code: "21211"
- *             to_district_id: 1820
- *             to_ward_code: "030712"
- *             length: 30
- *             width: 40
- *             height: 20
- *             weight: 3000
- *             insurance_value: 0
- *             coupon: null
- *     responses:
- *       200:
- *         description: GHN fee response (same as /fee endpoint)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Internal server error
- */
-router.post("/fee-proxy", proxyGhnFee);
 
 /**
  * @swagger
