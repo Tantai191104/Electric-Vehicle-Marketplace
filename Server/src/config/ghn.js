@@ -9,6 +9,16 @@ export const ghnClient = axios.create({
   baseURL: GHN_BASE_URL,
   headers: {
     "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9,vi;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "cross-site",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
   },
   timeout: 15000,
 });
@@ -19,7 +29,15 @@ export function getGhnHeaders() {
   if (!token || !shopId) {
     throw new Error("Missing GHN_TOKEN or GHN_SHOP_ID in environment");
   }
-  return { Token: token, ShopId: shopId };
+  return { 
+    Token: token, 
+    ShopId: shopId,
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9,vi;q=0.8",
+    "Referer": "https://dev-online-gateway.ghn.vn/",
+    "Origin": "https://dev-online-gateway.ghn.vn",
+  };
 }
 
 
