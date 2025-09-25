@@ -124,8 +124,10 @@ export async function handleZaloPayCallback(req, res) {
     // Update user wallet
     const user = await User.findById(topupRecord.userId);
     if (user) {
-      user.wallet.balance += topupRecord.amount;
-      user.wallet.totalDeposited += topupRecord.amount;
+      const balanceBefore = user.wallet?.balance || 0;
+      user.wallet = user.wallet || {};
+      user.wallet.balance = balanceBefore + topupRecord.amount;
+      user.wallet.totalDeposited = (user.wallet.totalDeposited || 0) + topupRecord.amount;
       await user.save();
 
       // Create wallet transaction record
@@ -133,14 +135,13 @@ export async function handleZaloPayCallback(req, res) {
         userId: topupRecord.userId,
         type: 'deposit',
         amount: topupRecord.amount,
+        balanceBefore,
+        balanceAfter: user.wallet.balance,
         description: `Nạp tiền qua ZaloPay - ${app_trans_id}`,
         status: 'completed',
-        reference: {
-          type: 'zalopay_topup',
-          id: topupRecord._id,
-          app_trans_id,
-          zp_trans_id
-        }
+        paymentMethod: 'e_wallet',
+        reference: `zalopay:${app_trans_id}`,
+        metadata: { app_trans_id, zp_trans_id }
       });
 
       console.log(`🎉 Successfully topped up ${topupRecord.amount} VND for user ${topupRecord.userId}`);
@@ -194,8 +195,10 @@ export async function queryOrderStatus(req, res) {
         // Update user wallet
         const user = await User.findById(userId);
         if (user) {
-          user.wallet.balance += topupRecord.amount;
-          user.wallet.totalDeposited += topupRecord.amount;
+          const balanceBefore = user.wallet?.balance || 0;
+          user.wallet = user.wallet || {};
+          user.wallet.balance = balanceBefore + topupRecord.amount;
+          user.wallet.totalDeposited = (user.wallet.totalDeposited || 0) + topupRecord.amount;
           await user.save();
 
           // Create wallet transaction record
@@ -203,14 +206,13 @@ export async function queryOrderStatus(req, res) {
             userId,
             type: 'deposit',
             amount: topupRecord.amount,
+            balanceBefore,
+            balanceAfter: user.wallet.balance,
             description: `Nạp tiền qua ZaloPay - ${topupRecord.app_trans_id}`,
             status: 'completed',
-            reference: {
-              type: 'zalopay_topup',
-              id: topupRecord._id,
-              app_trans_id: topupRecord.app_trans_id,
-              zp_trans_id: topupRecord.zp_trans_id
-            }
+            paymentMethod: 'e_wallet',
+            reference: `zalopay:${topupRecord.app_trans_id}`,
+            metadata: { app_trans_id: topupRecord.app_trans_id, zp_trans_id: topupRecord.zp_trans_id }
           });
         }
       } else if (zaloPayResult.data.return_code === 2) {
