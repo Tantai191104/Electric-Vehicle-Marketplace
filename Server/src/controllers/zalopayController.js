@@ -11,6 +11,7 @@ export async function createTopupOrder(req, res) {
   try {
     const { amount, description } = req.body;
     const userId = req.user.sub;
+    console.log(`[ZLP][CREATE] userId=${userId} amount=${amount} desc=${description || ''}`);
 
     // Validate amount
     if (!amount || amount < 1000) {
@@ -29,6 +30,7 @@ export async function createTopupOrder(req, res) {
 
     // Generate unique order ID
     const orderId = `topup_${userId}_${Date.now()}_${uuidv4().slice(0, 8)}`;
+    console.log(`[ZLP][CREATE] Generated orderId=${orderId}`);
 
     // Create ZaloPay order
     const zaloPayResult = await createZaloPayOrder({
@@ -39,12 +41,14 @@ export async function createTopupOrder(req, res) {
     });
 
     if (!zaloPayResult.success) {
+      console.warn(`[ZLP][CREATE][FAIL] orderId=${orderId} userId=${userId} error=${zaloPayResult.error}`);
       return res.status(400).json({
         error: 'ZaloPay order creation failed',
         message: zaloPayResult.error,
         zalopay: zaloPayResult.zalopay || zaloPayResult.details
       });
     }
+    console.log(`[ZLP][CREATE][OK] orderId=${orderId} app_trans_id=${zaloPayResult.data?.app_trans_id}`);
 
     // Save topup record to database
     const topupRecord = await WalletTopup.create({
@@ -59,6 +63,7 @@ export async function createTopupOrder(req, res) {
       ip_address: req.ip,
       user_agent: req.get('User-Agent')
     });
+    console.log(`[ZLP][CREATE][DB] topupId=${topupRecord._id} orderId=${topupRecord.orderId} status=${topupRecord.status}`);
 
     res.json({
       success: true,
@@ -73,7 +78,7 @@ export async function createTopupOrder(req, res) {
     });
 
   } catch (error) {
-    console.error('Create topup order error:', error);
+    console.error('[ZLP][CREATE][ERROR]', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'Không thể tạo đơn hàng nạp tiền'
@@ -87,8 +92,7 @@ export async function createTopupOrder(req, res) {
 export async function handleZaloPayCallback(req, res) {
   try {
     const { data, mac } = req.body;
-    
-    console.log('📥 ZaloPay callback received:', req.body);
+    console.log('📥 [ZLP][CALLBACK] received payload');
 
     // Validate MAC
     if (!validateCallbackMAC(data, mac)) {
@@ -101,7 +105,7 @@ export async function handleZaloPayCallback(req, res) {
 
     // Parse callback data
     const callbackData = JSON.parse(data);
-    console.log('✅ Parsed callback data:', callbackData);
+    console.log('✅ [ZLP][CALLBACK] parsed', { app_trans_id: callbackData?.app_trans_id, amount: callbackData?.amount });
 
     const { app_trans_id, zp_trans_id, server_time, amount } = callbackData;
 
@@ -119,7 +123,7 @@ export async function handleZaloPayCallback(req, res) {
     topupRecord.callback_data = callbackData;
     await topupRecord.save();
 
-    console.log(`✅ Updated topup record for app_trans_id: ${app_trans_id}`);
+    console.log(`✅ [ZLP][CALLBACK] updated topup: app_trans_id=${app_trans_id} status=${topupRecord.status}`);
 
     // Update user wallet
     const user = await User.findById(topupRecord.userId);
@@ -131,7 +135,7 @@ export async function handleZaloPayCallback(req, res) {
       await user.save();
 
       // Create wallet transaction record
-      await WalletTransaction.create({
+      const trx = await WalletTransaction.create({
         userId: topupRecord.userId,
         type: 'deposit',
         amount: topupRecord.amount,
@@ -143,8 +147,7 @@ export async function handleZaloPayCallback(req, res) {
         reference: `zalopay:${app_trans_id}`,
         metadata: { app_trans_id, zp_trans_id }
       });
-
-      console.log(`🎉 Successfully topped up ${topupRecord.amount} VND for user ${topupRecord.userId}`);
+      console.log(`🎉 [ZLP][CALLBACK] deposit success user=${topupRecord.userId} amount=${topupRecord.amount} balance ${balanceBefore} -> ${user.wallet.balance} trxId=${trx._id}`);
     } else {
       console.warn(`⚠️ User not found: ${topupRecord.userId}`);
     }
@@ -183,7 +186,9 @@ export async function queryOrderStatus(req, res) {
 
     // Query ZaloPay status if still pending
     if (topupRecord.status === 'pending') {
+      console.log(`[ZLP][QUERY] orderId=${orderId} app_trans_id=${topupRecord.app_trans_id} status=pending -> querying ZaloPay`);
       const zaloPayResult = await queryZaloPayOrder(topupRecord.app_trans_id);
+      console.log('[ZLP][QUERY] result', { return_code: zaloPayResult?.data?.return_code, zp_trans_id: zaloPayResult?.data?.zp_trans_id });
       
       if (zaloPayResult.success && zaloPayResult.data.return_code === 1) {
         // Payment successful, update record
@@ -191,6 +196,7 @@ export async function queryOrderStatus(req, res) {
         topupRecord.zp_trans_id = zaloPayResult.data.zp_trans_id;
         topupRecord.payment_time = new Date();
         await topupRecord.save();
+        console.log(`[ZLP][QUERY][OK] app_trans_id=${topupRecord.app_trans_id} marked success`);
 
         // Update user wallet
         const user = await User.findById(userId);
@@ -202,7 +208,7 @@ export async function queryOrderStatus(req, res) {
           await user.save();
 
           // Create wallet transaction record
-          await WalletTransaction.create({
+          const trx = await WalletTransaction.create({
             userId,
             type: 'deposit',
             amount: topupRecord.amount,
@@ -214,11 +220,13 @@ export async function queryOrderStatus(req, res) {
             reference: `zalopay:${topupRecord.app_trans_id}`,
             metadata: { app_trans_id: topupRecord.app_trans_id, zp_trans_id: topupRecord.zp_trans_id }
           });
+          console.log(`[ZLP][QUERY][TRX] user=${userId} amount=${topupRecord.amount} balance ${balanceBefore} -> ${user.wallet.balance} trxId=${trx._id}`);
         }
       } else if (zaloPayResult.data.return_code === 2) {
         // Payment failed
         topupRecord.status = 'failed';
         await topupRecord.save();
+        console.warn(`[ZLP][QUERY][FAILED] app_trans_id=${topupRecord.app_trans_id}`);
       }
     }
 
