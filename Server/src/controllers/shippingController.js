@@ -420,3 +420,105 @@ export async function getShippingOrderDetail(req, res) {
   }
 }
 
+// Cancel GHN order(s) and process local refund
+const cancelSchema = z.object({
+  order_codes: z.array(z.string().min(1)).nonempty()
+}).or(z.object({ order_code: z.string().min(1) }));
+
+export async function cancelShippingOrder(req, res) {
+  try {
+    const parsed = cancelSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues?.[0]?.message || 'Validation error' });
+    }
+    const headers = getGhnHeaders();
+    const order_codes = Array.isArray(parsed.data.order_codes)
+      ? parsed.data.order_codes
+      : [parsed.data.order_code];
+
+    // Call GHN cancel
+    const resp = await ghnClient.post('/v2/switch-status/cancel', { order_codes }, {
+      headers,
+      responseType: 'text',
+      transformResponse: [(x) => x],
+    });
+    let payload;
+    try { payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data; }
+    catch { return res.status(400).json({ code: 400, message: String(resp.data || ''), data: null }); }
+    if (payload && typeof payload.message === 'string') {
+      const msg = payload.message.trim();
+      if ((msg.startsWith('{') && msg.endsWith('}')) || (msg.startsWith('[') && msg.endsWith(']'))) {
+        try { const inner = JSON.parse(msg); if (inner && typeof inner === 'object') payload = inner; } catch {}
+      }
+    }
+
+    // Post-process: refund wallet and update local order for successful cancellations
+    const buyerId = req.user?.sub || req.user?.id;
+    const results = [];
+    const list = Array.isArray(payload?.data) ? payload.data : [];
+    for (const item of list) {
+      const code = item?.order_code;
+      const ok = !!item?.result;
+      let local = { updated: false, refunded: false };
+      try {
+        if (ok && code) {
+          const orderDoc = await Order.findOne({ $or: [
+            { orderNumber: code },
+            { 'shipping.trackingNumber': code },
+          ] });
+          if (orderDoc) {
+            // Only allow buyer to trigger refund of their own order
+            if (String(orderDoc.buyerId) !== String(buyerId)) {
+              results.push({ order_code: code, result: false, message: 'Not your order', local });
+              continue;
+            }
+            if (orderDoc.status !== 'cancelled') {
+              orderDoc.status = 'cancelled';
+              orderDoc.timeline.push({ status: 'cancelled', description: 'Hủy đơn hàng', updatedBy: buyerId });
+              await orderDoc.save();
+              local.updated = true;
+
+              // Refund wallet
+              const amount = Math.max(0, Number(orderDoc.finalAmount) || 0);
+              if (amount > 0) {
+                const user = await User.findById(orderDoc.buyerId);
+                if (user) {
+                  const balanceBefore = user.wallet?.balance || 0;
+                  user.wallet.balance = balanceBefore + amount;
+                  await user.save();
+                  await WalletTransaction.create({
+                    userId: user._id,
+                    type: 'refund',
+                    amount,
+                    balanceBefore,
+                    balanceAfter: user.wallet.balance,
+                    description: 'Hủy đơn hàng - hoàn tiền đã thanh toán',
+                    status: 'completed',
+                    reference: code,
+                    metadata: { orderId: code }
+                  });
+                  local.refunded = true;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // continue aggregating, include error message
+        results.push({ order_code: code, result: false, message: e?.message || 'Local refund error', local });
+        continue;
+      }
+      results.push({ order_code: code, result: ok, message: item?.message || 'OK', local });
+    }
+
+    return res.json({ code: payload?.code ?? 200, message: payload?.message ?? 'Success', data: results });
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const raw = err.response?.data;
+    if (typeof raw === 'string') {
+      try { return res.status(status).json(JSON.parse(raw)); } catch { return res.status(status).json({ code: status, message: raw, data: null }); }
+    }
+    return res.status(status).json(err.response?.data || { error: err.message });
+  }
+}
+

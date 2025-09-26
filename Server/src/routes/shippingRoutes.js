@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
-import { calcShippingFee, createShippingOrder, getShippingOrderDetail } from "../controllers/shippingController.js";
+import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShippingOrder } from "../controllers/shippingController.js";
 
 const router = express.Router();
 
@@ -276,6 +276,38 @@ router.post("/order", createShippingOrder);
  *         description: GHN order detail
  */
 router.post("/order/detail", getShippingOrderDetail);
+
+/**
+ * @swagger
+ * /shipping/order/cancel:
+ *   post:
+ *     summary: Cancel GHN order(s) and refund wallet if applicable
+ *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             oneOf:
+ *               - type: object
+ *                 properties:
+ *                   order_code:
+ *                     type: string
+ *                     example: "5E3NK3RS"
+ *               - type: object
+ *                 properties:
+ *                   order_codes:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     example: ["5E3NK3RS", "ABC123"]
+ *     responses:
+ *       200:
+ *         description: Cancel result and local refund summary
+ */
+router.post("/order/cancel", cancelShippingOrder);
 
 export default router;
 
