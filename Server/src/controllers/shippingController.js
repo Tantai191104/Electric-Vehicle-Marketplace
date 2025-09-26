@@ -420,6 +420,47 @@ export async function getShippingOrderDetail(req, res) {
   }
 }
 
+// Mark GHN order(s) as return (switch-status/return)
+const returnSchema = z.object({
+  order_codes: z.array(z.string().min(1)).nonempty()
+}).or(z.object({ order_code: z.string().min(1) }));
+
+export async function returnShippingOrder(req, res) {
+  try {
+    const parsed = returnSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues?.[0]?.message || 'Validation error' });
+    }
+    const headers = getGhnHeaders();
+    const order_codes = Array.isArray(parsed.data.order_codes)
+      ? parsed.data.order_codes
+      : [parsed.data.order_code];
+
+    const resp = await ghnClient.post('/v2/switch-status/return', { order_codes }, {
+      headers,
+      responseType: 'text',
+      transformResponse: [(x) => x],
+    });
+    let payload;
+    try { payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data; }
+    catch { return res.status(400).json({ code: 400, message: String(resp.data || ''), data: null }); }
+    if (payload && typeof payload.message === 'string') {
+      const msg = payload.message.trim();
+      if ((msg.startsWith('{') && msg.endsWith('}')) || (msg.startsWith('[') && msg.endsWith(']'))) {
+        try { const inner = JSON.parse(msg); if (inner && typeof inner === 'object') payload = inner; } catch {}
+      }
+    }
+    return res.json(payload);
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const raw = err.response?.data;
+    if (typeof raw === 'string') {
+      try { return res.status(status).json(JSON.parse(raw)); } catch { return res.status(status).json({ code: status, message: raw, data: null }); }
+    }
+    return res.status(status).json(err.response?.data || { error: err.message });
+  }
+}
+
 // Cancel GHN order(s) and process local refund
 const cancelSchema = z.object({
   order_codes: z.array(z.string().min(1)).nonempty()
@@ -512,6 +553,191 @@ export async function cancelShippingOrder(req, res) {
     }
 
     return res.json({ code: payload?.code ?? 200, message: payload?.message ?? 'Success', data: results });
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const raw = err.response?.data;
+    if (typeof raw === 'string') {
+      try { return res.status(status).json(JSON.parse(raw)); } catch { return res.status(status).json({ code: status, message: raw, data: null }); }
+    }
+    return res.status(status).json(err.response?.data || { error: err.message });
+  }
+}
+
+// Sync GHN order status and process refund when returned
+const syncSchema = z.object({ order_code: z.string().min(1) });
+
+export async function syncShippingOrderStatus(req, res) {
+  try {
+    const parsed = syncSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues?.[0]?.message || 'Validation error' });
+    }
+    const { order_code } = parsed.data;
+    const headers = getGhnHeaders();
+
+    // Fetch status from GHN
+    const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code }, {
+      headers,
+      responseType: 'text',
+      transformResponse: [(x) => x],
+    });
+    let payload;
+    try { payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data; }
+    catch { return res.status(400).json({ code: 400, message: String(resp.data || ''), data: null }); }
+    if (payload && typeof payload.message === 'string') {
+      const msg = payload.message.trim();
+      if ((msg.startsWith('{') && msg.endsWith('}')) || (msg.startsWith('[') && msg.endsWith(']'))) {
+        try { const inner = JSON.parse(msg); if (inner && typeof inner === 'object') payload = inner; } catch {}
+      }
+    }
+
+    const data = payload?.data || payload || {};
+    const ghnStatus = (data?.status || data?.current_status || '').toString().toLowerCase();
+
+    // Update local order
+    const orderDoc = await Order.findOne({ $or: [
+      { orderNumber: order_code },
+      { 'shipping.trackingNumber': order_code },
+    ] });
+    if (!orderDoc) {
+      return res.json({ code: 200, message: 'OK', data: { synced: false, reason: 'Local order not found', ghnStatus } });
+    }
+
+    let updated = false;
+    let refunded = false;
+    // Map GHN return statuses to local timeline/status
+    const isReturnFlow = ['return', 'return_transporting', 'return_sorting', 'returning'].includes(ghnStatus);
+    if (isReturnFlow) {
+      if (orderDoc.status !== 'refund') {
+        orderDoc.status = 'refund';
+        orderDoc.timeline.push({ status: 'refund', description: `Đang hoàn hàng (${ghnStatus})`, updatedBy: req.user?.sub || req.user?.id });
+        updated = true;
+      }
+    }
+    if (ghnStatus === 'returned') {
+      // Perform refund if not refunded yet
+      if (orderDoc.status !== 'refunded') {
+        const amount = Math.max(0, Number(orderDoc.finalAmount) || 0);
+        if (amount > 0) {
+          const user = await User.findById(orderDoc.buyerId);
+          if (user) {
+            const balanceBefore = user.wallet?.balance || 0;
+            user.wallet.balance = balanceBefore + amount;
+            await user.save();
+            await WalletTransaction.create({
+              userId: user._id,
+              type: 'refund',
+              amount,
+              balanceBefore,
+              balanceAfter: user.wallet.balance,
+              description: 'Hoàn tiền do đơn hàng đã hoàn về (returned)',
+              status: 'completed',
+              reference: order_code,
+              metadata: { orderId: order_code }
+            });
+            refunded = true;
+          }
+        }
+        orderDoc.status = 'refunded';
+        orderDoc.payment = orderDoc.payment || {};
+        orderDoc.payment.status = 'refunded';
+        orderDoc.timeline.push({ status: 'refunded', description: 'Đơn đã hoàn về - hoàn tiền ví', updatedBy: req.user?.sub || req.user?.id });
+        updated = true;
+      }
+    }
+    if (updated) await orderDoc.save();
+
+    return res.json({ code: 200, message: 'OK', data: { ghnStatus, updated, refunded } });
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const raw = err.response?.data;
+    if (typeof raw === 'string') {
+      try { return res.status(status).json(JSON.parse(raw)); } catch { return res.status(status).json({ code: status, message: raw, data: null }); }
+    }
+    return res.status(status).json(err.response?.data || { error: err.message });
+  }
+}
+
+// Sync all orders of current user; refund those already returned (idempotent)
+export async function syncUserOrders(req, res) {
+  try {
+    const userId = req.user?.sub || req.user?.id;
+    // Find candidate orders (not yet refunded) with a tracking code
+    const candidates = await Order.find({
+      buyerId: userId,
+      status: { $ne: 'refunded' },
+      'shipping.trackingNumber': { $ne: null }
+    }).select('orderNumber buyerId finalAmount status payment shipping');
+
+    const headers = getGhnHeaders();
+    const results = [];
+    let refundedCount = 0;
+    let updatedCount = 0;
+
+    for (const o of candidates) {
+      const code = o?.shipping?.trackingNumber || o?.orderNumber;
+      if (!code) continue;
+      try {
+        const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code: code }, {
+          headers,
+          responseType: 'text',
+          transformResponse: [(x) => x],
+        });
+        let payload;
+        try { payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data; }
+        catch { results.push({ order_code: code, ok: false, message: 'GHN non-JSON' }); continue; }
+        const data = payload?.data || payload || {};
+        const ghnStatus = (data?.status || data?.current_status || '').toString().toLowerCase();
+
+        let updated = false;
+        let refunded = false;
+        const isReturnFlow = ['return', 'return_transporting', 'return_sorting', 'returning'].includes(ghnStatus);
+        if (isReturnFlow) {
+          if (o.status !== 'refund') {
+            o.status = 'refund';
+            o.timeline.push({ status: 'refund', description: `Đang hoàn hàng (${ghnStatus})`, updatedBy: userId });
+            updated = true;
+          }
+        }
+        if (ghnStatus === 'returned') {
+          if (o.status !== 'refunded') {
+            const amount = Math.max(0, Number(o.finalAmount) || 0);
+            if (amount > 0) {
+              const user = await User.findById(o.buyerId);
+              if (user) {
+                const balanceBefore = user.wallet?.balance || 0;
+                user.wallet.balance = balanceBefore + amount;
+                await user.save();
+                await WalletTransaction.create({
+                  userId: user._id,
+                  type: 'refund',
+                  amount,
+                  balanceBefore,
+                  balanceAfter: user.wallet.balance,
+                  description: 'Hoàn tiền do đơn hàng đã hoàn về (returned)',
+                  status: 'completed',
+                  reference: code,
+                  metadata: { orderId: code }
+                });
+                refunded = true;
+              }
+            }
+            o.status = 'refunded';
+            o.payment = o.payment || {};
+            o.payment.status = 'refunded';
+            o.timeline.push({ status: 'refunded', description: 'Đơn đã hoàn về - hoàn tiền ví', updatedBy: userId });
+            updated = true;
+          }
+        }
+        if (updated) { await o.save(); updatedCount++; }
+        if (refunded) refundedCount++;
+        results.push({ order_code: code, ghnStatus, updated, refunded });
+      } catch (e) {
+        results.push({ order_code: o?.shipping?.trackingNumber || o?.orderNumber, ok: false, message: e?.message || 'Sync error' });
+      }
+    }
+
+    return res.json({ code: 200, message: 'OK', data: { total: candidates.length, updated: updatedCount, refunded: refundedCount, results } });
   } catch (err) {
     const status = err.response?.status || 500;
     const raw = err.response?.data;

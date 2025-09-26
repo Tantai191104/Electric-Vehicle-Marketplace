@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
-import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShippingOrder } from "../controllers/shippingController.js";
+import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShippingOrder, returnShippingOrder, syncShippingOrderStatus, syncUserOrders } from "../controllers/shippingController.js";
 
 const router = express.Router();
 
@@ -308,6 +308,76 @@ router.post("/order/detail", getShippingOrderDetail);
  *         description: Cancel result and local refund summary
  */
 router.post("/order/cancel", cancelShippingOrder);
+
+/**
+ * @swagger
+ * /shipping/order/return:
+ *   post:
+ *     summary: Switch GHN order(s) to return status (no refund logic)
+ *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             oneOf:
+ *               - type: object
+ *                 properties:
+ *                   order_code:
+ *                     type: string
+ *                     example: "5ENLKKHD"
+ *               - type: object
+ *                 properties:
+ *                   order_codes:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     example: ["5ENLKKHD"]
+ *     responses:
+ *       200:
+ *         description: Return switch result
+ */
+router.post("/order/return", returnShippingOrder);
+
+/**
+ * @swagger
+ * /shipping/order/sync:
+ *   post:
+ *     summary: Sync GHN status and process wallet refund when returned
+ *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               order_code:
+ *                 type: string
+ *                 example: "5ENLKKHD"
+ *     responses:
+ *       200:
+ *         description: Sync result and refund status
+ */
+router.post("/order/sync", syncShippingOrderStatus);
+
+/**
+ * @swagger
+ * /shipping/order/sync/all:
+ *   post:
+ *     summary: Sync toàn bộ đơn của user đang đăng nhập và hoàn tiền nếu GHN trả về returned (idempotent)
+ *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Kết quả đồng bộ và số đơn đã hoàn tiền
+ */
+router.post("/order/sync/all", syncUserOrders);
 
 export default router;
 
