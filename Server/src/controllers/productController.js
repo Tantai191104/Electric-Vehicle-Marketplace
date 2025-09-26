@@ -136,3 +136,57 @@ export async function getUserProducts(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+export async function getVehicles(req, res) {
+  try {
+    const result = getProductsValidation.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({ 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
+      });
+    }
+
+    const { page, limit, ...filters } = result.data;
+    const products = await listProductsService({ ...filters, category: 'vehicle' }, page, limit);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function getBatteries(req, res) {
+  try {
+    const result = getProductsValidation.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({ 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
+      });
+    }
+
+    const { page, limit, ...filters } = result.data;
+    const products = await listProductsService({ ...filters, category: 'battery' }, page, limit);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function getMotorcycles(req, res) {
+  try {
+    const result = getProductsValidation.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({ 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
+      });
+    }
+
+    const { page, limit, ...filters } = result.data;
+    const products = await listProductsService({ ...filters, category: 'motorcycle' }, page, limit);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
