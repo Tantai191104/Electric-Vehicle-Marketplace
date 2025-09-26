@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     category: { 
       type: String, 
-      enum: ["vehicle", "battery"], 
+      enum: ["vehicle", "battery", "motorcycle"], 
       required: true 
     },
     brand: { type: String, required: true },
@@ -15,7 +15,7 @@ const productSchema = new mongoose.Schema(
     year: { type: Number, required: true },
     condition: { 
       type: String, 
-      enum: ["new", "used", "refurbished"], 
+      enum: ["used", "refurbished"], 
       required: true 
     },
     images: [{ type: String }],
@@ -30,11 +30,11 @@ const productSchema = new mongoose.Schema(
       range: { type: String },
       chargingTime: { type: String },
       power: { type: String },
+      maxSpeed: { type: String },
       batteryType: { type: String },
       voltage: { type: String },
       capacity: { type: String },
       cycleLife: { type: String },
-      operatingTemperature: { type: String },
       warranty: { type: String },
       compatibility: { type: String }
     },
