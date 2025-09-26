@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -6,16 +7,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const locations = ["Tp Hồ Chí Minh", "Hà Nội", "Đà Nẵng", "Cần Thơ"];
-
-const LocationDropdown = () => (
+const SellerDropdown = () => (
   <DropdownMenu modal={false}>
     <DropdownMenuTrigger asChild>
       <Button
-        variant="outline"
-        className="px-3 py-2 rounded border border-yellow-400 text-black font-bold bg-yellow-200 flex items-center gap-2 flex-shrink-0"
+        variant="ghost"
+        className="bg-white text-yellow-900 font-medium text-sm px-3 py-1 rounded-full shadow-sm hover:bg-yellow-100 transition flex-shrink-0 "
       >
-        Tp Hồ Chí Minh
+        Dành cho người bán
         <svg
           width="16"
           height="16"
@@ -25,18 +24,20 @@ const LocationDropdown = () => (
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="inline align-middle"
+          className="inline ml-1 align-middle"
         >
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent className="w-40 bg-white shadow-lg border border-gray-300 rounded-md ">
-      {locations.map((loc) => (
-        <DropdownMenuItem key={loc}>{loc}</DropdownMenuItem>
-      ))}
+    <DropdownMenuContent
+      className="w-48 bg-white shadow-lg border border-gray-300 rounded-md relative"
+    >
+      <DropdownMenuItem>Quản lý tin</DropdownMenuItem>
+      <DropdownMenuItem>Gói Pro</DropdownMenuItem>
+      <DropdownMenuItem>Dành cho đối tác</DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 );
 
-export default LocationDropdown;
+export default SellerDropdown;

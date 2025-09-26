@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 const guides = [
   {
     image: "/images/ev1.jpg",
@@ -21,7 +23,7 @@ const guides = [
 
 export default function EVGuideCards() {
   return (
-    <section className="max-w-7xl mx-auto mt-12 px-4">
+    <section className="max-w-7xl mx-auto mt-12 mb-12 px-4">
       <div className="flex justify-between items-center mb-6">
         <div>
           <span className="text-gray-500 text-sm">Bạn đã biết chưa?</span>
@@ -29,9 +31,12 @@ export default function EVGuideCards() {
             Kiến thức hữu ích về xe điện
           </h2>
         </div>
-        <button className="border border-black px-5 py-2 rounded-full hover:bg-amber-50 transition">
-          Xem thêm
-        </button>
+        <Button
+          variant="outline"
+          className="rounded-full border-black text-black font-semibold px-6 py-2 hover:bg-black hover:text-white transition"
+        >
+          Xem thêm &rarr;
+        </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {guides.map((guide, idx) => (

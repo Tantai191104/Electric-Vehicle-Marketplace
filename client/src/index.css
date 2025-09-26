@@ -25,18 +25,19 @@ body {
   display: flex;
   flex-direction: column;
 }
+.scroll-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
 
+.scroll-hidden {
+  -ms-overflow-style: none; /* IE và Edge */
+  scrollbar-width: none; /* Firefox */
+}
 /* Root container thường dùng cho app */
 #root {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-/* Anchor defaults */
-a {
-  color: inherit;
-  text-decoration: none;
 }
 
 img,

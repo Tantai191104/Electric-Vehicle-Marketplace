@@ -2,13 +2,14 @@
 import React from "react";
 
 type CardFormRowProps = {
-  label: string;
+  label: React.ReactNode;
   error?: string;
   children: React.ReactNode;
+  className?: string;
 };
 
-const CardFormRow: React.FC<CardFormRowProps> = ({ label, error, children }) => (
-  <div className="flex flex-col gap-1">
+const CardFormRow: React.FC<CardFormRowProps> = ({ label, error, children, className }) => (
+  <div className={`flex flex-col gap-1 ${className}`}>
     <label className="text-yellow-900 font-medium">{label}</label>
     {children}
     {error && <p className="text-red-600 text-sm">{error}</p>}

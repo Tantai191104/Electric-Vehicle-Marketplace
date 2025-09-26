@@ -1,5 +1,4 @@
 import API from "@/lib/axios";
-
 export const authServices = {
   async login(data: { email: string; password: string }) {
     const response = await API.post("/auth/login", data);
@@ -13,6 +12,18 @@ export const authServices = {
   }) {
     console.log("Register data:", data);
     const response = await API.post("/auth/register", data);
+    return response.data;
+  },
+  async fetchProfile() {
+    const response = await API.get("/auth/profile");
+    return response.data;
+  },
+  async updateProfile(data: { name?: string; phone?: string }) {
+    const response = await API.put("/auth/profile", data);
+    return response.data;
+  },
+  async logout() {
+    const response = await API.post("/auth/logout");
     return response.data;
   },
 };
