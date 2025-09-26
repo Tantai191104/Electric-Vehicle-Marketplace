@@ -524,21 +524,25 @@ export async function cancelShippingOrder(req, res) {
               if (amount > 0) {
                 const user = await User.findById(orderDoc.buyerId);
                 if (user) {
-                  const balanceBefore = user.wallet?.balance || 0;
-                  user.wallet.balance = balanceBefore + amount;
-                  await user.save();
-                  await WalletTransaction.create({
-                    userId: user._id,
-                    type: 'refund',
-                    amount,
-                    balanceBefore,
-                    balanceAfter: user.wallet.balance,
-                    description: 'Hủy đơn hàng - hoàn tiền đã thanh toán',
-                    status: 'completed',
-                    reference: code,
-                    metadata: { orderId: code }
-                  });
-                  local.refunded = true;
+                  // Idempotency: skip if already refunded for this order_code
+                  const existed = await WalletTransaction.findOne({ userId: user._id, type: 'refund', reference: code });
+                  if (!existed) {
+                    const balanceBefore = user.wallet?.balance || 0;
+                    user.wallet.balance = balanceBefore + amount;
+                    await user.save();
+                    await WalletTransaction.create({
+                      userId: user._id,
+                      type: 'refund',
+                      amount,
+                      balanceBefore,
+                      balanceAfter: user.wallet.balance,
+                      description: 'Hủy đơn hàng - hoàn tiền đã thanh toán',
+                      status: 'completed',
+                      reference: code,
+                      metadata: { orderId: code }
+                    });
+                    local.refunded = true;
+                  }
                 }
               }
             }
@@ -615,27 +619,30 @@ export async function syncShippingOrderStatus(req, res) {
       }
     }
     if (ghnStatus === 'returned') {
-      // Perform refund if not refunded yet
+      // Perform refund if not refunded yet (idempotent)
       if (orderDoc.status !== 'refunded') {
         const amount = Math.max(0, Number(orderDoc.finalAmount) || 0);
         if (amount > 0) {
           const user = await User.findById(orderDoc.buyerId);
           if (user) {
-            const balanceBefore = user.wallet?.balance || 0;
-            user.wallet.balance = balanceBefore + amount;
-            await user.save();
-            await WalletTransaction.create({
-              userId: user._id,
-              type: 'refund',
-              amount,
-              balanceBefore,
-              balanceAfter: user.wallet.balance,
-              description: 'Hoàn tiền do đơn hàng đã hoàn về (returned)',
-              status: 'completed',
-              reference: order_code,
-              metadata: { orderId: order_code }
-            });
-            refunded = true;
+            const existed = await WalletTransaction.findOne({ userId: user._id, type: 'refund', reference: order_code });
+            if (!existed) {
+              const balanceBefore = user.wallet?.balance || 0;
+              user.wallet.balance = balanceBefore + amount;
+              await user.save();
+              await WalletTransaction.create({
+                userId: user._id,
+                type: 'refund',
+                amount,
+                balanceBefore,
+                balanceAfter: user.wallet.balance,
+                description: 'Hoàn tiền do đơn hàng đã hoàn về (returned)',
+                status: 'completed',
+                reference: order_code,
+                metadata: { orderId: order_code }
+              });
+              refunded = true;
+            }
           }
         }
         orderDoc.status = 'refunded';
