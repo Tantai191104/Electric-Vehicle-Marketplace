@@ -9,14 +9,14 @@ type UserHeaderProps = {
 };
 
 const UserHeader: React.FC<UserHeaderProps> = ({ name, role, avatarSrc }) => (
-  <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12 mb-6">
-    <Avatar className="w-28 h-28">
+  <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 mb-4">
+    <Avatar className="w-14 h-14">
       <AvatarImage src={avatarSrc || "/vite.svg"} alt={name} />
       <AvatarFallback>CT</AvatarFallback>
     </Avatar>
     <div>
-      <h2 className="text-3xl font-bold text-yellow-900">{name}</h2>
-      <p className="text-yellow-800 font-medium">{role}</p>
+      <h2 className="text-xl font-bold text-yellow-900">{name}</h2>
+      <p className="text-yellow-800 font-medium text-sm">{role}</p>
     </div>
   </div>
 );

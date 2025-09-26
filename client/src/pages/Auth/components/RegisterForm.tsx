@@ -8,7 +8,7 @@ import InputWithIcon from "./InputWithIcon";
 const registerSchema = z
   .object({
     name: z.string().min(2, "Tên phải ít nhất 2 ký tự"),
-    email: z.string().email("Email không hợp lệ"),
+    email: z.email("Email không hợp lệ"),
     phone: z.string().min(10, "Số điện thoại không hợp lệ"),
     password: z.string().min(6, "Mật khẩu ít nhất 6 ký tự"),
     confirmPassword: z.string().min(6, "Xác nhận mật khẩu"),

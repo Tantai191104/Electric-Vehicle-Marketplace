@@ -7,12 +7,13 @@ import {
 } from "react-icons/ai";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import SellerDropdown from "./header/SellerDropdown";
-import UserDropdown from "./header/UserDropdown";
-import CategoryDropdown from "./header/CategoryDropdown";
-import LocationDropdown from "./header/LocationDropdown";
-import StickySearchBar from "./header/StickySearchBar";
+import SellerDropdown from "../header/SellerDropdown";
+import UserDropdown from "../header/UserDropdown";
+import CategoryDropdown from "../header/CategoryDropdown";
+import LocationDropdown from "../header/LocationDropdown";
+import StickySearchBar from "../header/StickySearchBar";
 import { IoCartOutline } from "react-icons/io5";
+import { useAuthStore } from "@/store/auth";
 
 const navLinks = [
   { label: "Chợ Tốt", href: "#" },
@@ -25,7 +26,7 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<string>("");
   const [showStickySearch, setShowStickySearch] = useState(false);
-
+  const { isAuthenticated } = useAuthStore();
   useEffect(() => {
     const handleScroll = () => setShowStickySearch(window.scrollY > 140);
     window.addEventListener("scroll", handleScroll);
@@ -94,16 +95,20 @@ const Header: React.FC = () => {
           >
             <AiOutlineBell size={32} />
           </Button>
-          <Button
-            onClick={() => navigate("/auth/login")}
-            variant="outline"
-            className="text-yellow-900 font-semibold bg-white hover:bg-yellow-100 px-4 py-2 rounded-lg"
-          >
-            Đăng nhập
-          </Button>
+          {!isAuthenticated && (
+
+            <Button
+              onClick={() => navigate("/auth/login")}
+              variant="outline"
+              className="text-yellow-900 font-semibold bg-white hover:bg-yellow-100 px-4 py-2 rounded-lg"
+            >
+              Đăng nhập
+            </Button>
+          )}
           <Button
             variant="default"
             className="bg-yellow-300 text-black font-bold hover:bg-yellow-500 flex items-center gap-1 px-2 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base"
+            onClick={() => navigate("/articles/new")} // chuyển sang trang ArticleEditor
           >
             <AiOutlinePlusCircle size={20} className="md:mr-1" />
             <span className="hidden sm:inline">Đăng tin</span>

@@ -33,10 +33,10 @@ const PasswordFormCard: React.FC<PasswordFormCardProps> = ({
       <CardTitle>Đổi mật khẩu</CardTitle>
       <CardDescription>Đặt mật khẩu mới cho tài khoản của bạn</CardDescription>
     </CardHeader>
-    <CardContent className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <CardContent className="mt-2">
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-4"
+        className="flex flex-col gap-4"
       >
         <CardFormRow
           label="Mật khẩu hiện tại"
@@ -56,7 +56,7 @@ const PasswordFormCard: React.FC<PasswordFormCardProps> = ({
         >
           <Input type="password" {...form.register("confirmPassword")} />
         </CardFormRow>
-        <div className="flex items-end">
+        <div className="flex justify-end">
           <Button
             type="submit"
             className="bg-yellow-400 hover:bg-yellow-500 text-white"
