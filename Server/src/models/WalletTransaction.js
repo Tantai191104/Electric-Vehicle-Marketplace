@@ -32,7 +32,4 @@ const walletTransactionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Prevent duplicate refund for the same user and order reference
-walletTransactionSchema.index({ userId: 1, type: 1, reference: 1 }, { unique: true, sparse: true });
-
 export default mongoose.model("WalletTransaction", walletTransactionSchema);

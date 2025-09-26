@@ -450,6 +450,27 @@ export async function returnShippingOrder(req, res) {
         try { const inner = JSON.parse(msg); if (inner && typeof inner === 'object') payload = inner; } catch {}
       }
     }
+    // Update local order timeline/status to reflect return process (no refund yet)
+    try {
+      const list = Array.isArray(payload?.data) ? payload.data : [];
+      const buyerId = req.user?.sub || req.user?.id;
+      for (const item of list) {
+        const code = item?.order_code;
+        if (!code) continue;
+        const orderDoc = await Order.findOne({ $or: [
+          { orderNumber: code },
+          { 'shipping.trackingNumber': code },
+        ] });
+        if (!orderDoc) continue;
+        if (String(orderDoc.buyerId) !== String(buyerId)) continue;
+        // mark as refund in-progress if not already refunded/cancelled
+        if (orderDoc.status !== 'refunded' && !String(orderDoc.status).includes('cancel')) {
+          orderDoc.timeline.push({ status: 'refund', description: 'Yêu cầu trả hàng', updatedBy: buyerId });
+          await orderDoc.save();
+        }
+      }
+    } catch {}
+
     return res.json(payload);
   } catch (err) {
     const status = err.response?.status || 500;
@@ -524,25 +545,21 @@ export async function cancelShippingOrder(req, res) {
               if (amount > 0) {
                 const user = await User.findById(orderDoc.buyerId);
                 if (user) {
-                  // Idempotency: skip if already refunded for this order_code
-                  const existed = await WalletTransaction.findOne({ userId: user._id, type: 'refund', reference: code });
-                  if (!existed) {
-                    const balanceBefore = user.wallet?.balance || 0;
-                    user.wallet.balance = balanceBefore + amount;
-                    await user.save();
-                    await WalletTransaction.create({
-                      userId: user._id,
-                      type: 'refund',
-                      amount,
-                      balanceBefore,
-                      balanceAfter: user.wallet.balance,
-                      description: 'Hủy đơn hàng - hoàn tiền đã thanh toán',
-                      status: 'completed',
-                      reference: code,
-                      metadata: { orderId: code }
-                    });
-                    local.refunded = true;
-                  }
+                  const balanceBefore = user.wallet?.balance || 0;
+                  user.wallet.balance = balanceBefore + amount;
+                  await user.save();
+                  await WalletTransaction.create({
+                    userId: user._id,
+                    type: 'refund',
+                    amount,
+                    balanceBefore,
+                    balanceAfter: user.wallet.balance,
+                    description: 'Hủy đơn hàng - hoàn tiền đã thanh toán',
+                    status: 'completed',
+                    reference: code,
+                    metadata: { orderId: code }
+                  });
+                  local.refunded = true;
                 }
               }
             }
@@ -567,191 +584,83 @@ export async function cancelShippingOrder(req, res) {
   }
 }
 
-// Sync GHN order status and process refund when returned
-const syncSchema = z.object({ order_code: z.string().min(1) });
-
-export async function syncShippingOrderStatus(req, res) {
-  try {
-    const parsed = syncSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.issues?.[0]?.message || 'Validation error' });
+// Helper: idempotent refund for a single order when returned
+async function refundIfEligible(orderDoc, userId) {
+  const code = orderDoc?.shipping?.trackingNumber || orderDoc?.orderNumber;
+  if (!code) return { refunded: false, reason: 'NO_CODE' };
+  if (orderDoc.status === 'refunded') return { refunded: false, reason: 'ALREADY_REFUNDED' };
+  // Check existing refund transaction by reference
+  const existed = await WalletTransaction.findOne({ userId: orderDoc.buyerId, type: 'refund', reference: code });
+  if (existed) {
+    if (orderDoc.status !== 'refunded') {
+      orderDoc.status = 'refunded';
+      orderDoc.timeline.push({ status: 'refunded', description: 'Đã hoàn tiền do trả hàng', updatedBy: userId });
+      await orderDoc.save();
     }
-    const { order_code } = parsed.data;
-    const headers = getGhnHeaders();
-
-    // Fetch status from GHN
-    const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code }, {
-      headers,
-      responseType: 'text',
-      transformResponse: [(x) => x],
-    });
-    let payload;
-    try { payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data; }
-    catch { return res.status(400).json({ code: 400, message: String(resp.data || ''), data: null }); }
-    if (payload && typeof payload.message === 'string') {
-      const msg = payload.message.trim();
-      if ((msg.startsWith('{') && msg.endsWith('}')) || (msg.startsWith('[') && msg.endsWith(']'))) {
-        try { const inner = JSON.parse(msg); if (inner && typeof inner === 'object') payload = inner; } catch {}
-      }
-    }
-
-    const data = payload?.data || payload || {};
-    const ghnStatus = (data?.status || data?.current_status || '').toString().toLowerCase();
-
-    // Update local order
-    const orderDoc = await Order.findOne({ $or: [
-      { orderNumber: order_code },
-      { 'shipping.trackingNumber': order_code },
-    ] });
-    if (!orderDoc) {
-      return res.json({ code: 200, message: 'OK', data: { synced: false, reason: 'Local order not found', ghnStatus } });
-    }
-
-    let updated = false;
-    let refunded = false;
-    // Map GHN return statuses to local timeline/status
-    const isReturnFlow = ['return', 'return_transporting', 'return_sorting', 'returning'].includes(ghnStatus);
-    if (isReturnFlow) {
-      if (orderDoc.status !== 'refund') {
-        orderDoc.status = 'refund';
-        orderDoc.timeline.push({ status: 'refund', description: `Đang hoàn hàng (${ghnStatus})`, updatedBy: req.user?.sub || req.user?.id });
-        updated = true;
-      }
-    }
-    if (ghnStatus === 'returned') {
-      // Perform refund if not refunded yet (idempotent)
-      if (orderDoc.status !== 'refunded') {
-        const amount = Math.max(0, Number(orderDoc.finalAmount) || 0);
-        if (amount > 0) {
-          const user = await User.findById(orderDoc.buyerId);
-          if (user) {
-            const existed = await WalletTransaction.findOne({ userId: user._id, type: 'refund', reference: order_code });
-            if (!existed) {
-              const balanceBefore = user.wallet?.balance || 0;
-              user.wallet.balance = balanceBefore + amount;
-              await user.save();
-              await WalletTransaction.create({
-                userId: user._id,
-                type: 'refund',
-                amount,
-                balanceBefore,
-                balanceAfter: user.wallet.balance,
-                description: 'Hoàn tiền do đơn hàng đã hoàn về (returned)',
-                status: 'completed',
-                reference: order_code,
-                metadata: { orderId: order_code }
-              });
-              refunded = true;
-            }
-          }
-        }
-        orderDoc.status = 'refunded';
-        orderDoc.payment = orderDoc.payment || {};
-        orderDoc.payment.status = 'refunded';
-        orderDoc.timeline.push({ status: 'refunded', description: 'Đơn đã hoàn về - hoàn tiền ví', updatedBy: req.user?.sub || req.user?.id });
-        updated = true;
-      }
-    }
-    if (updated) await orderDoc.save();
-
-    return res.json({ code: 200, message: 'OK', data: { ghnStatus, updated, refunded } });
-  } catch (err) {
-    const status = err.response?.status || 500;
-    const raw = err.response?.data;
-    if (typeof raw === 'string') {
-      try { return res.status(status).json(JSON.parse(raw)); } catch { return res.status(status).json({ code: status, message: raw, data: null }); }
-    }
-    return res.status(status).json(err.response?.data || { error: err.message });
+    return { refunded: false, reason: 'TX_EXISTS' };
   }
+  const amount = Math.max(0, Number(orderDoc.finalAmount) || 0);
+  if (amount <= 0) return { refunded: false, reason: 'ZERO_AMOUNT' };
+  const user = await User.findById(orderDoc.buyerId);
+  if (!user) return { refunded: false, reason: 'USER_NOT_FOUND' };
+  const balanceBefore = user.wallet?.balance || 0;
+  user.wallet = user.wallet || {};
+  user.wallet.balance = balanceBefore + amount;
+  await user.save();
+  await WalletTransaction.create({
+    userId: user._id,
+    type: 'refund',
+    amount,
+    balanceBefore,
+    balanceAfter: user.wallet.balance,
+    description: 'Hoàn tiền do trả hàng',
+    status: 'completed',
+    reference: code,
+    metadata: { orderId: code }
+  });
+  orderDoc.status = 'refunded';
+  orderDoc.timeline.push({ status: 'refunded', description: 'Đã hoàn tiền do trả hàng', updatedBy: userId });
+  await orderDoc.save();
+  return { refunded: true };
 }
 
-// Sync all orders of current user; refund those already returned (idempotent)
-export async function syncUserOrders(req, res) {
+// Sync returns: iterate user's orders, check GHN status, refund once when returned
+export async function syncReturnsAndRefunds(req, res) {
   try {
-    const userId = req.user?.sub || req.user?.id;
-    // Find candidate orders (not yet refunded) with a tracking code
-    const candidates = await Order.find({
-      buyerId: userId,
-      status: { $ne: 'refunded' },
-      'shipping.trackingNumber': { $ne: null }
-    }).select('orderNumber buyerId finalAmount status payment shipping');
-
+    const buyerId = req.user?.sub || req.user?.id;
     const headers = getGhnHeaders();
+    const orders = await Order.find({ buyerId }).select('_id orderNumber status finalAmount shipping buyerId');
     const results = [];
-    let refundedCount = 0;
-    let updatedCount = 0;
-
-    for (const o of candidates) {
+    for (const o of orders) {
       const code = o?.shipping?.trackingNumber || o?.orderNumber;
-      if (!code) continue;
+      if (!code) {
+        results.push({ order: o.orderNumber, skipped: true, reason: 'NO_CODE' });
+        continue;
+      }
       try {
-        const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code: code }, {
-          headers,
-          responseType: 'text',
-          transformResponse: [(x) => x],
-        });
+        const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code: code }, { headers, responseType: 'text', transformResponse: [(x) => x] });
         let payload;
-        try { payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data; }
-        catch { results.push({ order_code: code, ok: false, message: 'GHN non-JSON' }); continue; }
-        const data = payload?.data || payload || {};
-        const ghnStatus = (data?.status || data?.current_status || '').toString().toLowerCase();
-
-        let updated = false;
-        let refunded = false;
-        const isReturnFlow = ['return', 'return_transporting', 'return_sorting', 'returning'].includes(ghnStatus);
-        if (isReturnFlow) {
-          if (o.status !== 'refund') {
-            o.status = 'refund';
-            o.timeline.push({ status: 'refund', description: `Đang hoàn hàng (${ghnStatus})`, updatedBy: userId });
-            updated = true;
-          }
+        try { payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data; } catch { payload = {}; }
+        const d = payload?.data || payload || {};
+        const status = String(d?.status || d?.current_status || '').toLowerCase();
+        if (status === 'returned') {
+          const r = await refundIfEligible(o, buyerId);
+          results.push({ order: code, status, ...r });
+        } else if (status === 'return' || status === 'return_transporting' || status === 'return_sorting' || status === 'returning') {
+          // mark timeline as refund in-progress
+          o.timeline.push({ status: 'refund', description: `Trả hàng (${status})`, updatedBy: buyerId });
+          await o.save();
+          results.push({ order: code, status, inProgress: true });
+        } else {
+          results.push({ order: code, status, skipped: true });
         }
-        if (ghnStatus === 'returned') {
-          if (o.status !== 'refunded') {
-            const amount = Math.max(0, Number(o.finalAmount) || 0);
-            if (amount > 0) {
-              const user = await User.findById(o.buyerId);
-              if (user) {
-                const balanceBefore = user.wallet?.balance || 0;
-                user.wallet.balance = balanceBefore + amount;
-                await user.save();
-                await WalletTransaction.create({
-                  userId: user._id,
-                  type: 'refund',
-                  amount,
-                  balanceBefore,
-                  balanceAfter: user.wallet.balance,
-                  description: 'Hoàn tiền do đơn hàng đã hoàn về (returned)',
-                  status: 'completed',
-                  reference: code,
-                  metadata: { orderId: code }
-                });
-                refunded = true;
-              }
-            }
-            o.status = 'refunded';
-            o.payment = o.payment || {};
-            o.payment.status = 'refunded';
-            o.timeline.push({ status: 'refunded', description: 'Đơn đã hoàn về - hoàn tiền ví', updatedBy: userId });
-            updated = true;
-          }
-        }
-        if (updated) { await o.save(); updatedCount++; }
-        if (refunded) refundedCount++;
-        results.push({ order_code: code, ghnStatus, updated, refunded });
       } catch (e) {
-        results.push({ order_code: o?.shipping?.trackingNumber || o?.orderNumber, ok: false, message: e?.message || 'Sync error' });
+        results.push({ order: o.orderNumber, error: e?.message || 'GHN detail error' });
       }
     }
-
-    return res.json({ code: 200, message: 'OK', data: { total: candidates.length, updated: updatedCount, refunded: refundedCount, results } });
+    return res.json({ success: true, results });
   } catch (err) {
-    const status = err.response?.status || 500;
-    const raw = err.response?.data;
-    if (typeof raw === 'string') {
-      try { return res.status(status).json(JSON.parse(raw)); } catch { return res.status(status).json({ code: status, message: raw, data: null }); }
-    }
-    return res.status(status).json(err.response?.data || { error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 }
 

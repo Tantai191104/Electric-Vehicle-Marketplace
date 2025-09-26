@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
-import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShippingOrder, returnShippingOrder, syncShippingOrderStatus, syncUserOrders } from "../controllers/shippingController.js";
+import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShippingOrder, returnShippingOrder, syncReturnsAndRefunds } from "../controllers/shippingController.js";
 
 const router = express.Router();
 
@@ -343,41 +343,17 @@ router.post("/order/return", returnShippingOrder);
 
 /**
  * @swagger
- * /shipping/order/sync:
+ * /shipping/returns/sync:
  *   post:
- *     summary: Sync GHN status and process wallet refund when returned
- *     tags: [Shipping]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               order_code:
- *                 type: string
- *                 example: "5ENLKKHD"
- *     responses:
- *       200:
- *         description: Sync result and refund status
- */
-router.post("/order/sync", syncShippingOrderStatus);
-
-/**
- * @swagger
- * /shipping/order/sync/all:
- *   post:
- *     summary: Sync toàn bộ đơn của user đang đăng nhập và hoàn tiền nếu GHN trả về returned (idempotent)
+ *     summary: Sync return status for all user's orders and refund once when returned
  *     tags: [Shipping]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Kết quả đồng bộ và số đơn đã hoàn tiền
+ *         description: Sync and refund results
  */
-router.post("/order/sync/all", syncUserOrders);
+router.post("/returns/sync", syncReturnsAndRefunds);
 
 export default router;
 
