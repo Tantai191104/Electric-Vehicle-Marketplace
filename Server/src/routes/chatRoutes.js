@@ -1,6 +1,7 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
-import { startChat, getMyConversations, postMessage, getMessages } from "../controllers/chatController.js";
+import { chatFileUpload } from "../middlewares/upload.js";
+import { startChat, getMyConversations, postMessage, getMessages, postMessageWithFiles, markAsRead } from "../controllers/chatController.js";
 
 const router = express.Router();
 
@@ -81,6 +82,83 @@ router.get("/", getMyConversations);
  *         description: Message
  */
 router.post("/messages", postMessage);
+
+/**
+ * @swagger
+ * /chat/messages/files:
+ *   post:
+ *     summary: Send a message with files
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               conversationId: { type: string }
+ *               text: { type: string }
+ *               files: 
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Message with files
+ */
+router.post("/messages/files", (req, res, next) => {
+  console.log('=== MULTER MIDDLEWARE DEBUG ===');
+  console.log('Content-Type:', req.headers['content-type']);
+  console.log('Content-Length:', req.headers['content-length']);
+  console.log('================================');
+  
+  chatFileUpload.array('files', 10)(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large. Maximum size is 50MB per file.' });
+      }
+      if (err.code === 'LIMIT_FILE_COUNT') {
+        return res.status(400).json({ error: 'Too many files. Maximum is 10 files.' });
+      }
+      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({ error: 'Unexpected field name for file upload.' });
+      }
+      return res.status(400).json({ error: 'File upload error: ' + err.message });
+    }
+    
+    console.log('=== MULTER SUCCESS ===');
+    console.log('Files received:', req.files ? req.files.length : 0);
+    console.log('Body:', req.body);
+    console.log('======================');
+    
+    next();
+  });
+}, postMessageWithFiles);
+
+/**
+ * @swagger
+ * /chat/{conversationId}/read:
+ *   post:
+ *     summary: Mark conversation as read
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Conversation marked as read
+ *       500:
+ *         description: Server error
+ */
+router.post("/:conversationId/read", markAsRead);
 
 /**
  * @swagger

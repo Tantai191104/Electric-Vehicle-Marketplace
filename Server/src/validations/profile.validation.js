@@ -45,8 +45,7 @@ export const updatePreferencesValidation = z.object({
 });
 
 export const addToWishlistValidation = z.object({
-  productId: z.string().min(1),
-  notes: z.string().max(500).optional()
+  productId: z.string().min(1)
 });
 
 export const updateOrderStatusValidation = z.object({

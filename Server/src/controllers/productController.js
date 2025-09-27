@@ -11,14 +11,15 @@ import {
   updateProductValidation,
   getProductsValidation,
 } from "../validations/product.validation.js";
+import cloudinary from "../config/cloudinary.js";
 
 export async function createProduct(req, res) {
   try {
     const result = createProductValidation.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({ 
-        error: result.error.errors[0]?.message || "Validation error", 
-        details: result.error.errors 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
       });
     }
 
@@ -26,6 +27,27 @@ export async function createProduct(req, res) {
       ...result.data,
       seller: req.user.sub || req.user.id
     };
+
+    // Upload files if provided
+    const files = req.files || [];
+    if (files.length > 0) {
+      const uploadPromises = files.map((file) => new Promise((resolve) => {
+        const resource_type = file.mimetype.startsWith('video') ? 'video' : 'image';
+        cloudinary.uploader.upload_stream({ resource_type }, (err, uploaded) => {
+          if (err) return resolve({ success: false, error: err.message });
+          resolve({ success: true, url: uploaded.secure_url, resource_type });
+        }).end(file.buffer);
+      }));
+
+      const results = await Promise.all(uploadPromises);
+      const successes = results.filter(r => r.success);
+      // Order: videos first, then images
+      const ordered = [
+        ...successes.filter(r => r.resource_type === 'video').map(r => r.url),
+        ...successes.filter(r => r.resource_type === 'image').map(r => r.url)
+      ];
+      productData.images = ordered;
+    }
 
     const product = await createProductService(productData);
     res.status(201).json(product);
@@ -40,8 +62,8 @@ export async function listProducts(req, res) {
     const result = getProductsValidation.safeParse(req.query);
     if (!result.success) {
       return res.status(400).json({ 
-        error: result.error.errors[0]?.message || "Validation error", 
-        details: result.error.errors 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
       });
     }
 
@@ -67,8 +89,8 @@ export async function updateProduct(req, res) {
     const result = updateProductValidation.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({ 
-        error: result.error.errors[0]?.message || "Validation error", 
-        details: result.error.errors 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
       });
     }
 
@@ -101,14 +123,68 @@ export async function getUserProducts(req, res) {
     const result = getProductsValidation.safeParse(req.query);
     if (!result.success) {
       return res.status(400).json({ 
-        error: result.error.errors[0]?.message || "Validation error", 
-        details: result.error.errors 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
       });
     }
 
     const { page, limit } = result.data;
     const userId = req.user.sub || req.user.id;
     const products = await getUserProductsService(userId, page, limit);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function getVehicles(req, res) {
+  try {
+    const result = getProductsValidation.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({ 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
+      });
+    }
+
+    const { page, limit, ...filters } = result.data;
+    const products = await listProductsService({ ...filters, category: 'vehicle' }, page, limit);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function getBatteries(req, res) {
+  try {
+    const result = getProductsValidation.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({ 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
+      });
+    }
+
+    const { page, limit, ...filters } = result.data;
+    const products = await listProductsService({ ...filters, category: 'battery' }, page, limit);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function getMotorcycles(req, res) {
+  try {
+    const result = getProductsValidation.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({ 
+        error: result.error.issues?.[0]?.message || "Validation error", 
+        details: result.error.issues 
+      });
+    }
+
+    const { page, limit, ...filters } = result.data;
+    const products = await listProductsService({ ...filters, category: 'motorcycle' }, page, limit);
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });

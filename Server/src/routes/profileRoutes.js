@@ -205,13 +205,61 @@ router.get("/wallet/transactions", getWalletTransactions);
  * @swagger
  * /profile/wishlist:
  *   get:
- *     summary: Get wishlist
+ *     summary: Get user's wishlist
  *     tags: [Profile]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of items per page
  *     responses:
  *       200:
- *         description: Wishlist
+ *         description: Wishlist retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       userId:
+ *                         type: string
+ *                       productId:
+ *                         type: string
+ *                       addedAt:
+ *                         type: string
+ *                         format: date-time
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ *       400:
+ *         description: Validation error
  */
 router.get("/wishlist", getUserWishlist);
 /**
@@ -228,9 +276,32 @@ router.get("/wishlist", getUserWishlist);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - productId
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 description: ID of the product to add to wishlist
+ *                 example: "60d5ecb74b24c1234567890a"
  *     responses:
- *       200:
- *         description: Added
+ *       201:
+ *         description: Item added to wishlist successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 userId:
+ *                   type: string
+ *                 productId:
+ *                   type: string
+ *                 addedAt:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Validation error or product already in wishlist
  */
 router.post("/wishlist", addToWishlist);
 /**
@@ -247,9 +318,21 @@ router.post("/wishlist", addToWishlist);
  *         required: true
  *         schema:
  *           type: string
+ *         description: ID of the product to remove from wishlist
+ *         example: "60d5ecb74b24c1234567890a"
  *     responses:
  *       200:
- *         description: Removed
+ *         description: Item removed from wishlist successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Item removed from wishlist"
+ *       400:
+ *         description: Item not found in wishlist
  */
 router.delete("/wishlist/:productId", removeFromWishlist);
 

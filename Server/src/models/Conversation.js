@@ -9,7 +9,8 @@ const conversationSchema = new mongoose.Schema(
       text: { type: String, default: null },
       sentAt: { type: Date, default: null },
       sentBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
-    }
+    },
+    unreadCount: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

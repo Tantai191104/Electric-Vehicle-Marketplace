@@ -7,7 +7,12 @@ export const startChatValidation = z.object({
 
 export const sendMessageValidation = z.object({
   conversationId: z.string().min(1),
-  text: z.string().min(1).max(4000)
+  text: z.string().max(4000).optional(),
+  files: z.array(z.object({
+    url: z.string(),
+    name: z.string(),
+    type: z.string()
+  })).optional()
 });
 
 export const listMessagesValidation = z.object({
