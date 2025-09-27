@@ -79,7 +79,7 @@ const WalletTopupPage: React.FC = () => {
   }, [status]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-blue-50 flex items-center justify-center py-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-blue-50 flex items-center justify-center py-16 px-4 mt-[120px]">
       <Card className="w-full max-w-lg mx-auto rounded-3xl shadow-2xl border border-gray-100 bg-white/90 backdrop-blur">
         <CardHeader className="flex flex-col items-center gap-2 pb-2">
           <BsCashCoin className="text-yellow-500 text-5xl drop-shadow" />
