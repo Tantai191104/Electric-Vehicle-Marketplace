@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import {
   AiOutlineMenu,
-  AiOutlineUser,
   AiOutlineBell,
   AiOutlinePlusCircle,
+  AiOutlineMessage,
 } from "react-icons/ai";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -85,8 +85,9 @@ const Header: React.FC = () => {
             variant="ghost"
             size="icon"
             className="text-yellow-900 h-12 w-12"
+            onClick={() => navigate("/chat")}
           >
-            <AiOutlineUser size={32} />
+            <AiOutlineMessage size={32} />
           </Button>
           <Button
             variant="ghost"
