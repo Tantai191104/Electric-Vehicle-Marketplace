@@ -90,36 +90,6 @@ router.get("/", listProducts);
 
 /**
  * @swagger
- * /products/{id}:
- *   get:
- *     summary: Get product by ID
- *     tags: [Products]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Product ID
- *     responses:
- *       200:
- *         description: Product details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   $ref: '#/components/schemas/Product'
- *       404:
- *         description: Product not found
- */
-router.get("/:id", getProductById);
-
-/**
- * @swagger
  * /products/vehicles:
  *   get:
  *     summary: Get all vehicle products
@@ -319,6 +289,36 @@ router.get("/batteries", getBatteries);
  */
 router.get("/motorcycles", getMotorcycles);
 
+/**
+ * @swagger
+ * /products/{id}:
+ *   get:
+ *     summary: Get product by ID
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Product details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: Product not found
+ */
+router.get("/:id", getProductById);
+
 router.use(authenticate);
 
 /**
@@ -390,9 +390,9 @@ router.use(authenticate);
  *                 description: "Product height (cm) - used for shipping calculation"
  *                 example: 90
  *               weight:
- *                 type: integer
- *                 description: "Product weight (grams) - used for shipping calculation"
- *                 example: 50000
+ *                 type: number
+ *                 description: "Product weight (kg) - used for shipping calculation"
+ *                 example: 50
  *               specifications:
  *                 type: object
  *                 description: "Product technical specifications (optional)"
