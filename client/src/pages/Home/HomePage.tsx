@@ -1,19 +1,19 @@
 import Banner from "./components/Banner";
 import Banner2 from "./components/Banner2";
-import EVAccessoryGrid from "./components/EVAccessoryGrid";
+import EVBatteryGrid from "./components/EVBatteryGrid";
 import EVCategoryCards from "./components/EVCategoryCards";
 import EVGuideCards from "./components/EVGuideCards";
 import EVProductGrid from "./components/EVProductGrid";
 
 export default function HomePage() {
   return (
-    <div className="pt-24"> {/* Thêm padding-top, nếu header cao hơn thì tăng giá trị */}
+    <div className="mt-[80px]">
       <EVCategoryCards />
       <EVProductGrid />
       <Banner />
-      <EVAccessoryGrid />
-      <Banner2/>
-      <EVGuideCards/>
+      <EVBatteryGrid />
+      <Banner2 />
+      <EVGuideCards />
     </div>
   );
 }

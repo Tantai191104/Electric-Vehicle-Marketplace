@@ -21,14 +21,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
 
     // Gọi mutation
     const loginMutation = useLoginMutation();
-    const registerMutation = useRegisterMutation(); // Thay đổi nếu có mutation đăng ký riêng
+    const registerMutation = useRegisterMutation();
     const handleLogin = async (data: { email: string; password: string }) => {
         try {
             const response = await loginMutation.mutateAsync(data);
             const { ...user } = response;
-            console.log("Login response:", response);
-
-            // Redirect dựa trên role
             if (user.role === "admin") {
                 navigation("/admin");
             } else {

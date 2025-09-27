@@ -2,39 +2,15 @@
 import React, { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
 import FilterSidebar from "./components/FilterSidebar";
 import CarCard from "./components/CarCard";
+import { useProducts } from "@/hooks/useProduct";
+import { BiErrorCircle } from "react-icons/bi";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import type { Product } from "@/types/productType";
 
 const PAGE_SIZE = 9;
-
-type Car = {
-    id: number;
-    name: string;
-    image: string;
-    price: number;
-    brand: string;
-    year: number;
-    status: string;
-    color: string;
-    type: string;
-};
-
-const cars: Car[] = [
-    { id: 1, name: "VinFast VF e34", image: "/images/vfe34.jpg", price: 690_000_000, brand: "VinFast", year: 2023, status: "Đã qua sử dụng", color: "Đen", type: "SUV" },
-    { id: 2, name: "Tesla Model 3", image: "/images/model3.jpg", price: 1_200_000_000, brand: "Tesla", year: 2022, status: "Đã qua sử dụng", color: "Trắng", type: "Sedan" },
-    { id: 3, name: "KIA EV6", image: "/images/kiaev6.jpg", price: 850_000_000, brand: "KIA", year: 2023, status: "Đã qua sử dụng", color: "Xám", type: "SUV" },
-    { id: 4, name: "VinFast VF8", image: "/images/vf8.jpg", price: 900_000_000, brand: "VinFast", year: 2024, status: "Mới", color: "Đen", type: "SUV" },
-    { id: 5, name: "Tesla Model Y", image: "/images/modely.jpg", price: 1_400_000_000, brand: "Tesla", year: 2023, status: "Mới", color: "Trắng", type: "SUV" },
-    { id: 6, name: "VinFast VF8", image: "/images/vf8.jpg", price: 900_000_000, brand: "VinFast", year: 2024, status: "Mới", color: "Đen", type: "SUV" },
-    { id: 7, name: "Tesla Model Y", image: "/images/modely.jpg", price: 1_400_000_000, brand: "Tesla", year: 2023, status: "Mới", color: "Trắng", type: "SUV" },
-    { id: 8, name: "VinFast VF8", image: "/images/vf8.jpg", price: 900_000_000, brand: "VinFast", year: 2024, status: "Mới", color: "Đen", type: "SUV" },
-    { id: 9, name: "Tesla Model Y", image: "/images/modely.jpg", price: 1_400_000_000, brand: "Tesla", year: 2023, status: "Mới", color: "Trắng", type: "SUV" },
-    { id: 10, name: "VinFast VF8", image: "/images/vf8.jpg", price: 900_000_000, brand: "VinFast", year: 2024, status: "Mới", color: "Đen", type: "SUV" },
-    { id: 11, name: "Tesla Model Y", image: "/images/modely.jpg", price: 1_400_000_000, brand: "Tesla", year: 2023, status: "Mới", color: "Trắng", type: "SUV" },
-    { id: 12, name: "VinFast VF8", image: "/images/vf8.jpg", price: 900_000_000, brand: "VinFast", year: 2024, status: "Mới", color: "Đen", type: "SUV" },
-    { id: 13, name: "Tesla Model Y", image: "/images/modely.jpg", price: 1_400_000_000, brand: "Tesla", year: 2023, status: "Mới", color: "Trắng", type: "SUV" },
-    
-];
 
 const brands = ["VinFast", "Tesla", "KIA"];
 const colors = ["Đen", "Trắng", "Xám"];
@@ -48,20 +24,46 @@ const CarProductList: React.FC = () => {
     const [maxPrice, setMaxPrice] = useState<number | "">("");
     const [page, setPage] = useState(1);
 
-    const filteredCars = cars.filter(car => {
-        const brandOk = selectedBrand.length === 0 || selectedBrand.includes(car.brand);
-        const colorOk = selectedColor.length === 0 || selectedColor.includes(car.color);
-        const typeOk = selectedType.length === 0 || selectedType.includes(car.type);
-        const minOk = minPrice === "" || car.price >= minPrice;
-        const maxOk = maxPrice === "" || car.price <= maxPrice;
-        return brandOk && colorOk && typeOk && minOk && maxOk;
+    // Fetch products với React Query
+    const { data, isLoading, error } = useProducts({
+        page,
+        limit: PAGE_SIZE,
+        category: "vehicle"
     });
 
-    const totalPages = Math.ceil(filteredCars.length / PAGE_SIZE);
-    const pagedCars = filteredCars.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const products = data?.products || [];
+    const totalPages = Math.ceil((data?.pagination.total || 0) / PAGE_SIZE);
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <div className="max-w-7xl mx-auto mt-[180px] px-4 md:px-0">
+                <div className="text-center py-12">
+                    <AiOutlineLoading3Quarters className="w-8 h-8 mx-auto mb-4 text-yellow-500 animate-spin" />
+                    <p className="text-gray-600">Đang tải danh sách xe điện...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <div className="max-w-7xl mx-auto mt-[180px] px-4 md:px-0">
+                <div className="text-center py-12">
+                    <BiErrorCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Không thể tải dữ liệu</h3>
+                    <p className="text-gray-600 mb-4">Có lỗi xảy ra khi tải danh sách xe điện</p>
+                    <Button onClick={() => window.location.reload()} variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
+                        Thử lại
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="max-w-7xl mx-auto mt-[180px] px-4 md:px-0">
+        <div className="max-w-7xl mx-auto mt-[180px] px-4 md:px-0 py-14">
             <div className="flex flex-col md:flex-row gap-8">
                 <FilterSidebar
                     brands={brands}
@@ -81,7 +83,12 @@ const CarProductList: React.FC = () => {
 
                 <main className="flex-1">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Danh sách xe điện</h1>
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Danh sách xe điện</h1>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Hiển thị {products.length} xe điện (Trang {page}/{totalPages})
+                            </p>
+                        </div>
                         <Select>
                             <SelectTrigger className="w-52 min-w-[200px] flex-shrink-0">
                                 <SelectValue placeholder="Sắp xếp theo" />
@@ -96,12 +103,16 @@ const CarProductList: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        {pagedCars.length === 0 ? (
+                        {products.length === 0 ? (
                             <div className="col-span-3 text-center text-gray-400 py-12">
-                                Không tìm thấy xe phù hợp.
+                                <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <BiErrorCircle className="w-10 h-10 text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">Không tìm thấy xe phù hợp</h3>
+                                <p className="text-gray-600">Hãy thử điều chỉnh bộ lọc để tìm thêm sản phẩm</p>
                             </div>
                         ) : (
-                            pagedCars.map(car => <CarCard key={car.id} car={car} />)
+                            products.map((product: Product) => <CarCard key={product._id} car={product} />)
                         )}
                     </div>
 

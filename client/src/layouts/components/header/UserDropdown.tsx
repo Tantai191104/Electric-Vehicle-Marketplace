@@ -24,7 +24,6 @@ import { toast } from "sonner";
 const UserDropdown = () => {
   const { clearAuth, isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
-  console.log("User in dropdown:", user);
   const handleLogout = () => {
     clearAuth();
     authServices.logout();

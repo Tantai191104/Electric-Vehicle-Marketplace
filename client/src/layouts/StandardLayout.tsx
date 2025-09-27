@@ -9,7 +9,7 @@ const StandardLayout: React.FC = () => {
   return (
     <div className="subpixel-antialiased">
       <FixedHeader />
-      <main className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <Outlet />
       </main>
       <Footer />
