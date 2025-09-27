@@ -109,7 +109,7 @@ const options = {
             length: { type: 'number', example: 150, description: 'Chiều dài (cm)' },
             width: { type: 'number', example: 60, description: 'Chiều rộng (cm)' },
             height: { type: 'number', example: 90, description: 'Chiều cao (cm)' },
-            weight: { type: 'number', example: 50000, description: 'Khối lượng (gram)' },
+            weight: { type: 'number', example: 100, description: 'Weight (kg)' },
             specifications: {
               type: 'object',
               properties: {
@@ -157,7 +157,7 @@ const options = {
             length: { type: 'number', example: 150, description: 'Chiều dài (cm) 1-200' },
             width: { type: 'number', example: 60, description: 'Chiều rộng (cm) 1-200' },
             height: { type: 'number', example: 90, description: 'Chiều cao (cm) 1-200' },
-            weight: { type: 'number', example: 50000, description: 'Khối lượng (gram) 1-1600000' },
+            weight: { type: 'number', example: 50, description: 'Weight (kg) 1-1600' },
             specifications: {
               type: 'object',
               properties: {
@@ -197,7 +197,7 @@ const options = {
             length: { type: 'number', example: 150, description: 'Chiều dài (cm) 1-200' },
             width: { type: 'number', example: 60, description: 'Chiều rộng (cm) 1-200' },
             height: { type: 'number', example: 90, description: 'Chiều cao (cm) 1-200' },
-            weight: { type: 'number', example: 50000, description: 'Khối lượng (gram) 1-1600000' },
+            weight: { type: 'number', example: 50, description: 'Weight (kg) 1-1600' },
             specifications: {
               type: 'object',
               properties: {
@@ -237,24 +237,24 @@ const options = {
               items: { type: 'string' },
               example: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg']
             },
-            length: { type: 'number', example: 150, description: 'Chiều dài (cm)' },
-            width: { type: 'number', example: 60, description: 'Chiều rộng (cm)' },
-            height: { type: 'number', example: 90, description: 'Chiều cao (cm)' },
-            weight: { type: 'number', example: 50000, description: 'Khối lượng (gram)' },
+            length: { type: 'number', example: 450, description: 'Length (cm)' },
+            width: { type: 'number', example: 180, description: 'Width (cm)' },
+            height: { type: 'number', example: 165, description: 'Height (cm)' },
+            weight: { type: 'number', example: 100, description: 'Weight (kg)' },
             specifications: {
               type: 'object',
+              description: 'Vehicle-specific technical specifications',
               properties: {
-                batteryCapacity: { type: 'string', example: '3.5 kWh', description: 'Dung lượng pin' },
-                range: { type: 'string', example: '203 km', description: 'Quãng đường đi được' },
-                chargingTime: { type: 'string', example: '6-7 giờ', description: 'Thời gian sạc đầy' },
-                power: { type: 'string', example: '2,500 W', description: 'Công suất động cơ' },
-                maxSpeed: { type: 'string', example: '120 km/h', description: 'Tốc độ tối đa' },
-                batteryType: { type: 'string', example: 'LFP', description: 'Loại pin' },
-                voltage: { type: 'string', example: '48V', description: 'Điện áp' },
-                capacity: { type: 'string', example: '34.6 Ah', description: 'Dung lượng pin' },
-                cycleLife: { type: 'string', example: '2000 chu kỳ', description: 'Chu kỳ sạc' },
-                warranty: { type: 'string', example: '3 năm hoặc 30,000 km', description: 'Bảo hành' },
-                compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast', description: 'Tương thích' }
+                batteryCapacity: { type: 'string', example: '3.5 kWh', description: 'Battery capacity' },
+                range: { type: 'string', example: '203 km', description: 'Driving range' },
+                chargingTime: { type: 'string', example: '6-7 giờ', description: 'Charging time' },
+                power: { type: 'string', example: '2,500 W', description: 'Motor power' },
+                maxSpeed: { type: 'string', example: '120 km/h', description: 'Maximum speed' },
+                batteryType: { type: 'string', example: 'LFP', description: 'Battery type' },
+                voltage: { type: 'string', example: '400V', description: 'Voltage' },
+                capacity: { type: 'string', example: '87.7 Ah', description: 'Battery capacity (Ah)' },
+                warranty: { type: 'string', example: '3 năm hoặc 30,000 km', description: 'Warranty' },
+                compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast', description: 'Compatibility' }
               }
             },
             seller: { type: 'string', example: '507f1f77bcf86cd799439012' },
@@ -283,19 +283,20 @@ const options = {
               items: { type: 'string' },
               example: ['https://example.com/battery1.jpg', 'https://example.com/battery2.jpg']
             },
-            length: { type: 'number', example: 30, description: 'Chiều dài (cm)' },
-            width: { type: 'number', example: 20, description: 'Chiều rộng (cm)' },
-            height: { type: 'number', example: 15, description: 'Chiều cao (cm)' },
-            weight: { type: 'number', example: 5000, description: 'Khối lượng (gram)' },
+            length: { type: 'number', example: 30, description: 'Length (cm)' },
+            width: { type: 'number', example: 20, description: 'Width (cm)' },
+            height: { type: 'number', example: 15, description: 'Height (cm)' },
+            weight: { type: 'number', example: 5, description: 'Weight (kg)' },
             specifications: {
               type: 'object',
+              description: 'Battery-specific technical specifications',
               properties: {
-                batteryType: { type: 'string', example: 'LFP', description: 'Loại pin' },
-                voltage: { type: 'string', example: '48V', description: 'Điện áp' },
-                capacity: { type: 'string', example: '34.6 Ah', description: 'Dung lượng pin' },
-                cycleLife: { type: 'string', example: '2000 chu kỳ', description: 'Chu kỳ sạc' },
-                warranty: { type: 'string', example: '3 năm hoặc 30,000 km', description: 'Bảo hành' },
-                compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast', description: 'Tương thích' }
+                batteryType: { type: 'string', example: 'LFP', description: 'Battery type' },
+                voltage: { type: 'string', example: '48V', description: 'Voltage' },
+                capacity: { type: 'string', example: '34.6 Ah', description: 'Battery capacity' },
+                cycleLife: { type: 'string', example: '2000 chu kỳ', description: 'Cycle life' },
+                warranty: { type: 'string', example: '3 năm hoặc 30,000 km', description: 'Warranty' },
+                compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast', description: 'Compatibility' }
               }
             },
             seller: { type: 'string', example: '507f1f77bcf86cd799439012' },
@@ -324,26 +325,21 @@ const options = {
               items: { type: 'string' },
               example: ['https://example.com/motorcycle1.jpg', 'https://example.com/motorcycle2.jpg']
             },
-            length: { type: 'number', example: 180, description: 'Chiều dài (cm)' },
-            width: { type: 'number', example: 70, description: 'Chiều rộng (cm)' },
-            height: { type: 'number', example: 110, description: 'Chiều cao (cm)' },
-            weight: { type: 'number', example: 120000, description: 'Khối lượng (gram)' },
+            length: { type: 'number', example: 200, description: 'Length (cm)' },
+            width: { type: 'number', example: 70, description: 'Width (cm)' },
+            height: { type: 'number', example: 110, description: 'Height (cm)' },
+            weight: { type: 'number', example: 95, description: 'Weight (kg)' },
             specifications: {
               type: 'object',
+              description: 'Motorcycle-specific technical specifications',
               properties: {
-                batteryCapacity: { type: 'string', example: '1.2 kWh', description: 'Dung lượng pin' },
-                range: { type: 'string', example: '80 km', description: 'Quãng đường đi được' },
-                chargingTime: { type: 'string', example: '4-6 giờ', description: 'Thời gian sạc đầy' },
-                power: { type: 'string', example: '1,200 W', description: 'Công suất động cơ' },
-                maxSpeed: { type: 'string', example: '45 km/h', description: 'Tốc độ tối đa' },
-                motorType: { type: 'string', example: 'BLDC', description: 'Loại động cơ' },
-                batteryType: { type: 'string', example: 'Lithium-ion', description: 'Loại pin' },
-                voltage: { type: 'string', example: '48V', description: 'Điện áp' },
-                capacity: { type: 'string', example: '25 Ah', description: 'Dung lượng pin' },
-                cycleLife: { type: 'string', example: '1000 chu kỳ', description: 'Chu kỳ sạc' },
-                operatingTemperature: { type: 'string', example: '-5°C đến 40°C', description: 'Nhiệt độ hoạt động' },
-                warranty: { type: 'string', example: '2 năm hoặc 20,000 km', description: 'Bảo hành' },
-                compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast', description: 'Tương thích' }
+                batteryCapacity: { type: 'string', example: '1.2 kWh', description: 'Battery capacity' },
+                range: { type: 'string', example: '80 km', description: 'Driving range' },
+                chargingTime: { type: 'string', example: '4-6 giờ', description: 'Charging time' },
+                power: { type: 'string', example: '1,200 W', description: 'Motor power' },
+                maxSpeed: { type: 'string', example: '45 km/h', description: 'Maximum speed' },
+                warranty: { type: 'string', example: '2 năm hoặc 20,000 km', description: 'Warranty' },
+                compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast', description: 'Compatibility' }
               }
             },
             seller: { type: 'string', example: '507f1f77bcf86cd799439012' },

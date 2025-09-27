@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-// Accept multipart form-data where numbers arrive as strings
-// Also allow specifications to arrive as a JSON string
-const specificationsSchema = z.object({
+// Category-specific specifications
+const vehicleSpecsSchema = z.object({
   batteryCapacity: z.string().optional(),
   range: z.string().optional(),
   chargingTime: z.string().optional(),
@@ -11,7 +10,25 @@ const specificationsSchema = z.object({
   batteryType: z.string().optional(),
   voltage: z.string().optional(),
   capacity: z.string().optional(),
+  warranty: z.string().optional(),
+  compatibility: z.string().optional()
+}).optional();
+
+const batterySpecsSchema = z.object({
+  batteryType: z.string().optional(),
+  voltage: z.string().optional(),
+  capacity: z.string().optional(),
   cycleLife: z.string().optional(),
+  warranty: z.string().optional(),
+  compatibility: z.string().optional()
+}).optional();
+
+const motorcycleSpecsSchema = z.object({
+  batteryCapacity: z.string().optional(),
+  range: z.string().optional(),
+  chargingTime: z.string().optional(),
+  power: z.string().optional(),
+  maxSpeed: z.string().optional(),
   warranty: z.string().optional(),
   compatibility: z.string().optional()
 }).optional();
@@ -27,17 +44,17 @@ export const createProductValidation = z.object({
   condition: z.enum(["used", "refurbished"], { message: "Invalid condition. Choose: used (used), refurbished (refurbished)" }),
   images: z.array(z.string().url("Invalid image URL")).optional(),
   // Required shipping dimensions/weight (light service)
-  length: z.coerce.number().int().min(1, "Length must be from 1cm onwards").max(200, "Length cannot exceed 200cm"),
-  width: z.coerce.number().int().min(1, "Width must be from 1cm onwards").max(200, "Width cannot exceed 200cm"),
-  height: z.coerce.number().int().min(1, "Height must be from 1cm onwards").max(200, "Height cannot exceed 200cm"),
-  weight: z.coerce.number().int().min(1, "Weight must be from 1g onwards").max(1600000, "Weight cannot exceed 1,600,000g (1.6 tons)"),
-  // Removed GHN-specific package info from product creation
+  length: z.coerce.number().int().min(1, "Length must be from 1cm onwards").max(600, "Length cannot exceed 600cm"),
+  width: z.coerce.number().int().min(1, "Width must be from 1cm onwards").max(300, "Width cannot exceed 300cm"),
+  height: z.coerce.number().int().min(1, "Height must be from 1cm onwards").max(250, "Height cannot exceed 250cm"),
+  weight: z.coerce.number().min(1, "Weight must be from 1kg onwards").max(1600, "Weight cannot exceed 1,600kg (1.6 tons)"),
+  // Category-specific specifications
   specifications: z.preprocess((val) => {
     if (typeof val === 'string') {
       try { return JSON.parse(val); } catch { return {}; }
     }
     return val;
-  }, specificationsSchema),
+  }, z.union([vehicleSpecsSchema, batterySpecsSchema, motorcycleSpecsSchema])),
   status: z.enum(["active", "sold", "inactive"]).optional(),
   isFeatured: z.coerce.boolean().optional()
 });
