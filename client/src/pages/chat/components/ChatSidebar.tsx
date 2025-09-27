@@ -45,11 +45,11 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
                                     <h4 className="font-medium text-sm truncate text-gray-900">{otherUser.name}</h4>
-                                    {conv.unreadCount > 0 && (
+                                    {conv.lastMessage.sentBy !== currentUserId && conv.unreadCount > 0 && (
                                         <Badge className="bg-blue-500 text-white text-xs px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center">
                                             {conv.unreadCount}
                                         </Badge>
-                                    )}
+                                    )}  
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <p className="text-gray-500 text-xs truncate flex-1">{conv.lastMessage.text}</p>
