@@ -26,14 +26,13 @@ body {
   flex-direction: column;
 }
 .scroll-hidden::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
 }
 
 .scroll-hidden {
-  -ms-overflow-style: none; /* IE và Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-/* Root container thường dùng cho app */
 #root {
   flex: 1;
   display: flex;
