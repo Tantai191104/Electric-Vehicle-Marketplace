@@ -1,6 +1,9 @@
 import API from "@/lib/axios";
-import type { BatteryFormData, ProductsResponse, VehicleFormData } from "@/types/productType";
-
+import type {
+  BatteryFormData,
+  ProductsResponse,
+  VehicleFormData,
+} from "@/types/productType";
 export interface ProductFilters {
   page?: number;
   limit?: number;
@@ -12,28 +15,38 @@ export interface ProductFilters {
 }
 
 export const productServices = {
-  async fetchProducts(filters: ProductFilters = {}):Promise<ProductsResponse> {
+  async fetchProducts(filters: ProductFilters = {}): Promise<ProductsResponse> {
     const { page = 1, limit = 10, ...otherFilters } = filters;
     const params = Object.fromEntries(
-      Object.entries({ page, limit, ...otherFilters }).filter(([, value]) => value !== undefined && value !== "")
+      Object.entries({ page, limit, ...otherFilters }).filter(
+        ([, value]) => value !== undefined && value !== ""
+      )
     );
-    
+
     const response = await API.get("/products", { params });
     return response.data;
   },
-  async fetchVehicleProducts(filters: Omit<ProductFilters, 'category'> = {}):Promise<ProductsResponse> {
+  async fetchVehicleProducts(
+    filters: Omit<ProductFilters, "category"> = {}
+  ): Promise<ProductsResponse> {
     const { page = 1, limit = 10, ...otherFilters } = filters;
     const params = Object.fromEntries(
-      Object.entries({ page, limit, ...otherFilters }).filter(([, value]) => value !== undefined && value !== "")
+      Object.entries({ page, limit, ...otherFilters }).filter(
+        ([, value]) => value !== undefined && value !== ""
+      )
     );
-    
+
     const response = await API.get("/products/vehicles", { params });
     return response.data;
   },
-  async fetchBatteryProducts(filters: Omit<ProductFilters, 'category'> = {}):Promise<ProductsResponse> {
+  async fetchBatteryProducts(
+    filters: Omit<ProductFilters, "category"> = {}
+  ): Promise<ProductsResponse> {
     const { page = 1, limit = 10, ...otherFilters } = filters;
     const params = Object.fromEntries(
-      Object.entries({ page, limit, ...otherFilters }).filter(([, value]) => value !== undefined && value !== "")
+      Object.entries({ page, limit, ...otherFilters }).filter(
+        ([, value]) => value !== undefined && value !== ""
+      )
     );
     const response = await API.get("/products/batteries", { params });
     return response.data;
@@ -54,8 +67,4 @@ export const productServices = {
     const response = await API.delete(`/profile/wishlist/${productId}`);
     return response.data;
   },
-  async addToCart(productId: string, quantity = 1): Promise<null> {
-    const response = await API.post("/cart", { productId, quantity });
-    return response.data;
-  }
 };

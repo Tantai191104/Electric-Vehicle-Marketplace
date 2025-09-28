@@ -14,6 +14,8 @@ import { ChatPage } from "@/pages/chat/ChatPage";
 import EditorPage from "@/pages/article/EditorPage";
 import ProductDetailPage from "@/pages/detail/ProductDetailPage";
 import WishListPage from "@/pages/wishlist/WishListPage";
+import OrderPage from "@/pages/order/OrderPage";
+import CheckoutPage from "@/pages/checkout/CheckoutPage";
 
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
@@ -55,7 +57,7 @@ export default function App() {
         />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/chat/:id" element={<ChatPage />} />
-
+        <Route path="/checkout" element={animatePage(<CheckoutPage />)} />
         {/* App layout */}
         <Route element={<BaseLayout />}>
           <Route path="/" element={animatePage(<HomePage />)} />
@@ -68,6 +70,7 @@ export default function App() {
           <Route path="/motorbikes" element={animatePage(<MotorbikeProductList />)} />
           <Route path="/detail/:id" element={animatePage(<ProductDetailPage />)} />
           <Route path="/wishlist" element={animatePage(<WishListPage />)} />
+          <Route path="/orders" element={animatePage(<OrderPage />)} />
         </Route>
       </Routes>
     </AnimatePresence>

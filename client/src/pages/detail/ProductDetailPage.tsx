@@ -110,23 +110,31 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
         }
     };
 
-    const handleAddToCart = async (): Promise<void> => {
+    const handleBuyNow = async (): Promise<void> => {
         if (!user) {
-            toast.error("Bạn cần đăng nhập để thêm vào giỏ hàng");
+            toast.error("Bạn cần đăng nhập để mua hàng");
             navigate('/auth/login');
             return;
         }
 
         if (user._id === product.seller) {
-            toast.error("Bạn không thể thêm sản phẩm của chính mình vào giỏ hàng");
+            toast.error("Bạn không thể mua sản phẩm của chính mình");
             return;
         }
 
         try {
-            await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
+            // For battery products, redirect to checkout page
+            if (product.category === 'battery') {
+                toast.success("Chuyển đến trang thanh toán...");
+                navigate(`/checkout?productId=${product._id}&quantity=1`);
+            } else {
+                // For other products, add to cart first then redirect
+                await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
+                navigate('/checkout');
+            }
         } catch (error) {
             // Error đã được handle trong hook
-            console.error("Failed to add to cart:", error);
+            console.error("Failed to process buy now:", error);
         }
     };
 
@@ -161,11 +169,11 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                         likes={product.likes}
                         onContact={handleContact}
                         onFavorite={handleFavorite}
-                        onAddToCart={handleAddToCart}
+                        onBuyNow={handleBuyNow}
                         isContactLoading={createConversation.isPending}
                         isInWishlist={product.isInWishlist || false}
                         isFavoriteLoading={addWishlist.isPending || removeWishlist.isPending}
-                        isAddToCartLoading={addToCart.isPending}
+                        isBuyNowLoading={addToCart.isPending}
                         category={product.category}
                         className="mb-5"
                     />
