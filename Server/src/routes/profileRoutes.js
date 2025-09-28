@@ -340,20 +340,131 @@ router.delete("/wishlist/:productId", removeFromWishlist);
  * @swagger
  * /profile/orders:
  *   get:
- *     summary: Get user's orders
+ *     summary: Get user's orders with full product details
  *     tags: [Profile]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [all, buyer, seller]
+ *           default: all
+ *         description: Filter orders by type
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Items per page
  *     responses:
  *       200:
- *         description: Orders
+ *         description: Orders with full product details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       orderNumber:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [pending, confirmed, shipped, delivered, cancelled, refunded]
+ *                       totalAmount:
+ *                         type: number
+ *                       shippingFee:
+ *                         type: number
+ *                       finalAmount:
+ *                         type: number
+ *                       productId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           images:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                           description:
+ *                             type: string
+ *                           price:
+ *                             type: number
+ *                           brand:
+ *                             type: string
+ *                           model:
+ *                             type: string
+ *                           year:
+ *                             type: number
+ *                           condition:
+ *                             type: string
+ *                           category:
+ *                             type: string
+ *                           specifications:
+ *                             type: object
+ *                       buyerId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           phone:
+ *                             type: string
+ *                       sellerId:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           phone:
+ *                             type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ *       400:
+ *         description: Validation error
  */
 router.get("/orders", getUserOrders);
 /**
  * @swagger
  * /profile/orders/{orderId}:
  *   get:
- *     summary: Get order details
+ *     summary: Get detailed order information with full product details
  *     tags: [Profile]
  *     security:
  *       - bearerAuth: []
@@ -363,9 +474,184 @@ router.get("/orders", getUserOrders);
  *         required: true
  *         schema:
  *           type: string
+ *         description: Order ID
  *     responses:
  *       200:
- *         description: Details
+ *         description: Detailed order information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 orderNumber:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                   enum: [pending, confirmed, shipped, delivered, cancelled, refunded]
+ *                 quantity:
+ *                   type: number
+ *                 unitPrice:
+ *                   type: number
+ *                 totalAmount:
+ *                   type: number
+ *                 shippingFee:
+ *                   type: number
+ *                 commission:
+ *                   type: number
+ *                 finalAmount:
+ *                   type: number
+ *                 productId:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     images:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     price:
+ *                       type: number
+ *                     brand:
+ *                       type: string
+ *                     model:
+ *                       type: string
+ *                     year:
+ *                       type: number
+ *                     condition:
+ *                       type: string
+ *                     category:
+ *                       type: string
+ *                     specifications:
+ *                       type: object
+ *                       properties:
+ *                         batteryCapacity:
+ *                           type: string
+ *                         range:
+ *                           type: string
+ *                         chargingTime:
+ *                           type: string
+ *                         power:
+ *                           type: string
+ *                         maxSpeed:
+ *                           type: string
+ *                         batteryType:
+ *                           type: string
+ *                         voltage:
+ *                           type: string
+ *                         capacity:
+ *                           type: string
+ *                         cycleLife:
+ *                           type: string
+ *                         warranty:
+ *                           type: string
+ *                         compatibility:
+ *                           type: string
+ *                     length:
+ *                       type: number
+ *                       description: Package length in cm
+ *                     width:
+ *                       type: number
+ *                       description: Package width in cm
+ *                     height:
+ *                       type: number
+ *                       description: Package height in cm
+ *                     weight:
+ *                       type: number
+ *                       description: Package weight in grams
+ *                 buyerId:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                 sellerId:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                 shipping:
+ *                   type: object
+ *                   properties:
+ *                     method:
+ *                       type: string
+ *                     trackingNumber:
+ *                       type: string
+ *                     carrier:
+ *                       type: string
+ *                     estimatedDelivery:
+ *                       type: string
+ *                       format: date-time
+ *                     actualDelivery:
+ *                       type: string
+ *                       format: date-time
+ *                 shippingAddress:
+ *                   type: object
+ *                   properties:
+ *                     fullName:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                     address:
+ *                       type: string
+ *                     city:
+ *                       type: string
+ *                     province:
+ *                       type: string
+ *                     zipCode:
+ *                       type: string
+ *                 payment:
+ *                   type: object
+ *                   properties:
+ *                     method:
+ *                       type: string
+ *                       enum: [wallet, bank_transfer, credit_card]
+ *                     status:
+ *                       type: string
+ *                       enum: [pending, paid, failed, refunded]
+ *                     transactionId:
+ *                       type: string
+ *                     paidAt:
+ *                       type: string
+ *                       format: date-time
+ *                 timeline:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       status:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       timestamp:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedBy:
+ *                         type: string
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *       404:
+ *         description: Order not found or access denied
  */
 router.get("/orders/:orderId", getOrderDetails);
 /**
