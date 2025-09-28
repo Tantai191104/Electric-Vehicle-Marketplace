@@ -112,7 +112,7 @@ const UserDropdown = () => {
                 <div className="flex justify-between text-sm text-gray-700 mb-2">
                   <span>Đồng Tốt</span>
                   <span className="font-semibold text-yellow-600">
-                    {formatVND(user?.wallet.balance)}
+                    {formatVND(user?.wallet.balance ?? 0)}
                   </span>
                 </div>
                 <Link to="/wallet/recharge">
@@ -129,6 +129,11 @@ const UserDropdown = () => {
                 Tiện ích
               </div>
               <div className="flex flex-col gap-2">
+                <Link to="/orders">
+                  <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
+                    <FaStore /> Đơn hàng của tôi
+                  </DropdownMenuItem>
+                </Link>
                 <Link to="/wishlist">
                   <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
                     <AiOutlineHeart /> Tin đăng đã lưu

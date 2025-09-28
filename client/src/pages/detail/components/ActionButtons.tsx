@@ -1,16 +1,16 @@
-import { FiZap, FiHeart, FiShoppingCart } from "react-icons/fi";
+import { FiZap, FiHeart, FiShoppingBag } from "react-icons/fi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 interface ActionButtonsProps {
     likes: number;
     onContact: () => void;
     onFavorite: () => void;
-    onAddToCart?: () => void;
+    onBuyNow?: () => void;
     className?: string;
     disabled?: boolean;
     isContactLoading?: boolean;
     isFavoriteLoading?: boolean;
-    isAddToCartLoading?: boolean;
+    isBuyNowLoading?: boolean;
     isInWishlist?: boolean;
     category?: "vehicle" | "battery";
 }
@@ -19,12 +19,12 @@ export function ActionButtons({
     likes,
     onContact,
     onFavorite,
-    onAddToCart,
+    onBuyNow,
     className = "",
     disabled = false,
     isContactLoading = false,
     isFavoriteLoading = false,
-    isAddToCartLoading = false,
+    isBuyNowLoading = false,
     isInWishlist = false,
     category = "vehicle",
 }: ActionButtonsProps) {
@@ -68,13 +68,13 @@ export function ActionButtons({
         return (
             <div className={`flex flex-col gap-3 ${className}`}>
                 <ButtonWithIcon
-                    onClick={onAddToCart!}
-                    isLoading={isAddToCartLoading}
-                    icon={<FiShoppingCart className="w-5 h-5" />}
+                    onClick={onBuyNow!}
+                    isLoading={isBuyNowLoading}
+                    icon={<FiShoppingBag className="w-5 h-5" />}
                     type="ghost"
                     fullWidth
                 >
-                    {isAddToCartLoading ? "Đang thêm vào giỏ hàng..." : "Thêm vào giỏ hàng"}
+                    {isBuyNowLoading ? "Đang xử lý..." : "Mua ngay"}
                 </ButtonWithIcon>
 
                 <div className="flex flex-col sm:flex-row gap-3">

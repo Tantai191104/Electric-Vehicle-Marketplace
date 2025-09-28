@@ -42,15 +42,13 @@ API.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
-    const { accessToken, isAuthenticated, user, setAuth, clearAuth } =
+    const { isAuthenticated, user, setAuth, clearAuth } =
       useAuthStore.getState();
 
     if (
       error.response?.status === 401 &&
-      originalRequest &&
       !originalRequest._retry &&
-      isAuthenticated && // chỉ refresh khi đã login
-      accessToken // phải có accessToken
+      isAuthenticated
     ) {
       originalRequest._retry = true;
 
@@ -63,28 +61,24 @@ API.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        interface RefreshResponse {
-          accessToken: string;
-        }
+        const res = await APIRefresh.post("/auth/refresh-token");
+        const newToken = res.data.accessToken;
 
-        const res = await APIRefresh.post<RefreshResponse>(
-          "/auth/refresh-token",
-          {}
-        );
-        const newAccessToken = res.data.accessToken;
+        if (!newToken) throw new Error("Không nhận được accessToken mới");
 
-        setAuth({ user: user!, accessToken: newAccessToken });
+        setAuth({ user, accessToken: newToken });
+        processQueue(null, newToken);
 
-        if (originalRequest.headers)              
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        processQueue(null, newAccessToken);
+        // Retry request cũ
+        if (originalRequest.headers)
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return API(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
+      } catch (err) {
+        // Chỉ logout khi thực sự refresh token thất bại
+        processQueue(err, null);
         clearAuth();
         window.location.href = "/auth/login";
-        return Promise.reject(refreshError);
+        return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
