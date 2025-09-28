@@ -199,38 +199,38 @@ export const useWishlist = () => {
   });
 };
 
-// Hook để thêm sản phẩm vào giỏ hàng
-export const useAddToCart = () => {
-  const queryClient = useQueryClient();
+// // Hook để thêm sản phẩm vào giỏ hàng
+// export const useAddToCart = () => {
+//   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      productId,
-      quantity = 1,
-    }: {
-      productId: string;
-      quantity?: number;
-    }) => productServices.addToCart(productId, quantity),
-    onSuccess: () => {
-      // Invalidate cart cache (nếu có)
-      queryClient.invalidateQueries({
-        queryKey: ["cart"],
-      });
+//   return useMutation({
+//     mutationFn: ({
+//       productId,
+//       quantity = 1,
+//     }: {
+//       productId: string;
+//       quantity?: number;
+//     }) => productServices.addToCart(productId, quantity),
+//     onSuccess: () => {
+//       // Invalidate cart cache (nếu có)
+//       queryClient.invalidateQueries({
+//         queryKey: ["cart"],
+//       });
 
-      toast.success("Đã thêm vào giỏ hàng thành công!");
-    },
-    onError: (error: unknown) => {
-      let errorMessage = "Không thể thêm vào giỏ hàng";
+//       toast.success("Đã thêm vào giỏ hàng thành công!");
+//     },
+//     onError: (error: unknown) => {
+//       let errorMessage = "Không thể thêm vào giỏ hàng";
 
-      if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      }
+//       if (error && typeof error === "object" && "response" in error) {
+//         const axiosError = error as {
+//           response?: { data?: { message?: string } };
+//         };
+//         errorMessage = axiosError.response?.data?.message || errorMessage;
+//       }
 
-      toast.error(errorMessage);
-      console.error("Error adding to cart:", error);
-    },
-  });
-};
+//       toast.error(errorMessage);
+//       console.error("Error adding to cart:", error);
+//     },
+//   });
+// };

@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from "react-router-dom";
-
 import { ImageGallery } from "./components/ImageGallery";
 import { GuaranteeBadges } from "./components/GuaranteeBadges";
 import { SocialShare } from "./components/SocialShare";
@@ -8,7 +7,7 @@ import { ActionButtons } from "./components/ActionButtons";
 import { ProductHeader } from "./components/ProductHeader";
 import { ProductDescription } from "./components/ProductDescriptionProps";
 import { ProductStats } from "./components/ProductStats";
-import { useAddWishlist, useRemoveWishlist, useProduct, useAddToCart } from "@/hooks/useProduct";
+import { useAddWishlist, useRemoveWishlist, useProduct } from "@/hooks/useProduct";
 import { useCreateConversation, useFindExistingConversation } from "@/hooks/useChat";
 import { useAuthStore } from "@/store/auth";
 import { LoadingState } from "./components/LoadingState";
@@ -28,7 +27,6 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     const findExistingConversation = useFindExistingConversation();
     const addWishlist = useAddWishlist();
     const removeWishlist = useRemoveWishlist();
-    const addToCart = useAddToCart();
     const { user } = useAuthStore();
 
     if (isLoading) {
@@ -127,10 +125,6 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
             if (product.category === 'battery') {
                 toast.success("Chuyển đến trang thanh toán...");
                 navigate(`/checkout?productId=${product._id}&quantity=1`);
-            } else {
-                // For other products, add to cart first then redirect
-                await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
-                navigate('/checkout');
             }
         } catch (error) {
             // Error đã được handle trong hook
@@ -173,7 +167,6 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                         isContactLoading={createConversation.isPending}
                         isInWishlist={product.isInWishlist || false}
                         isFavoriteLoading={addWishlist.isPending || removeWishlist.isPending}
-                        isBuyNowLoading={addToCart.isPending}
                         category={product.category}
                         className="mb-5"
                     />
