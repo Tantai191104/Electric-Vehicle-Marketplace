@@ -13,7 +13,7 @@ import WalletTopupPage from "@/pages/zalopay/WalletTopupPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
 import EditorPage from "@/pages/article/EditorPage";
 import ProductDetailPage from "@/pages/detail/ProductDetailPage";
-
+import WishListPage from "@/pages/wishlist/WishListPage";
 
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
@@ -61,12 +61,13 @@ export default function App() {
           <Route path="/" element={animatePage(<HomePage />)} />
         </Route>
         <Route element={<StandardLayout />}>
-          <Route path="/articles/new" element={animatePage(<EditorPage />)} />
+          <Route path="/articles/create" element={animatePage(<EditorPage />)} />
           <Route path="/profile" element={animatePage(<ProfilePage />)} />
           <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
           <Route path="/cars" element={animatePage(<CarProductList />)} />
           <Route path="/motorbikes" element={animatePage(<MotorbikeProductList />)} />
           <Route path="/detail/:id" element={animatePage(<ProductDetailPage />)} />
+          <Route path="/wishlist" element={animatePage(<WishListPage />)} />
         </Route>
       </Routes>
     </AnimatePresence>

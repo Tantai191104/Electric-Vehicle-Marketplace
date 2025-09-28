@@ -66,7 +66,7 @@ const LoginForm: React.FC<{
           <button
             type="submit"
             disabled={isLoading}
-            className="cursor-pointer bg-yellow-500 text-white py-4 px-8 rounded-md font-semibold text-lg flex items-center gap-3 hover:bg-yellow-600 transition-all duration-300 shadow-lg disabled:opacity-70"
+            className="cursor-pointer bg-yellow-500 text-white py-4 px-8 rounded-md font-semibold text-md flex items-center gap-3 hover:bg-yellow-600 transition-all duration-300 shadow-lg disabled:opacity-70"
           >
             {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
             <FiArrowRight className="text-xl" />

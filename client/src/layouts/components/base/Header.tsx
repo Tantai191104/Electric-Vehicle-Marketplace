@@ -109,7 +109,7 @@ const Header: React.FC = () => {
           <Button
             variant="default"
             className="bg-yellow-300 text-black font-bold hover:bg-yellow-500 flex items-center gap-1 px-2 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base"
-            onClick={() => navigate("/articles/new")} // chuyển sang trang ArticleEditor
+            onClick={() => navigate("/articles/create")}
           >
             <AiOutlinePlusCircle size={20} className="md:mr-1" />
             <span className="hidden sm:inline">Đăng tin</span>

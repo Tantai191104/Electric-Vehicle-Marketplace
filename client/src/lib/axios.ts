@@ -75,7 +75,7 @@ API.interceptors.response.use(
 
         setAuth({ user: user!, accessToken: newAccessToken });
 
-        if (originalRequest.headers)
+        if (originalRequest.headers)              
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         processQueue(null, newAccessToken);

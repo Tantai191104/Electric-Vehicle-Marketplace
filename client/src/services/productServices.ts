@@ -46,4 +46,16 @@ export const productServices = {
     const response = await API.post("/products", data);
     return response.data;
   },
+  async addWishlist(productId: string): Promise<null> {
+    const response = await API.post("/profile/wishlist", { productId });
+    return response.data;
+  },
+  async removeWishlist(productId: string): Promise<null> {
+    const response = await API.delete(`/profile/wishlist/${productId}`);
+    return response.data;
+  },
+  async addToCart(productId: string, quantity = 1): Promise<null> {
+    const response = await API.post("/cart", { productId, quantity });
+    return response.data;
+  }
 };

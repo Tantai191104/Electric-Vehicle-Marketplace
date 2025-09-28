@@ -73,20 +73,34 @@ export const useSendMessage = () => {
   });
 };
 
-// Hook để tạo conversation mới (nếu cần)
+// Hook để tìm existing conversation trong cache
+export const useFindExistingConversation = () => {
+  const queryClient = useQueryClient();
+  
+  return (productId: string, sellerId: string): Conversation | null => {
+    const conversations = queryClient.getQueryData<Conversation[]>(chatKeys.conversations());
+    if (!conversations) return null;
+    
+    return conversations.find(conv => 
+      conv.productId._id === productId && conv.sellerId._id === sellerId
+    ) || null;
+  };
+};
+
+// Hook để tạo conversation mới (không check cache)
 export const useCreateConversation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { productId: string; sellerId: string }) => {
-      return chatService.createConversation(data.productId, data.sellerId);
+    mutationFn: async (data: { productId: string; sellerId: string }) => {
+      // Tạo conversation mới trực tiếp
+      const newConversation = await chatService.createConversation(data.productId, data.sellerId);
+      return newConversation;
     },
     onSuccess: (newConversation) => {
-      // Chỉ invalidate để refetch từ server, không add trực tiếp vào cache
-      // vì newConversation có thể chưa có đầy đủ populated data
+      // Invalidate để refetch data mới
       queryClient.invalidateQueries({ queryKey: chatKeys.conversations() });
       
-      // Nếu có conversationId, cũng invalidate messages của conversation đó
       if (newConversation._id) {
         queryClient.invalidateQueries({ 
           queryKey: chatKeys.messages(newConversation._id) 

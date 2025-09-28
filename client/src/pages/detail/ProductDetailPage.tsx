@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+
 import { ImageGallery } from "./components/ImageGallery";
 import { GuaranteeBadges } from "./components/GuaranteeBadges";
 import { SocialShare } from "./components/SocialShare";
@@ -7,8 +8,8 @@ import { ActionButtons } from "./components/ActionButtons";
 import { ProductHeader } from "./components/ProductHeader";
 import { ProductDescription } from "./components/ProductDescriptionProps";
 import { ProductStats } from "./components/ProductStats";
-import { useProduct } from "@/hooks/useProduct";
-import { useCreateConversation } from "@/hooks/useChat";
+import { useAddWishlist, useRemoveWishlist, useProduct, useAddToCart } from "@/hooks/useProduct";
+import { useCreateConversation, useFindExistingConversation } from "@/hooks/useChat";
 import { useAuthStore } from "@/store/auth";
 import { LoadingState } from "./components/LoadingState";
 import { ErrorState } from "./components/ErrorState";
@@ -24,6 +25,10 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     const navigate = useNavigate();
     const { data, isLoading, error, refetch } = useProduct(id ?? "");
     const createConversation = useCreateConversation();
+    const findExistingConversation = useFindExistingConversation();
+    const addWishlist = useAddWishlist();
+    const removeWishlist = useRemoveWishlist();
+    const addToCart = useAddToCart();
     const { user } = useAuthStore();
 
     if (isLoading) {
@@ -39,35 +44,44 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     }
 
     const product = data;
+    console.log("Product data:", product);
     const handleContact = async (): Promise<void> => {
         if (!user) {
             toast.error("Bạn cần đăng nhập để liên hệ với người bán");
             navigate('/auth/login');
             return;
         }
-        if (user._id === product.seller) {
+        if (user._id === product.seller._id) {
             toast.error("Bạn không thể liên hệ với chính mình");
             return;
         }
 
         try {
-            toast.loading("Đang tạo cuộc hội thoại...");
-            console.log("Creating conversation with:", {
-                productId: product._id,
-                sellerId: product.seller._id
-            });
-            const conversation = await createConversation.mutateAsync({
+            const existingConversation = findExistingConversation(product._id, product.seller._id);
+
+            if (existingConversation) {
+                toast.success("Chuyển đến cuộc hội thoại hiện có!");
+                navigate(`/chat/${existingConversation._id}`);
+                return;
+            }
+
+            const toastId = toast.loading("Đang tạo cuộc hội thoại...");
+            console.log("Creating new conversation with:", {
                 productId: product._id,
                 sellerId: product.seller._id
             });
 
+            const newConversation = await createConversation.mutateAsync({
+                productId: product._id,
+                sellerId: product.seller._id
+            });
+
+            toast.dismiss(toastId);
             toast.success("Tạo cuộc hội thoại thành công!");
 
-            // Đợi một chút để React Query invalidate và refetch data
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Navigate to chat page - ChatPage sẽ tự động fetch đúng data từ server
-            navigate(`/chat/${conversation._id}`);
+            navigate(`/chat/${newConversation._id}`);
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Có lỗi xảy ra khi tạo cuộc hội thoại";
@@ -76,16 +90,44 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
         }
     };
 
-    const handleFavorite = (): void => {
+    const handleFavorite = async (): Promise<void> => {
         if (!user) {
             toast.error("Bạn cần đăng nhập để thích sản phẩm");
             navigate('/auth/login');
             return;
         }
 
-        // TODO: Implement favorite functionality
-        console.log("Favorite clicked for:", product._id);
-        toast.success("Đã thêm vào danh sách yêu thích!");
+        try {
+            // Check if product is already in wishlist
+            if (product.isInWishlist) {
+                await removeWishlist.mutateAsync(product._id);
+            } else {
+                await addWishlist.mutateAsync(product._id);
+            }
+        } catch (error) {
+            // Error đã được handle trong hook
+            console.error("Failed to toggle wishlist:", error);
+        }
+    };
+
+    const handleAddToCart = async (): Promise<void> => {
+        if (!user) {
+            toast.error("Bạn cần đăng nhập để thêm vào giỏ hàng");
+            navigate('/auth/login');
+            return;
+        }
+
+        if (user._id === product.seller) {
+            toast.error("Bạn không thể thêm sản phẩm của chính mình vào giỏ hàng");
+            return;
+        }
+
+        try {
+            await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
+        } catch (error) {
+            // Error đã được handle trong hook
+            console.error("Failed to add to cart:", error);
+        }
     };
 
     return (
@@ -119,7 +161,12 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                         likes={product.likes}
                         onContact={handleContact}
                         onFavorite={handleFavorite}
+                        onAddToCart={handleAddToCart}
                         isContactLoading={createConversation.isPending}
+                        isInWishlist={product.isInWishlist || false}
+                        isFavoriteLoading={addWishlist.isPending || removeWishlist.isPending}
+                        isAddToCartLoading={addToCart.isPending}
+                        category={product.category}
                         className="mb-5"
                     />
 
