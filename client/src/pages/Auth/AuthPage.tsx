@@ -46,7 +46,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
     }) => {
         try {
             await registerMutation.mutateAsync(data);
-            setIsLogin(true); // Chuyển về form đăng nhập sau khi đăng ký thành công
+            setIsLogin(true);
         } catch (error) {
             console.error("Registration failed:", error);
         }

@@ -129,9 +129,11 @@ const UserDropdown = () => {
                 Tiện ích
               </div>
               <div className="flex flex-col gap-2">
-                <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
-                  <AiOutlineHeart /> Tin đăng đã lưu
-                </DropdownMenuItem>
+                <Link to="/wishlist">
+                  <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
+                    <AiOutlineHeart /> Tin đăng đã lưu
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
                   <FaSearch /> Tìm kiếm đã lưu
                 </DropdownMenuItem>

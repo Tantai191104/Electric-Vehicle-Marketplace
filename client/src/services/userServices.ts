@@ -33,4 +33,8 @@ import type { User } from "@/types/authType";
     const response = await API.get("/profile/profile");
     return response.data;
   },
+  async getWishlist() {
+    const response = await API.get("/profile/wishlist");
+    return response.data;
+  },
 };
