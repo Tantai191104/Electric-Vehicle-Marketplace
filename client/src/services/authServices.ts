@@ -10,8 +10,10 @@ export const authServices = {
     password: string;
     phone: string;
   }) {
-    console.log("Register data:", data);
-    const response = await API.post("/auth/register", data);
+    const response = await API.post("/auth/register", {
+      ...data,
+      role: "user",
+    });
     return response.data;
   },
   async fetchProfile() {

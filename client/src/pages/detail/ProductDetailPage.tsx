@@ -7,7 +7,7 @@ import { ActionButtons } from "./components/ActionButtons";
 import { ProductHeader } from "./components/ProductHeader";
 import { ProductDescription } from "./components/ProductDescriptionProps";
 import { ProductStats } from "./components/ProductStats";
-import { useAddWishlist, useRemoveWishlist, useProduct } from "@/hooks/useProduct";
+import { useProduct } from "@/hooks/useProduct";
 import { useCreateConversation, useFindExistingConversation } from "@/hooks/useChat";
 import { useAuthStore } from "@/store/auth";
 import { LoadingState } from "./components/LoadingState";
@@ -25,8 +25,6 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     const { data, isLoading, error, refetch } = useProduct(id ?? "");
     const createConversation = useCreateConversation();
     const findExistingConversation = useFindExistingConversation();
-    const addWishlist = useAddWishlist();
-    const removeWishlist = useRemoveWishlist();
     const { user } = useAuthStore();
 
     if (isLoading) {
@@ -88,25 +86,6 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
         }
     };
 
-    const handleFavorite = async (): Promise<void> => {
-        if (!user) {
-            toast.error("Bạn cần đăng nhập để thích sản phẩm");
-            navigate('/auth/login');
-            return;
-        }
-
-        try {
-            // Check if product is already in wishlist
-            if (product.isInWishlist) {
-                await removeWishlist.mutateAsync(product._id);
-            } else {
-                await addWishlist.mutateAsync(product._id);
-            }
-        } catch (error) {
-            // Error đã được handle trong hook
-            console.error("Failed to toggle wishlist:", error);
-        }
-    };
 
     const handleBuyNow = async (): Promise<void> => {
         if (!user) {
@@ -160,13 +139,10 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                     <ProductHeader car={product} className="mb-5" />
 
                     <ActionButtons
-                        likes={product.likes}
                         onContact={handleContact}
-                        onFavorite={handleFavorite}
                         onBuyNow={handleBuyNow}
                         isContactLoading={createConversation.isPending}
                         isInWishlist={product.isInWishlist || false}
-                        isFavoriteLoading={addWishlist.isPending || removeWishlist.isPending}
                         category={product.category}
                         className="mb-5"
                     />

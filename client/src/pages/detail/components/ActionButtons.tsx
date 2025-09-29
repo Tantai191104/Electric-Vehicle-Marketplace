@@ -1,29 +1,23 @@
-import { FiZap, FiHeart, FiShoppingBag } from "react-icons/fi";
+import { FiZap, FiShoppingBag } from "react-icons/fi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 interface ActionButtonsProps {
-    likes: number;
     onContact: () => void;
-    onFavorite: () => void;
     onBuyNow?: () => void;
     className?: string;
     disabled?: boolean;
     isContactLoading?: boolean;
-    isFavoriteLoading?: boolean;
     isBuyNowLoading?: boolean;
     isInWishlist?: boolean;
     category?: "vehicle" | "battery";
 }
 
 export function ActionButtons({
-    likes,
     onContact,
-    onFavorite,
     onBuyNow,
     className = "",
     disabled = false,
     isContactLoading = false,
-    isFavoriteLoading = false,
     isBuyNowLoading = false,
     isInWishlist = false,
     category = "vehicle",
@@ -87,20 +81,6 @@ export function ActionButtons({
                     >
                         {isContactLoading ? "Đang tạo cuộc hội thoại..." : "Liên hệ người bán"}
                     </ButtonWithIcon>
-
-                    <ButtonWithIcon
-                        onClick={onFavorite}
-                        isLoading={isFavoriteLoading}
-                        icon={<FiHeart className="w-4 h-4" />}
-                        type="secondary"
-                        fullWidth
-                    >
-                        {isFavoriteLoading
-                            ? "Đang xử lý..."
-                            : isInWishlist
-                                ? `Đã thích (${likes})`
-                                : `Yêu thích (${likes})`}
-                    </ButtonWithIcon>
                 </div>
             </div>
         );
@@ -117,20 +97,6 @@ export function ActionButtons({
                 fullWidth
             >
                 {isContactLoading ? "Đang tạo cuộc hội thoại..." : "Liên hệ mua ngay"}
-            </ButtonWithIcon>
-
-            <ButtonWithIcon
-                onClick={onFavorite}
-                isLoading={isFavoriteLoading}
-                icon={<FiHeart className="w-4 h-4" />}
-                type="secondary"
-                fullWidth
-            >
-                {isFavoriteLoading
-                    ? "Đang xử lý..."
-                    : isInWishlist
-                        ? `Đã thích (${likes})`
-                        : `Yêu thích (${likes})`}
             </ButtonWithIcon>
         </div>
     );
