@@ -25,4 +25,24 @@ export const chatService = {
     const response = await API.post(`/chat/${conversationId}/read`);
     return response.data;
   },
+  async sendFileMessage(conversationId: string, files: File[], text?: string) {
+    const formData = new FormData();
+    formData.append("conversationId", conversationId);
+
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    if (text) {
+      formData.append("text", text);
+    }
+
+    const response = await API.post(`/chat/messages/files`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  },
 };
