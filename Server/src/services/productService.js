@@ -45,11 +45,14 @@ export async function listProductsService(filters, page = 1, limit = 10) {
     const skip = (page - 1) * limit;
     let query = {};
 
+    // Chỉ hiển thị sản phẩm đã được duyệt (active) hoặc đã bán (sold)
+    query.status = { $in: ["active", "sold"] };
+
     if (filters.category) query.category = filters.category;
     if (filters.brand) query.brand = filters.brand;
     if (filters.model) query.model = filters.model;
     if (filters.seller) query.seller = filters.seller;
-    if (filters.status) query.status = filters.status;
+    if (filters.status) query.status = filters.status; // Override nếu có filter status cụ thể
     if (filters.condition) query.condition = filters.condition;
     if (filters.isFeatured !== undefined) query.isFeatured = filters.isFeatured;
 

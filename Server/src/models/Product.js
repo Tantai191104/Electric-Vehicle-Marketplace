@@ -45,9 +45,15 @@ const productSchema = new mongoose.Schema(
     },
     status: { 
       type: String, 
-      enum: ["active", "sold", "inactive"], 
-      default: "active" 
+      enum: ["pending", "active", "sold", "inactive", "rejected"], 
+      default: "pending" 
     },
+    // Thông tin xét duyệt
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    approvedAt: { type: Date },
+    rejectedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    rejectedAt: { type: Date },
+    rejectionReason: { type: String },
     isFeatured: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 }

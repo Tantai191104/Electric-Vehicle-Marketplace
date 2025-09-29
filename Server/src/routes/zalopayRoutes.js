@@ -6,6 +6,7 @@ import {
   getTopupHistory
 } from "../controllers/zalopayController.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { requireUser } from "../middlewares/authorize.js";
 import { 
   createTopupOrderValidation, 
   getTopupHistoryValidation,
@@ -84,7 +85,8 @@ const router = express.Router();
  *       500:
  *         description: Lỗi server
  */
-router.post("/create-order", authenticate, async (req, res) => {
+// Chỉ User mới được nạp tiền để mua hàng, Admin không nạp tiền
+router.post("/create-order", authenticate, requireUser, async (req, res) => {
   try {
     const result = createTopupOrderValidation.safeParse(req.body);
     if (!result.success) {
@@ -219,7 +221,8 @@ router.post("/callback", async (req, res) => {
  *       500:
  *         description: Lỗi server
  */
-router.get("/order/:orderId/status", authenticate, queryOrderStatus);
+// Chỉ User mới được kiểm tra trạng thái nạp tiền
+router.get("/order/:orderId/status", authenticate, requireUser, queryOrderStatus);
 
 /**
  * @swagger
@@ -301,7 +304,8 @@ router.get("/order/:orderId/status", authenticate, queryOrderStatus);
  *       500:
  *         description: Lỗi server
  */
-router.get("/history", authenticate, async (req, res) => {
+// Chỉ User mới được xem lịch sử nạp tiền
+router.get("/history", authenticate, requireUser, async (req, res) => {
   try {
     const result = getTopupHistoryValidation.safeParse(req.query);
     if (!result.success) {

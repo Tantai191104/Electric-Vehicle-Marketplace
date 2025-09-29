@@ -5,9 +5,6 @@ import {
   updateUserPreferences,
   getWalletBalance,
   getWalletTransactions,
-  addToWishlist,
-  removeFromWishlist,
-  getUserWishlist,
   getUserOrders,
   getOrderDetails,
   updateOrderStatus,
@@ -18,10 +15,12 @@ import {
   updateUserAddress
 } from "../controllers/profileController.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { requireAuth } from "../middlewares/authorize.js";
 
 const router = express.Router();
 
-router.use(authenticate);
+// User và Admin đều có thể quản lý profile riêng của mình
+router.use(authenticate, requireAuth);
 /**
  * @swagger
  * /profile/locations/provinces:
@@ -201,140 +200,6 @@ router.get("/wallet", getWalletBalance);
  */
 router.get("/wallet/transactions", getWalletTransactions);
 
-/**
- * @swagger
- * /profile/wishlist:
- *   get:
- *     summary: Get user's wishlist
- *     tags: [Profile]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *           default: 1
- *         description: Page number for pagination
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *           default: 20
- *         description: Number of items per page
- *     responses:
- *       200:
- *         description: Wishlist retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 items:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                       userId:
- *                         type: string
- *                       productId:
- *                         type: string
- *                       addedAt:
- *                         type: string
- *                         format: date-time
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     page:
- *                       type: integer
- *                     limit:
- *                       type: integer
- *                     total:
- *                       type: integer
- *                     pages:
- *                       type: integer
- *       400:
- *         description: Validation error
- */
-router.get("/wishlist", getUserWishlist);
-/**
- * @swagger
- * /profile/wishlist:
- *   post:
- *     summary: Add item to wishlist
- *     tags: [Profile]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - productId
- *             properties:
- *               productId:
- *                 type: string
- *                 description: ID of the product to add to wishlist
- *                 example: "60d5ecb74b24c1234567890a"
- *     responses:
- *       201:
- *         description: Item added to wishlist successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                 userId:
- *                   type: string
- *                 productId:
- *                   type: string
- *                 addedAt:
- *                   type: string
- *                   format: date-time
- *       400:
- *         description: Validation error or product already in wishlist
- */
-router.post("/wishlist", addToWishlist);
-/**
- * @swagger
- * /profile/wishlist/{productId}:
- *   delete:
- *     summary: Remove item from wishlist
- *     tags: [Profile]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: productId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the product to remove from wishlist
- *         example: "60d5ecb74b24c1234567890a"
- *     responses:
- *       200:
- *         description: Item removed from wishlist successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Item removed from wishlist"
- *       400:
- *         description: Item not found in wishlist
- */
-router.delete("/wishlist/:productId", removeFromWishlist);
 
 /**
  * @swagger

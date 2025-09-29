@@ -6,6 +6,7 @@ import {
   deleteProductService,
   getUserProductsService,
 } from "../services/productService.js";
+import Product from "../models/Product.js";
 import {
   createProductValidation,
   updateProductValidation,
@@ -186,6 +187,93 @@ export async function getMotorcycles(req, res) {
     const { page, limit, ...filters } = result.data;
     const products = await listProductsService({ ...filters, category: 'motorcycle' }, page, limit);
     res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function markProductAsSold(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.sub || req.user.id;
+
+    // Tìm sản phẩm
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ 
+        error: "Sản phẩm không tồn tại" 
+      });
+    }
+
+    // Kiểm tra user có phải chủ sở hữu sản phẩm không
+    if (product.seller.toString() !== userId) {
+      return res.status(403).json({ 
+        error: "Bạn chỉ có thể cập nhật sản phẩm của chính mình" 
+      });
+    }
+
+    // Kiểm tra sản phẩm đã được duyệt chưa
+    if (product.status === "pending") {
+      return res.status(400).json({ 
+        error: "Sản phẩm đang chờ xét duyệt, chưa thể cập nhật đã bán" 
+      });
+    }
+
+    // Kiểm tra sản phẩm chưa được đánh dấu sold
+    if (product.status === "sold") {
+      return res.status(400).json({ 
+        error: "Đã được cập nhật trước đó" 
+      });
+    }
+
+    // Cập nhật status thành sold
+    await Product.findByIdAndUpdate(id, { status: "sold" });
+
+    res.json({
+      success: true,
+      message: "Thành công",
+      data: {
+        productId: id,
+        status: "sold"
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// Người bán có thể đánh dấu sản phẩm chưa bán (nếu muốn bán lại)
+export async function markProductAsAvailable(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.sub || req.user.id;
+
+    // Tìm sản phẩm
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ 
+        error: "Sản phẩm không tồn tại" 
+      });
+    }
+
+    // Kiểm tra user có phải chủ sở hữu sản phẩm không
+    if (product.seller.toString() !== userId) {
+      return res.status(403).json({ 
+        error: "Bạn chỉ có thể đánh dấu sản phẩm của chính mình" 
+      });
+    }
+
+    // Cập nhật status thành active
+    await Product.findByIdAndUpdate(id, { status: "active" });
+
+    res.json({
+      success: true,
+      message: "Đã cập nhật sản phẩm là có thể bán",
+      data: {
+        productId: id,
+        status: "active"
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
