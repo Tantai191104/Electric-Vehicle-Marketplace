@@ -13,10 +13,10 @@ import WalletTopupPage from "@/pages/zalopay/WalletTopupPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
 import EditorPage from "@/pages/article/EditorPage";
 import ProductDetailPage from "@/pages/detail/ProductDetailPage";
-import WishListPage from "@/pages/wishlist/WishListPage";
 import OrderPage from "@/pages/order/OrderPage";
 import CheckoutPage from "@/pages/checkout/CheckoutPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import SubscriptionPage from "@/pages/subscription/SubscriptionPage";
 
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
@@ -74,8 +74,8 @@ export default function App() {
             <Route path="/articles/create" element={animatePage(<EditorPage />)} />
             <Route path="/profile" element={animatePage(<ProfilePage />)} />
             <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
-            <Route path="/wishlist" element={animatePage(<WishListPage />)} />
             <Route path="/orders" element={animatePage(<OrderPage />)} />
+            <Route path="/subscriptions" element={animatePage(<SubscriptionPage />)} />
           </Route>
         </Route>
       </Routes>
