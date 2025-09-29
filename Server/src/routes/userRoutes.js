@@ -1,6 +1,7 @@
 import express from "express";
 import { createUser, loginUser, listUsers, getUserById, updateUser, deleteUser } from "../controllers/userController.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { requireAdmin } from "../middlewares/authorize.js";
 
 const router = express.Router();
 
@@ -61,13 +62,14 @@ router.post("/register", createUser);
  */
 router.post("/login", loginUser);
 
-router.use(authenticate);
+// Routes below require admin authentication (quản lý người dùng)
+router.use(authenticate, requireAdmin);
 
 /**
  * @swagger
  * /users/list:
  *   get:
- *     summary: List users
+ *     summary: List users (Admin only - for statistics and management)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -81,7 +83,7 @@ router.get("/list", listUsers);
  * @swagger
  * /users/{id}:
  *   get:
- *     summary: Get user by id
+ *     summary: Get user by id (Admin only - for viewing user details)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -93,54 +95,12 @@ router.get("/list", listUsers);
  *           type: string
  *     responses:
  *       200:
- *         description: User
+ *         description: User details
  */
 router.get("/:id", getUserById);
 
-/**
- * @swagger
- * /users/{id}:
- *   put:
- *     summary: Update user by id
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: Updated
- */
-router.put("/:id", updateUser);
-
-/**
- * @swagger
- * /users/{id}:
- *   delete:
- *     summary: Delete user by id
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Deleted
- */
-router.delete("/:id", deleteUser);
+// Note: Admin không thể update/delete user trực tiếp
+// Update user chỉ thông qua /api/admin/users/:id (ban/unban, quản lý vi phạm)
+// User tự update profile qua /api/profile/*
 
 export default router;

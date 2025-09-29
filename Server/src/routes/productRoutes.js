@@ -9,8 +9,13 @@ import {
   getVehicles,
   getBatteries,
   getMotorcycles,
+  markProductAsSold,
+  markProductAsAvailable,
 } from "../controllers/productController.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { optionalAuth, requireUser, requireAdmin, requireAuth } from "../middlewares/authorize.js";
+import { requireProductManagement } from "../middlewares/checkPurchasePermission.js";
+import { requireOwnership } from "../middlewares/checkOwnership.js";
 import { productUpload } from "../middlewares/upload.js";
 
 const router = express.Router();
@@ -86,7 +91,8 @@ const router = express.Router();
  *                     pages:
  *                       type: integer
  */
-router.get("/", listProducts);
+// Guest, User, Admin can view products (GET /products) - Guest chỉ xem danh sách
+router.get("/", optionalAuth, listProducts);
 
 /**
  * @swagger
@@ -153,7 +159,9 @@ router.get("/", listProducts);
  *                     pages:
  *                       type: integer
  */
-router.get("/vehicles", getVehicles);
+// Guest, User, Admin can view vehicles
+// Chỉ User mới xem chi tiết sản phẩm (Guest không được xem chi tiết, Admin không cần xem)
+router.get("/vehicles", authenticate, requireUser, getVehicles);
 
 /**
  * @swagger
@@ -220,7 +228,9 @@ router.get("/vehicles", getVehicles);
  *                     pages:
  *                       type: integer
  */
-router.get("/batteries", getBatteries);
+// Guest, User, Admin can view batteries
+// Chỉ User mới xem chi tiết sản phẩm (Guest không được xem chi tiết, Admin không cần xem)
+router.get("/batteries", authenticate, requireUser, getBatteries);
 
 /**
  * @swagger
@@ -287,7 +297,9 @@ router.get("/batteries", getBatteries);
  *                     pages:
  *                       type: integer
  */
-router.get("/motorcycles", getMotorcycles);
+// Guest, User, Admin can view motorcycles
+// Chỉ User mới xem chi tiết sản phẩm (Guest không được xem chi tiết, Admin không cần xem)
+router.get("/motorcycles", authenticate, requireUser, getMotorcycles);
 
 /**
  * @swagger
@@ -317,9 +329,11 @@ router.get("/motorcycles", getMotorcycles);
  *       404:
  *         description: Product not found
  */
-router.get("/:id", getProductById);
+// Guest, User, Admin can view product details
+// Chỉ User mới xem chi tiết sản phẩm (Guest không được xem chi tiết, Admin không cần xem)
+router.get("/:id", authenticate, requireUser, getProductById);
 
-router.use(authenticate);
+// Routes below require authentication
 
 /**
  * @swagger
@@ -458,7 +472,8 @@ router.use(authenticate);
  *       401:
  *         description: Unauthorized
  */
-router.post("/", productUpload.array('files', 10), createProduct);
+// Chỉ User (người bán) có thể tạo sản phẩm, Admin không bán hàng
+router.post("/", authenticate, requireProductManagement, productUpload.array('files', 10), createProduct);
 
 /**
  * @swagger
@@ -500,7 +515,8 @@ router.post("/", productUpload.array('files', 10), createProduct);
  *       401:
  *         description: Unauthorized
  */
-router.get("/my/products", getUserProducts);
+// Chỉ User (người bán) có thể xem sản phẩm của mình
+router.get("/my/products", authenticate, requireProductManagement, getUserProducts);
 
 /**
  * @swagger
@@ -544,7 +560,8 @@ router.get("/my/products", getUserProducts);
  *       404:
  *         description: Product not found
  */
-router.put("/:id", updateProduct);
+// User chỉ có thể update sản phẩm của mình, Admin có thể update bất kỳ sản phẩm nào
+router.put("/:id", authenticate, requireAuth, requireOwnership, updateProduct);
 
 /**
  * @swagger
@@ -580,6 +597,91 @@ router.put("/:id", updateProduct);
  *       404:
  *         description: Product not found
  */
-router.delete("/:id", deleteProduct);
+// User chỉ có thể delete sản phẩm của mình, Admin có thể delete bất kỳ sản phẩm nào
+router.delete("/:id", authenticate, requireAuth, requireOwnership, deleteProduct);
+
+/**
+ * @swagger
+ * /products/{id}/mark-sold:
+ *   patch:
+ *     summary: Đánh dấu sản phẩm đã bán (chỉ chủ sở hữu)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Sản phẩm đã được đánh dấu là đã bán
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     productId:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *       403:
+ *         description: Không có quyền đánh dấu sản phẩm này
+ *       404:
+ *         description: Sản phẩm không tồn tại
+ */
+// Người bán tự đánh dấu sản phẩm đã bán (bán ở nơi khác)
+router.patch("/:id/mark-sold", authenticate, requireUser, markProductAsSold);
+
+/**
+ * @swagger
+ * /products/{id}/mark-available:
+ *   patch:
+ *     summary: Đánh dấu sản phẩm có thể bán (chỉ chủ sở hữu)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Sản phẩm đã được đánh dấu là có thể bán
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     productId:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *       403:
+ *         description: Không có quyền đánh dấu sản phẩm này
+ *       404:
+ *         description: Sản phẩm không tồn tại
+ */
+// Người bán có thể đánh dấu sản phẩm chưa bán (nếu muốn bán lại)
+router.patch("/:id/mark-available", authenticate, requireUser, markProductAsAvailable);
 
 export default router;

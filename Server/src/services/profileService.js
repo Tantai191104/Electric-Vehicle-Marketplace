@@ -1,6 +1,5 @@
 import User from "../models/User.js";
 import WalletTransaction from "../models/WalletTransaction.js";
-import Wishlist from "../models/Wishlist.js";
 import Order from "../models/Order.js";
 import fs from "fs";
 import path from "path";
@@ -161,65 +160,6 @@ export async function getWalletTransactionsService(userId, page = 1, limit = 20)
 }
 
 
-export async function addToWishlistService(userId, productId) {
-  try {
-    const existingItem = await Wishlist.findOne({ userId, productId });
-    if (existingItem) {
-      throw new Error("Product already in wishlist");
-    }
-    
-    const wishlistItem = await Wishlist.create({
-      userId,
-      productId,
-      addedAt: new Date()
-    });
-    
-    return wishlistItem;
-  } catch (error) {
-    if (error.code === 11000) {
-      throw new Error("Product already in wishlist");
-    }
-    throw error;
-  }
-}
-
-
-export async function removeFromWishlistService(userId, productId) {
-  try {
-    const result = await Wishlist.findOneAndDelete({ userId, productId });
-    if (!result) {
-      throw new Error("Item not found in wishlist");
-    }
-    return { message: "Item removed from wishlist" };
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function getUserWishlistService(userId, page = 1, limit = 20) {
-  try {
-    const skip = (page - 1) * limit;
-    
-    const wishlistItems = await Wishlist.find({ userId })
-      .sort({ addedAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
-    const total = await Wishlist.countDocuments({ userId });
-    
-    return {
-      items: wishlistItems,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    };
-  } catch (error) {
-    throw error;
-  }
-}
 
 export async function getUserOrdersService(userId, type = 'all', page = 1, limit = 20) {
   try {

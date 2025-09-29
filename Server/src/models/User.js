@@ -17,7 +17,12 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, select: false },
     phone: { type: String, default: null },
     avatar: { type: String, default: null },
-    role: { type: String, enum: ["customer", "staff", "admin"], default: "customer" },
+    role: { 
+      type: String, 
+      enum: ["user", "admin"], 
+      default: "user",
+      description: "user: người bán/mua trên platform, admin: quản lý platform"
+    },
     isActive: { type: Boolean, default: true },
     
     profile: {
@@ -38,6 +43,25 @@ const userSchema = new mongoose.Schema(
         bankName: { type: String, default: null },
         accountNumber: { type: String, default: null },
         accountHolder: { type: String, default: null }
+      },
+      // Quản lý vi phạm
+      violations: [{
+        type: { type: String, enum: ["spam", "fake_product", "fraud", "inappropriate", "other"] },
+        description: { type: String, required: true },
+        severity: { type: String, enum: ["low", "medium", "high"], default: "low" },
+        action: { type: String, enum: ["warning", "suspension", "ban"], default: "warning" },
+        status: { type: String, enum: ["pending", "resolved"], default: "pending" },
+        reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        reportedAt: { type: Date, default: Date.now },
+        resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        resolvedAt: { type: Date },
+        adminNotes: { type: String }
+      }],
+      suspension: {
+        reason: { type: String },
+        suspendedAt: { type: Date },
+        suspendedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        expiresAt: { type: Date }
       }
     },
     

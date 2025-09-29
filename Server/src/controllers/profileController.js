@@ -5,9 +5,6 @@ import {
   updateUserAddressService,
   getWalletBalanceService,
   getWalletTransactionsService,
-  addToWishlistService,
-  removeFromWishlistService,
-  getUserWishlistService,
   getUserOrdersService,
   getOrderDetailsService,
   updateOrderStatusService
@@ -25,11 +22,9 @@ const wards = JSON.parse(fs.readFileSync(path.join(__dirname, "../constants/loca
 import {
   updateProfileValidation,
   updatePreferencesValidation,
-  addToWishlistValidation,
   updateOrderStatusValidation,
   uploadAvatarValidation,
   getWalletTransactionsValidation,
-  getWishlistValidation,
   getOrdersValidation,
   updateAddressValidation
 } from "../validations/profile.validation.js";
@@ -181,51 +176,6 @@ export async function getWalletTransactions(req, res) {
   }
 }
 
-export async function addToWishlist(req, res) {
-  try {
-    const wishlistResult = addToWishlistValidation.safeParse(req.body);
-    if (!wishlistResult.success) {
-      return res.status(400).json({ error: wishlistResult.error.errors[0]?.message || "Validation error" });
-    }
-    
-    const userId = req.user.sub;
-    const { productId } = wishlistResult.data;
-    
-    const wishlistItem = await addToWishlistService(userId, productId);
-    res.status(201).json(wishlistItem);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-}
-
-export async function removeFromWishlist(req, res) {
-  try {
-    const userId = req.user.sub;
-    const { productId } = req.params;
-    
-    const result = await removeFromWishlistService(userId, productId);
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-}
-
-export async function getUserWishlist(req, res) {
-  try {
-    const wishlistQueryResult = getWishlistValidation.safeParse(req.query);
-    if (!wishlistQueryResult.success) {
-      return res.status(400).json({ error: wishlistQueryResult.error.errors[0]?.message || "Validation error" });
-    }
-    
-    const userId = req.user.sub;
-    const { page = 1, limit = 20 } = wishlistQueryResult.data;
-    
-    const result = await getUserWishlistService(userId, parseInt(page), parseInt(limit));
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-}
 
 export async function getUserOrders(req, res) {
   try {

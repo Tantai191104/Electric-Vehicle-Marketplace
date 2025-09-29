@@ -1,11 +1,13 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
+import { requireUser } from "../middlewares/authorize.js";
 import { chatFileUpload } from "../middlewares/upload.js";
 import { startChat, getMyConversations, postMessage, getMessages, postMessageWithFiles, markAsRead } from "../controllers/chatController.js";
 
 const router = express.Router();
 
-router.use(authenticate);
+// Chỉ User (người bán/mua) mới được chat, Admin không tham gia giao dịch
+router.use(authenticate, requireUser);
 
 /**
  * @swagger
