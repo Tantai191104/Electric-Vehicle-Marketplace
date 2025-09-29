@@ -16,6 +16,7 @@ import ProductDetailPage from "@/pages/detail/ProductDetailPage";
 import WishListPage from "@/pages/wishlist/WishListPage";
 import OrderPage from "@/pages/order/OrderPage";
 import CheckoutPage from "@/pages/checkout/CheckoutPage";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
@@ -55,22 +56,27 @@ export default function App() {
           path="/auth/register"
           element={animatePage(<AuthPage mode="register" />)}
         />
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/chat/:id" element={<ChatPage />} />
-        <Route path="/checkout" element={animatePage(<CheckoutPage />)} />
-        {/* App layout */}
         <Route element={<BaseLayout />}>
           <Route path="/" element={animatePage(<HomePage />)} />
         </Route>
         <Route element={<StandardLayout />}>
-          <Route path="/articles/create" element={animatePage(<EditorPage />)} />
-          <Route path="/profile" element={animatePage(<ProfilePage />)} />
-          <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
           <Route path="/cars" element={animatePage(<CarProductList />)} />
           <Route path="/motorbikes" element={animatePage(<MotorbikeProductList />)} />
           <Route path="/detail/:id" element={animatePage(<ProductDetailPage />)} />
-          <Route path="/wishlist" element={animatePage(<WishListPage />)} />
-          <Route path="/orders" element={animatePage(<OrderPage />)} />
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/chat/:id" element={<ChatPage />} />
+          <Route path="/checkout" element={animatePage(<CheckoutPage />)} />
+
+          <Route element={<StandardLayout />}>
+            <Route path="/articles/create" element={animatePage(<EditorPage />)} />
+            <Route path="/profile" element={animatePage(<ProfilePage />)} />
+            <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
+            <Route path="/wishlist" element={animatePage(<WishListPage />)} />
+            <Route path="/orders" element={animatePage(<OrderPage />)} />
+          </Route>
         </Route>
       </Routes>
     </AnimatePresence>

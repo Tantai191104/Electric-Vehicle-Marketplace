@@ -201,15 +201,14 @@ export default function CheckoutPage() {
                 }
             }
 
-            // 🔹 Tạo payload đơn hàng
             const orderPayload: OrderPayload = {
-                productName: product.name,
+                productName: product.title,
                 from_name: product.seller.name,
                 from_phone: product.seller.phone,
                 from_address: `${product.seller.address.houseNumber}, ${product.seller.address.ward}, ${product.seller.address.district}, ${product.seller.address.province}`,
-                from_ward_name: product.seller.ward_name,
-                from_district_name: product.seller.district_name,
-                from_province_name: product.seller.province_name,
+                from_ward_name: product.seller.address.ward,
+                from_district_name: product.seller.address.district,
+                from_province_name: product.seller.address.province,
                 to_name: shippingInfo.fullName,
                 to_phone: shippingInfo.phone,
                 to_address: `${shippingInfo.houseNumber}, ${shippingInfo.ward}, ${shippingInfo.district}, ${shippingInfo.city}`,
@@ -226,18 +225,33 @@ export default function CheckoutPage() {
                 cod_amount: totalAmount,
                 required_note: "KHONGCHOXEMHANG",
                 shipping_fee: shippingFee,
-                unit_price: product.price
+                unit_price: product.price,
+                content: `${product.title} x${product.brand}`,
+                product_id: product._id,
+                seller_id: product.seller._id,
+                item: [
+                    {
+                        name: product.title,
+                        code: product._id,
+                        price: product.price,
+                        length: product.length,
+                        width: product.width,
+                        height: product.height,
+                        weight: product.weight,
+                        category: { "level1": product.category }
+                    }
+                ]
+
             };
 
             const result = await orderServices.createOrder(orderPayload);
-            if (result.status !== 200) {
+            if (result.status < 200 || result.status >= 300) {
                 toast.dismiss(toastId);
                 toast.error("Có lỗi xảy ra trong quá trình tạo đơn hàng. Vui lòng thử lại.");
                 setIsProcessing(false);
                 return;
             }
 
-            // 🔹 Nếu thanh toán = ví hệ thống → trừ tiền trong store
             if (selectedPaymentMethod === "system_wallet") {
                 updateUser({
                     wallet: {

@@ -32,11 +32,29 @@ export type OrderPayload = {
   width: number;
   height: number;
   weight: number;
-  unit_price: number;
-  shipping_fee: number;
+
   service_type_id: number;
   payment_type_id: number;
   insurance_value: number;
   cod_amount: number;
-  required_note: "KHONGCHOXEMHANG" | "CHOXEMHANGKHONGTHU" | "CHOTHUHANG"; // GHN yêu cầu fixed values
+  required_note: "KHONGCHOXEMHANG" | "CHOXEMHANGKHONGTHU" | "CHOTHUHANG";
+
+  content: string;
+  product_id: string;
+  seller_id: string;
+  unit_price: number;
+  shipping_fee: number;
+
+  item: [
+    {
+      name: string;
+      code: string;
+      price: number;
+      length: number;
+      width: number;
+      height: number;
+      weight: number;
+      category: { [key: string]: string };
+    }
+  ];
 };
