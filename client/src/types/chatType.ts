@@ -25,13 +25,20 @@ export interface Conversation {
   createdAt: string;
   updatedAt: string;
 }
+export interface FileMeta {
+  _id: string;
+  url: string;
+  name: string;
+  type: string; // "image/jpeg", "application/pdf", ...
+}
+
 export interface Message {
   _id: string;
   conversationId: string;
   senderId: string;
   text: string;
-  type: "text" | "image" | "file";
-  files: string[];
+  type: "text" | "image" | "file"; // tùy server define
+  files?: FileMeta[];
   isRead: boolean;
   createdAt: string;
   updatedAt: string;
