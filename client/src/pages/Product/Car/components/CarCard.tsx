@@ -7,6 +7,7 @@ import { getConditionLabel, getProductType } from "@/utils/productHelper";
 import { Badge } from "@/components/ui/badge";
 
 interface CarCardProps {
+    key : string;
     car: Product;
 }
 
