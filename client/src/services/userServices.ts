@@ -37,4 +37,8 @@ import type { User } from "@/types/authType";
     const response = await API.get("/profile/wishlist");
     return response.data;
   },
+  async fetchOrders() {
+    const response = await API.get("/profile/orders");
+    return response.data;
+  }
 };
