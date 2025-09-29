@@ -1,10 +1,12 @@
 import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
+import { requirePurchasePermission } from "../middlewares/checkPurchasePermission.js";
+import { preventSelfPurchase } from "../middlewares/checkOwnership.js";
 import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShippingOrder, returnShippingOrder, syncReturnsAndRefunds } from "../controllers/shippingController.js";
 
 const router = express.Router();
 
-router.use(authenticate);
+router.use(authenticate, requirePurchasePermission);
 
 /**
  * @swagger
@@ -271,7 +273,8 @@ router.post("/fee", calcShippingFee);
  *       200:
  *         description: GHN order creation response
  */
-router.post("/order", createShippingOrder);
+// User không được mua sản phẩm của chính mình
+router.post("/order", preventSelfPurchase, createShippingOrder);
 
 /**
  * @swagger

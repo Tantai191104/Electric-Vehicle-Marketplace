@@ -44,9 +44,6 @@ export const updatePreferencesValidation = z.object({
   currency: z.enum(['VND', 'USD']).optional()
 });
 
-export const addToWishlistValidation = z.object({
-  productId: z.string().min(1)
-});
 
 export const updateOrderStatusValidation = z.object({
   status: z.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'refunded']),
@@ -62,10 +59,6 @@ export const getWalletTransactionsValidation = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional()
 });
 
-export const getWishlistValidation = z.object({
-  page: z.coerce.number().int().min(1).optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional()
-});
 
 export const getOrdersValidation = z.object({
   type: z.enum(['all', 'buyer', 'seller']).optional(),

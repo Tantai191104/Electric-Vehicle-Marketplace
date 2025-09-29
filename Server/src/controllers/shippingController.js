@@ -356,6 +356,9 @@ export async function createShippingOrder(req, res) {
           ],
         });
 
+        // Update product status to "sold" when order is created successfully
+        await Product.findByIdAndUpdate(b.product_id, { status: 'sold' });
+
         // Attach local order info to response
         payload.localOrder = {
           _id: orderDoc._id,
