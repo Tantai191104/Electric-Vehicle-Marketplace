@@ -68,7 +68,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:id" element={<ChatPage />} />
-          <Route path="/checkout" element={animatePage(<CheckoutPage />)} />
+          <Route path="/checkout/:productId/:quantity" element={<CheckoutPage />} />
 
           <Route element={<StandardLayout />}>
             <Route path="/articles/create" element={animatePage(<EditorPage />)} />
