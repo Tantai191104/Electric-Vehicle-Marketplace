@@ -23,6 +23,7 @@ import { zaloPayServices } from "@/services/walletServices";
 import ZaloPayLogo from "@/assets/Zalopay.svg";
 import { useZaloPayOrder } from "@/hooks/useZaloPayOrder";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/auth";
 
 const PRESET_AMOUNTS = [25000, 50000, 100000, 500000, 1000000];
 
@@ -70,13 +71,27 @@ const WalletTopupPage: React.FC = () => {
   useEffect(() => {
     if (status === "success") {
       setOpen(false);
-      setAmount("");
+
+      // Chuyển amount từ string sang number
+      const depositAmount = Number(amount || 0);
+
+      // Cập nhật user trong Zustand
+      useAuthStore.getState().updateUser({
+        wallet: {
+          balance: (useAuthStore.getState().user?.wallet.balance ?? 0) + depositAmount,
+          totalDeposited: (useAuthStore.getState().user?.wallet.totalDeposited ?? 0) + depositAmount
+        }
+      });
+
+      setAmount(""); // reset input
       toast.success("Thanh toán thành công! Ví đã được cộng tiền.");
     }
+
     if (status === "fail") {
       toast.error("Thanh toán thất bại. Vui lòng thử lại.");
     }
-  }, [status]);
+  }, [status, amount]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-blue-50 flex items-center justify-center py-16 px-4 mt-[120px]">

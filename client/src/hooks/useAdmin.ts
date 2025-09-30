@@ -6,6 +6,9 @@ export const useAdmin = () => {
     queryKey: ["users"],
     queryFn: adminServices.fetchUsers,
   });
-
-  return { usersQuery };
+  const productsQuery = useQuery({
+    queryKey: ["pending-products"],
+    queryFn: adminServices.fetchPendingProducts,
+  });
+  return { usersQuery, productsQuery };
 };

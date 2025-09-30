@@ -18,6 +18,7 @@ import { authServices } from "@/services/authServices";
 const adminLinks = [
     { to: "/admin", label: "Dashboard", icon: <FaHome /> },
     { to: "/admin/users", label: "Người dùng", icon: <FaUser /> },
+    { to: "/admin/products", label: "Sản phẩm", icon: <FaCar /> },
     { to: "/admin/orders", label: "Đơn hàng", icon: <FaClipboardList /> },
     { to: "/admin/vehicles", label: "Xe điện", icon: <FaCar /> },
     { to: "/admin/stations", label: "Trạm sạc", icon: <FaChargingStation /> },

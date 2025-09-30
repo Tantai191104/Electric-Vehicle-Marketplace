@@ -19,6 +19,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import SubscriptionPage from "@/pages/subscription/SubscriptionPage";
 import AdminLayout from "@/layouts/AdminLayout";
 import UserManage from "@/pages/admin/user/UserManage";
+import ProductManage from "@/pages/admin/product/ProductManage";
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
   animate: { opacity: 1, y: 0, scale: 1 },
@@ -93,7 +94,7 @@ export default function App() {
               path="users"
               element={animatePage(<UserManage />)}
             />
-            {/* <Route path="products" element={animatePage(<ProductManage />)} /> */}
+            <Route path="products" element={animatePage(<ProductManage />)} />
           </Route>
         </Route>
       </Routes>
