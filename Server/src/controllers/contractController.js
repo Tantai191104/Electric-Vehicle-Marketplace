@@ -71,7 +71,7 @@ export async function generateDraftPdf(req, res) {
     doc.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       const uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ resource_type: 'raw', folder: 'contracts' }, (err, result) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf' }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
           resolve({ success: true, url: result.secure_url });
         }).end(buffer);
@@ -191,7 +191,7 @@ export async function signContract(req, res) {
     }
 
     const uploaded = await new Promise((resolve) => {
-      cloudinary.uploader.upload_stream({ resource_type: 'raw', folder: 'contracts' }, (err, result) => {
+      cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf' }, (err, result) => {
         if (err) return resolve({ success: false, error: err.message });
         resolve({ success: true, url: result.secure_url });
       }).end(file.buffer);
