@@ -53,8 +53,28 @@ export async function calcShippingFee(req, res) {
     }
     delete body.items;
     // GHN API expects 'service_id' and 'service_type_id' (with underscores)
-    body.service_id = 2;
+    // We'll resolve a valid service_id for this route to avoid "route not found service"
     body.service_type_id = 2;
+
+    // Try to resolve available services for the given route and pick a valid service_id
+    try {
+      const svcResp = await ghnClient.post(
+        "/v2/shipping-order/available-services",
+        {
+          shop_id: Number(process.env.GHN_SHOP_ID),
+          from_district: Number(body.from_district_id),
+          to_district: Number(body.to_district_id),
+        },
+        { headers }
+      );
+      let svcPayload;
+      try { svcPayload = typeof svcResp.data === 'string' ? JSON.parse(svcResp.data) : svcResp.data; } catch { svcPayload = {}; }
+      const services = Array.isArray(svcPayload?.data) ? svcPayload.data : [];
+      const preferred = services.find((s) => Number(s.service_type_id) === 2) || services[0];
+      if (preferred && preferred.service_id) {
+        body.service_id = Number(preferred.service_id);
+      }
+    } catch {}
     body.length = Math.min(Math.max(Number(body.length), 1), 200);
     body.width = Math.min(Math.max(Number(body.width), 1), 200);
     body.height = Math.min(Math.max(Number(body.height), 1), 200);
