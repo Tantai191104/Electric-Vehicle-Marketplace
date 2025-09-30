@@ -2,6 +2,7 @@ import { ghnClient, getGhnHeaders } from "../config/ghn.js";
 import Product from "../models/Product.js";
 import { z } from "zod";
 import Order from "../models/Order.js";
+import Contract from "../models/Contract.js";
 import User from "../models/User.js";
 import WalletTransaction from "../models/WalletTransaction.js";
 
@@ -318,6 +319,18 @@ export async function createShippingOrder(req, res) {
 
       // Only proceed if we have at least product and pricing context
       if (b.product_id && typeof unitPrice === 'number') {
+        // Require signed contract before charging and creating order
+        const existingSigned = await Contract.findOne({
+          buyerId,
+          productId: b.product_id,
+          status: 'signed'
+        }).sort({ createdAt: -1 });
+        if (!existingSigned) {
+          payload = payload || {};
+          payload.error = 'CONTRACT_REQUIRED';
+          payload.message = 'Vui lòng ký hợp đồng trước khi tạo đơn hàng';
+          return res.status(400).json(payload);
+        }
         const fee = typeof shippingFee === 'number' ? shippingFee : 0;
         const totalAmount = Math.max(0, Math.round(unitPrice));
         const finalAmountCalc = totalAmount + Math.max(0, Math.round(fee));
@@ -381,6 +394,18 @@ export async function createShippingOrder(req, res) {
             { status: 'pending', description: 'Đơn hàng tạo trên GHN', updatedBy: buyerId },
           ],
         });
+
+        // Attach contract URL to order and link back
+        try {
+          if (existingSigned?.finalPdfUrl) {
+            orderDoc.contract = orderDoc.contract || {};
+            orderDoc.contract.pdfUrl = existingSigned.finalPdfUrl;
+            orderDoc.contract.signedAt = existingSigned.signedAt || new Date();
+            await orderDoc.save();
+            existingSigned.orderId = orderDoc._id;
+            await existingSigned.save();
+          }
+        } catch {}
 
         // Update product status to "sold" when order is created successfully
         await Product.findByIdAndUpdate(b.product_id, { status: 'sold' });

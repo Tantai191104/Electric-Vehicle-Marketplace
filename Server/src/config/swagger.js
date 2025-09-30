@@ -350,6 +350,25 @@ const options = {
             createdAt: { type: 'string', format: 'date-time', example: '2024-01-15T10:30:00.000Z' },
             updatedAt: { type: 'string', format: 'date-time', example: '2024-01-15T10:30:00.000Z' }
           }
+        },
+        ContractInitiate: {
+          type: 'object',
+          properties: {
+            product_id: { type: 'string' },
+            seller_id: { type: 'string' }
+          }
+        },
+        ContractSign: {
+          type: 'object',
+          properties: {
+            contractId: { type: 'string' }
+          }
+        },
+        ContractDraft: {
+          type: 'object',
+          properties: {
+            contractId: { type: 'string' }
+          }
         }
       }
     },
