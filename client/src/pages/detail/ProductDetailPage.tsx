@@ -103,7 +103,7 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
             // For battery products, redirect to checkout page
             if (product.category === 'battery') {
                 toast.success("Chuyển đến trang thanh toán...");
-                navigate(`/checkout?productId=${product._id}&quantity=1`);
+                navigate(`/checkout/${product._id}/1`);
             }
         } catch (error) {
             // Error đã được handle trong hook

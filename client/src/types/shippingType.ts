@@ -45,8 +45,9 @@ export type OrderPayload = {
   unit_price: number;
   shipping_fee: number;
 
-  item: [
+  items: [
     {
+      quantity: number;
       name: string;
       code: string;
       price: number;
