@@ -427,10 +427,11 @@ export async function createShippingOrder(req, res) {
           ],
         });
 
-        // Attach contract URL to order and link back
+        // Attach contract info to order and link back
         try {
           if (existingSigned?.finalPdfUrl) {
             orderDoc.contract = orderDoc.contract || {};
+            orderDoc.contract.contractId = existingSigned._id;
             orderDoc.contract.pdfUrl = existingSigned.finalPdfUrl;
             orderDoc.contract.signedAt = existingSigned.signedAt || new Date();
             await orderDoc.save();
