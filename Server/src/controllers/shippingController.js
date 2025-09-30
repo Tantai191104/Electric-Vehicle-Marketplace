@@ -222,6 +222,8 @@ export async function createShippingOrder(req, res) {
     // Resolve product info if provided to support wallet check and local order creation
     let productDoc = null;
     let sellerId = b.seller_id || null;
+    let sellerDoc = null;
+    let sellerAddr = null;
     let unitPrice = typeof b.unit_price === 'number' ? b.unit_price : null;
     let shippingFee = typeof b.shipping_fee === 'number' ? b.shipping_fee : null;
     if (b.product_id) {
@@ -231,6 +233,13 @@ export async function createShippingOrder(req, res) {
           if (unitPrice === null || Number.isNaN(unitPrice)) unitPrice = Number(productDoc.price) || 0;
           if (!sellerId && productDoc.seller) sellerId = String(productDoc.seller);
         }
+      } catch {}
+    }
+    // Resolve seller info/address for sender fields
+    if (sellerId) {
+      try {
+        sellerDoc = await User.findById(sellerId).select('name phone profile.address');
+        sellerAddr = sellerDoc?.profile?.address || sellerDoc?.address || null;
       } catch {}
     }
 
@@ -257,15 +266,15 @@ export async function createShippingOrder(req, res) {
       service_type_id: b.service_type_id ?? 2,
       payment_type_id: b.payment_type_id ?? 2,
       required_note: b.required_note ?? 'KHONGCHOXEMHANG',
-      from_name: b.from_name ?? null,
-      from_phone: b.from_phone ?? null,
-      from_address: b.from_address ?? null,
-      from_ward_name: b.from_ward_name ?? null,
-      from_district_name: b.from_district_name ?? null,
-      from_province_name: b.from_province_name ?? null,
-      // Prefer codes if FE has them to avoid mismatch with GHN
-      from_ward_code: b.from_ward_code ?? undefined,
-      from_district_id: b.from_district_id ?? undefined,
+      from_name: b.from_name ?? (sellerDoc?.name || null),
+      from_phone: b.from_phone ?? (sellerDoc?.phone || null),
+      from_address: b.from_address ?? (sellerAddr?.houseNumber || null),
+      from_ward_name: b.from_ward_name ?? (sellerAddr?.ward || null),
+      from_district_name: b.from_district_name ?? (sellerAddr?.district || null),
+      from_province_name: b.from_province_name ?? (sellerAddr?.province || null),
+      // Prefer codes if FE/DB has them to avoid mismatch with GHN
+      from_ward_code: b.from_ward_code ?? (sellerAddr?.wardCode ? String(sellerAddr.wardCode) : undefined),
+      from_district_id: b.from_district_id ?? (sellerAddr?.districtCode ? Number(sellerAddr.districtCode) : undefined),
       to_name: b.to_name,
       to_phone: b.to_phone,
       to_address: b.to_address,
@@ -294,6 +303,20 @@ export async function createShippingOrder(req, res) {
       pick_shift: b.pick_shift ?? null,
       items: b.items ?? [],
     };
+
+    // Extra debug for resolved sender
+    try {
+      console.log('[SHIPPING][ORDER][SENDER_RESOLVED]', {
+        from_name: body.from_name,
+        from_phone: body.from_phone,
+        from_address: body.from_address,
+        from_ward_name: body.from_ward_name,
+        from_district_name: body.from_district_name,
+        from_province_name: body.from_province_name,
+        from_ward_code: body.from_ward_code,
+        from_district_id: body.from_district_id,
+      });
+    } catch {}
 
     const resp = await ghnClient.post('/v2/shipping-order/create', body, {
       headers,
