@@ -4,16 +4,8 @@ export const authServices = {
     const response = await API.post("/auth/login", data);
     return response.data;
   },
-  async register(data: {
-    name: string;
-    email: string;
-    password: string;
-    phone: string;
-  }) {
-    const response = await API.post("/auth/register", {
-      ...data,
-      role: "user",
-    });
+  async register(data: { name: string; email: string; password: string }) {
+    const response = await API.post("/auth/register", data);
     return response.data;
   },
   async fetchProfile() {

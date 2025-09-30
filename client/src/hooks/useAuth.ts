@@ -58,12 +58,8 @@ export function useLoginMutation() {
 
 export function useRegisterMutation() {
   return useMutation({
-    mutationFn: (data: {
-      name: string;
-      email: string;
-      password: string;
-      phone: string;
-    }) => authServices.register(data),
+    mutationFn: (data: { name: string; email: string; password: string }) =>
+      authServices.register(data),
     onSuccess: () => {
       toast.success("Đăng ký thành công!");
     },
