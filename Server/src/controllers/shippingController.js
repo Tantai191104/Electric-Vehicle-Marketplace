@@ -52,7 +52,9 @@ export async function calcShippingFee(req, res) {
       delete body.product_id;
     }
     delete body.items;
-    body.service_type_id = 2;
+    // GHN API expects 'serviceId' not 'service_type_id'
+    body.serviceId = 2;
+    delete body.service_type_id;
     body.length = Math.min(Math.max(Number(body.length), 1), 200);
     body.width = Math.min(Math.max(Number(body.width), 1), 200);
     body.height = Math.min(Math.max(Number(body.height), 1), 200);
@@ -221,7 +223,7 @@ export async function createShippingOrder(req, res) {
       }
     }
     const body = {
-      service_type_id: b.service_type_id ?? 2,
+      serviceId: b.service_type_id ?? 2,
       payment_type_id: b.payment_type_id ?? 2,
       required_note: b.required_note ?? 'KHONGCHOXEMHANG',
       from_name: b.from_name ?? null,
