@@ -213,6 +213,12 @@ export async function createShippingOrder(req, res) {
     const headers = getGhnHeaders();
     const b = parsed.data;
 
+    // Debug logging: raw request body to help diagnose address/ward issues
+    try {
+      console.log('[SHIPPING][ORDER][REQ] raw body =', JSON.stringify(req.body));
+      console.log('[SHIPPING][ORDER][REQ] parsed body =', JSON.stringify(b));
+    } catch {}
+
     // Resolve product info if provided to support wallet check and local order creation
     let productDoc = null;
     let sellerId = b.seller_id || null;
@@ -257,7 +263,9 @@ export async function createShippingOrder(req, res) {
       from_ward_name: b.from_ward_name ?? null,
       from_district_name: b.from_district_name ?? null,
       from_province_name: b.from_province_name ?? null,
-      from_district_id: b.from_district_id ?? null,
+      // Prefer codes if FE has them to avoid mismatch with GHN
+      from_ward_code: b.from_ward_code ?? undefined,
+      from_district_id: b.from_district_id ?? undefined,
       to_name: b.to_name,
       to_phone: b.to_phone,
       to_address: b.to_address,
@@ -292,6 +300,7 @@ export async function createShippingOrder(req, res) {
       responseType: 'text',
       transformResponse: [(x) => x],
     });
+    try { console.log('[SHIPPING][ORDER][GHN][BODY] =>', JSON.stringify(body)); } catch {}
     let payload;
     try {
       payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
