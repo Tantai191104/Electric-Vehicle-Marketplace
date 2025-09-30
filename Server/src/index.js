@@ -24,6 +24,7 @@ import productRoutes from "./routes/productRoutes.js";
 import shippingRoutes from "./routes/shippingRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import zalopayRoutes from "./routes/zalopayRoutes.js";
+import contractRoutes from "./routes/contractRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { specs, swaggerUi } from "./config/swagger.js";
@@ -42,6 +43,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/zalopay", zalopayRoutes);
+app.use("/api/contracts", contractRoutes);
 app.use("/api/admin", adminRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   explorer: true,
