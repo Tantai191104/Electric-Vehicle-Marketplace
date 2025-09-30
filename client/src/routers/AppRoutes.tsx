@@ -17,7 +17,8 @@ import OrderPage from "@/pages/order/OrderPage";
 import CheckoutPage from "@/pages/checkout/CheckoutPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import SubscriptionPage from "@/pages/subscription/SubscriptionPage";
-
+import AdminLayout from "@/layouts/AdminLayout";
+import UserManage from "@/pages/admin/user/UserManage";
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
   animate: { opacity: 1, y: 0, scale: 1 },
@@ -65,7 +66,7 @@ export default function App() {
           <Route path="/detail/:id" element={animatePage(<ProductDetailPage />)} />
         </Route>
 
-        <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedRoute role="user" />}>
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:id" element={<ChatPage />} />
           <Route path="/checkout/:productId/:quantity" element={<CheckoutPage />} />
@@ -76,6 +77,23 @@ export default function App() {
             <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
             <Route path="/orders" element={animatePage(<OrderPage />)} />
             <Route path="/subscriptions" element={animatePage(<SubscriptionPage />)} />
+          </Route>
+
+
+        </Route>
+        <Route element={<ProtectedRoute role="admin" />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            {/* Index route cho /admin */}
+            <Route
+              index
+              element={animatePage(<UserManage />)} // Đây sẽ là trang mặc định khi vào /admin
+            />
+            {/* Các route con khác */}
+            <Route
+              path="users"
+              element={animatePage(<UserManage />)}
+            />
+            {/* <Route path="products" element={animatePage(<ProductManage />)} /> */}
           </Route>
         </Route>
       </Routes>
