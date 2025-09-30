@@ -42,7 +42,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
         name: string;
         email: string;
         password: string;
-        phone: string;
     }) => {
         try {
             await registerMutation.mutateAsync(data);
