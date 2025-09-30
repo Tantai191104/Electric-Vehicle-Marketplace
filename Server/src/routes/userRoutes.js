@@ -1,5 +1,5 @@
 import express from "express";
-import { createUser, loginUser, listUsers, getUserById, updateUser, deleteUser } from "../controllers/userController.js";
+import { listUsers, getUserById, updateUser, deleteUser } from "../controllers/userController.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { requireAdmin } from "../middlewares/authorize.js";
 
@@ -12,55 +12,6 @@ const router = express.Router();
  *   description: User management endpoints
  */
 
-/**
- * @swagger
- * /users/register:
- *   post:
- *     summary: Create a user (admin or public register depending on implementation)
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [name, email, password]
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User created
- */
-router.post("/register", createUser);
-
-/**
- * @swagger
- * /users/login:
- *   post:
- *     summary: Login a user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [email, password]
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Logged in
- */
-router.post("/login", loginUser);
 
 // Routes below require admin authentication (quản lý người dùng)
 router.use(authenticate, requireAdmin);

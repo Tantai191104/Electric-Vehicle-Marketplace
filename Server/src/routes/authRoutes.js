@@ -35,7 +35,7 @@ const router = express.Router();
  *                 description: 10-11 digit phone number
  *               role:
  *                 type: string
- *                 enum: [customer, admin]
+ *                 enum: [user, admin]
  *     responses:
  *       201:
  *         description: User registered

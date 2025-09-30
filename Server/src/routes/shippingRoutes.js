@@ -6,7 +6,8 @@ import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShi
 
 const router = express.Router();
 
-router.use(authenticate, requirePurchasePermission);
+// Apply authentication to all routes
+router.use(authenticate);
 
 /**
  * @swagger
@@ -274,7 +275,7 @@ router.post("/fee", calcShippingFee);
  *         description: GHN order creation response
  */
 // User không được mua sản phẩm của chính mình
-router.post("/order", preventSelfPurchase, createShippingOrder);
+router.post("/order", requirePurchasePermission, preventSelfPurchase, createShippingOrder);
 
 /**
  * @swagger
@@ -298,7 +299,7 @@ router.post("/order", preventSelfPurchase, createShippingOrder);
  *       200:
  *         description: GHN order detail
  */
-router.post("/order/detail", getShippingOrderDetail);
+router.post("/order/detail", requirePurchasePermission, getShippingOrderDetail);
 
 /**
  * @swagger
@@ -330,7 +331,7 @@ router.post("/order/detail", getShippingOrderDetail);
  *       200:
  *         description: Cancel result and local refund summary
  */
-router.post("/order/cancel", cancelShippingOrder);
+router.post("/order/cancel", requirePurchasePermission, cancelShippingOrder);
 
 /**
  * @swagger
@@ -362,7 +363,7 @@ router.post("/order/cancel", cancelShippingOrder);
  *       200:
  *         description: Return switch result
  */
-router.post("/order/return", returnShippingOrder);
+router.post("/order/return", requirePurchasePermission, returnShippingOrder);
 
 /**
  * @swagger
@@ -376,7 +377,7 @@ router.post("/order/return", returnShippingOrder);
  *       200:
  *         description: Sync and refund results
  */
-router.post("/returns/sync", syncReturnsAndRefunds);
+router.post("/returns/sync", requirePurchasePermission, syncReturnsAndRefunds);
 
 export default router;
 

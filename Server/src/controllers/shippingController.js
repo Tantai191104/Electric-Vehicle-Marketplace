@@ -52,11 +52,16 @@ export async function calcShippingFee(req, res) {
       delete body.product_id;
     }
     delete body.items;
+    // GHN API expects 'service_id' and 'service_type_id' (with underscores)
+    body.service_id = 2;
     body.service_type_id = 2;
     body.length = Math.min(Math.max(Number(body.length), 1), 200);
     body.width = Math.min(Math.max(Number(body.width), 1), 200);
     body.height = Math.min(Math.max(Number(body.height), 1), 200);
     body.weight = Math.min(Math.max(Number(body.weight), 1), 1600000);
+
+    // Debug: Log the request body being sent to GHN
+    console.log('GHN Fee Request Body:', JSON.stringify(body, null, 2));
 
     const resp = await ghnClient.post("/v2/shipping-order/fee", body, {
       headers,
@@ -221,6 +226,7 @@ export async function createShippingOrder(req, res) {
       }
     }
     const body = {
+      service_id: b.service_type_id ?? 2,
       service_type_id: b.service_type_id ?? 2,
       payment_type_id: b.payment_type_id ?? 2,
       required_note: b.required_note ?? 'KHONGCHOXEMHANG',
