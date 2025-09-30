@@ -1,3 +1,9 @@
+export type Seller = {
+  _id: string;
+  name: string;
+  email: string;
+};
+
 export type Product = {
   _id: string;
   title: string;
@@ -14,7 +20,7 @@ export type Product = {
   height?: number;
   weight?: number;
   specifications: Record<string, string>;
-  seller: string;
+  seller: Seller; // 👈 sửa lại thành object thay vì string
   status: string;
   isFeatured: boolean;
   views: number;
@@ -22,6 +28,7 @@ export type Product = {
   createdAt: string;
   updatedAt: string;
 };
+
 export interface VehicleSpecifications {
   batteryCapacity: string;
   range: string;
