@@ -71,7 +71,7 @@ export async function generateDraftPdf(req, res) {
     doc.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       const uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload', access_mode: 'public' }, (err, result) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'authenticated' }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
           resolve({ success: true, url: result.secure_url });
         }).end(buffer);
@@ -196,51 +196,47 @@ export async function signContract(req, res) {
     const signatureDataUrl = req.body?.signature || req.body?.signatureDataUrl;
     if (file && !signatureDataUrl) {
       uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload', access_mode: 'public' }, (err, result) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'authenticated' }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
           resolve({ success: true, url: result.secure_url });
         }).end(file.buffer);
       });
     } else {
-      const doc = new PDFDocument({ size: 'A4', margin: 50 });
-      const chunks = [];
-      doc.on('data', (c) => chunks.push(c));
-      doc.on('end', async () => {
-        const buffer = Buffer.concat(chunks);
-        const up = await new Promise((resolve) => {
-          cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload', access_mode: 'public' }, (err, result) => {
+      uploaded = await new Promise((resolve) => {
+        const doc = new PDFDocument({ size: 'A4', margin: 50 });
+        const chunks = [];
+        doc.on('data', (c) => chunks.push(c));
+        doc.on('end', async () => {
+          const buffer = Buffer.concat(chunks);
+          cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'authenticated' }, (err, result) => {
             if (err) return resolve({ success: false, error: err.message });
-            resolve({ success: true, url: result.secure_url });
+            return resolve({ success: true, url: result.secure_url });
           }).end(buffer);
         });
-        uploaded = up;
-      });
 
-      const m = contract.metadata || {};
-      const price = new Intl.NumberFormat('vi-VN').format(Number(m.unitPrice) || 0);
-      doc.fontSize(20).text('HỢP ĐỒNG MUA BÁN', { align: 'center' });
-      doc.moveDown();
-      doc.fontSize(12).text(`Sản phẩm: ${m.productTitle || ''}`);
-      doc.text(`Giá: ${price} VND`);
-      doc.moveDown();
-      doc.text(`Bên bán: ${m.sellerName || ''} (đã ký)`);
-      doc.text(`Bên mua: ${m.buyerName || ''} (đã ký)`);
-      doc.moveDown();
-      // Render buyer signature image if provided as data URL
-      if (typeof signatureDataUrl === 'string' && signatureDataUrl.startsWith('data:image')) {
-        try {
-          const base64 = signatureDataUrl.split(',')[1] || '';
-          const sigBuffer = Buffer.from(base64, 'base64');
-          doc.text('Chữ ký bên mua:', { continued: false });
-          doc.moveDown(0.5);
-          doc.image(sigBuffer, { width: 200 });
-        } catch {}
-      } else {
-        doc.text('Chữ ký bên mua: (điện tử)', { continued: false });
-      }
-      doc.end();
-      // wait until upload finished
-      await new Promise((resolve) => setImmediate(resolve));
+        const m = contract.metadata || {};
+        const price = new Intl.NumberFormat('vi-VN').format(Number(m.unitPrice) || 0);
+        doc.fontSize(20).text('HỢP ĐỒNG MUA BÁN', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(12).text(`Sản phẩm: ${m.productTitle || ''}`);
+        doc.text(`Giá: ${price} VND`);
+        doc.moveDown();
+        doc.text(`Bên bán: ${m.sellerName || ''} (đã ký)`);
+        doc.text(`Bên mua: ${m.buyerName || ''} (đã ký)`);
+        doc.moveDown();
+        if (typeof signatureDataUrl === 'string' && signatureDataUrl.startsWith('data:image')) {
+          try {
+            const base64 = signatureDataUrl.split(',')[1] || '';
+            const sigBuffer = Buffer.from(base64, 'base64');
+            doc.text('Chữ ký bên mua:', { continued: false });
+            doc.moveDown(0.5);
+            doc.image(sigBuffer, { width: 200 });
+          } catch {}
+        } else {
+          doc.text('Chữ ký bên mua: (điện tử)', { continued: false });
+        }
+        doc.end();
+      });
     }
 
     if (!uploaded.success) {
@@ -256,6 +252,34 @@ export async function signContract(req, res) {
     return res.json({ success: true, data: { contractId: contract._id, status: contract.status, finalPdfUrl: contract.finalPdfUrl } });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+}
+
+export async function getContractPdf(req, res) {
+  try {
+    const { id } = req.params;
+    const buyerId = req.user?.sub || req.user?.id;
+    const contract = await Contract.findById(id);
+    if (!contract) return res.status(404).send('Not found');
+    if (String(contract.buyerId) !== String(buyerId) && String(contract.sellerId) !== String(buyerId)) {
+      return res.status(403).send('Forbidden');
+    }
+    const url = contract.finalPdfUrl || contract.draftPdfUrl;
+    if (!url) return res.status(404).send('No PDF');
+    // Extract public ID from URL: after /upload/ and before .pdf
+    const match = url.match(/\/upload\/v\d+\/([^\.]+)\.pdf/);
+    const publicId = match ? match[1] : null;
+    if (!publicId) return res.redirect(url);
+    const expiresAt = Math.floor(Date.now() / 1000) + 300; // 5 minutes
+    const signedUrl = cloudinary.utils.private_download_url(publicId, 'pdf', {
+      resource_type: 'image',
+      type: 'authenticated',
+      expires_at: expiresAt,
+      secure: true,
+    });
+    return res.redirect(signedUrl);
+  } catch (err) {
+    return res.status(500).send('Internal Server Error');
   }
 }
 

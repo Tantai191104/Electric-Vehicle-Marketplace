@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import { authenticate } from "../middlewares/authenticate.js";
 import { requireUser } from "../middlewares/authorize.js";
-import { initiateContract, signContract, getContractTemplate, generateDraftPdf } from "../controllers/contractController.js";
+import { initiateContract, signContract, getContractTemplate, generateDraftPdf, getContractPdf } from "../controllers/contractController.js";
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -100,6 +100,9 @@ router.get("/template", authenticate, requireUser, getContractTemplate);
  *         description: Uploaded draft
  */
 router.post("/draft", authenticate, requireUser, generateDraftPdf);
+
+// Serve signed Cloudinary URL so clients avoid 401 when accessing authenticated PDFs
+router.get("/:id/pdf", authenticate, requireUser, getContractPdf);
 
 export default router;
 
