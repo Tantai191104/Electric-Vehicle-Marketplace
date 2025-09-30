@@ -1,5 +1,5 @@
 import express from "express";
-import { createUser, loginUser, listUsers, getUserById, updateUser, deleteUser } from "../controllers/userController.js";
+import { loginUser, listUsers, getUserById, updateUser, deleteUser } from "../controllers/userController.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { requireAdmin } from "../middlewares/authorize.js";
 
@@ -12,31 +12,7 @@ const router = express.Router();
  *   description: User management endpoints
  */
 
-/**
- * @swagger
- * /users/register:
- *   post:
- *     summary: Create a user (admin or public register depending on implementation)
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [name, email, password]
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User created
- */
-router.post("/register", createUser);
+// Register route removed - use /api/auth/register instead
 
 /**
  * @swagger
