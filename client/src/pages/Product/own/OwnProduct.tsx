@@ -32,7 +32,7 @@ export default function OwnProduct() {
     const [selectedStatus, setSelectedStatus] = useState("all");
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
-    const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+    // Removed unused productToDelete state
     const navigate = useNavigate();
     useEffect(() => {
         const loadProducts = async () => {
@@ -102,7 +102,9 @@ export default function OwnProduct() {
     };
 
     const handleDeleteProduct = (product: Product) => {
-        setProductToDelete(product);
+        // Implement delete logic here if needed, or remove this function if not used
+        // For now, just log the product to delete
+        console.log("Delete product:", product._id);
     };
 
     const handleToggleStatus = (product: Product) => {
