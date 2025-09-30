@@ -37,30 +37,56 @@ export type Preferences = {
   currency: string;
 };
 
+// Violation type
+export type Violation = {
+  type: "spam" | "fake_product" | "fraud" | "inappropriate" | "other";
+  description: string;
+  severity: "low" | "medium" | "high";
+  action: "warning" | "suspension" | "ban";
+  status: "pending" | "resolved";
+  reportedBy?: string; // userId
+  reportedAt: string;
+  resolvedBy?: string; // userId
+  resolvedAt?: string;
+  adminNotes?: string;
+};
+
+// Suspension type
+export type Suspension = {
+  reason?: string;
+  suspendedAt?: string;
+  suspendedBy?: string; // userId
+  expiresAt?: string;
+};
+
 // Profile type
 export type Profile = {
-  address: Address;
-  bankAccount: BankAccount;
   fullName: string | null;
   dateOfBirth: string | null;
-  gender: string | null;
+  gender: "male" | "female" | "other" | null;
+  address: Address;
   identityCard: string | null;
+  bankAccount: BankAccount;
+  violations: Violation[];
+  suspension?: Suspension;
 };
 
 // User type
 export type User = {
-  profile: Profile;
-  wallet: Wallet;
-  preferences: Preferences;
   _id?: string;
   name: string;
   email: string;
-  phone?: string;
+  password?: string; // select: false
+  phone?: string | null;
   avatar: string | null;
-  role: "customer" | "admin" | string; // có thể mở rộng
+  role: "user" | "admin" | string; // có thể mở rộng
   isActive: boolean;
+  profile: Profile;
+  wallet: Wallet;
+  preferences: Preferences;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   createdAt?: string;
   updatedAt?: string;
+  __v?: number;
 };
