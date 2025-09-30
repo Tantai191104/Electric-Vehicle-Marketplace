@@ -71,7 +71,7 @@ export async function generateDraftPdf(req, res) {
     doc.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       const uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf' }, (err, result) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload', access_mode: 'public' }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
           resolve({ success: true, url: result.secure_url });
         }).end(buffer);
@@ -190,12 +190,58 @@ export async function signContract(req, res) {
       return res.status(400).json({ error: "Missing signed PDF file (field 'pdf')" });
     }
 
-    const uploaded = await new Promise((resolve) => {
-      cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf' }, (err, result) => {
-        if (err) return resolve({ success: false, error: err.message });
-        resolve({ success: true, url: result.secure_url });
-      }).end(file.buffer);
-    });
+    // If client sends a signed PDF file, upload directly. Otherwise, if a signature image/data URL is provided,
+    // render a final PDF on the server including the buyer signature and upload that instead.
+    let uploaded;
+    const signatureDataUrl = req.body?.signature || req.body?.signatureDataUrl;
+    if (file && !signatureDataUrl) {
+      uploaded = await new Promise((resolve) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload', access_mode: 'public' }, (err, result) => {
+          if (err) return resolve({ success: false, error: err.message });
+          resolve({ success: true, url: result.secure_url });
+        }).end(file.buffer);
+      });
+    } else {
+      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      const chunks = [];
+      doc.on('data', (c) => chunks.push(c));
+      doc.on('end', async () => {
+        const buffer = Buffer.concat(chunks);
+        const up = await new Promise((resolve) => {
+          cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload', access_mode: 'public' }, (err, result) => {
+            if (err) return resolve({ success: false, error: err.message });
+            resolve({ success: true, url: result.secure_url });
+          }).end(buffer);
+        });
+        uploaded = up;
+      });
+
+      const m = contract.metadata || {};
+      const price = new Intl.NumberFormat('vi-VN').format(Number(m.unitPrice) || 0);
+      doc.fontSize(20).text('HỢP ĐỒNG MUA BÁN', { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(12).text(`Sản phẩm: ${m.productTitle || ''}`);
+      doc.text(`Giá: ${price} VND`);
+      doc.moveDown();
+      doc.text(`Bên bán: ${m.sellerName || ''} (đã ký)`);
+      doc.text(`Bên mua: ${m.buyerName || ''} (đã ký)`);
+      doc.moveDown();
+      // Render buyer signature image if provided as data URL
+      if (typeof signatureDataUrl === 'string' && signatureDataUrl.startsWith('data:image')) {
+        try {
+          const base64 = signatureDataUrl.split(',')[1] || '';
+          const sigBuffer = Buffer.from(base64, 'base64');
+          doc.text('Chữ ký bên mua:', { continued: false });
+          doc.moveDown(0.5);
+          doc.image(sigBuffer, { width: 200 });
+        } catch {}
+      } else {
+        doc.text('Chữ ký bên mua: (điện tử)', { continued: false });
+      }
+      doc.end();
+      // wait until upload finished
+      await new Promise((resolve) => setImmediate(resolve));
+    }
 
     if (!uploaded.success) {
       return res.status(500).json({ error: uploaded.error || "Upload failed" });
