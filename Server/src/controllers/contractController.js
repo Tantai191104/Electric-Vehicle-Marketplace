@@ -71,7 +71,7 @@ export async function generateDraftPdf(req, res) {
     doc.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       const uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'authenticated' }, (err, result) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload' }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
           resolve({ success: true, url: result.secure_url });
         }).end(buffer);
@@ -196,7 +196,7 @@ export async function signContract(req, res) {
     const signatureDataUrl = req.body?.signature || req.body?.signatureDataUrl;
     if (file && !signatureDataUrl) {
       uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'authenticated' }, (err, result) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload' }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
           resolve({ success: true, url: result.secure_url });
         }).end(file.buffer);
@@ -208,7 +208,7 @@ export async function signContract(req, res) {
         doc.on('data', (c) => chunks.push(c));
         doc.on('end', async () => {
           const buffer = Buffer.concat(chunks);
-          cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'authenticated' }, (err, result) => {
+          cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload' }, (err, result) => {
             if (err) return resolve({ success: false, error: err.message });
             return resolve({ success: true, url: result.secure_url });
           }).end(buffer);
@@ -258,19 +258,19 @@ export async function signContract(req, res) {
 export async function getContractPdf(req, res) {
   try {
     const { id } = req.params;
-    const buyerId = req.user?.sub || req.user?.id;
     const contract = await Contract.findById(id);
     if (!contract) return res.status(404).send('Not found');
-    if (String(contract.buyerId) !== String(buyerId) && String(contract.sellerId) !== String(buyerId)) {
-      return res.status(403).send('Forbidden');
-    }
     const url = contract.finalPdfUrl || contract.draftPdfUrl;
     if (!url) return res.status(404).send('No PDF');
-    // Extract public ID from URL: after /upload/ and before .pdf
-    const match = url.match(/\/upload\/v\d+\/([^\.]+)\.pdf/);
-    const publicId = match ? match[1] : null;
+    // If URL is already public (type upload), just redirect
+    if (/\/image\/upload\//.test(url)) {
+      return res.redirect(url);
+    }
+    // Otherwise, try to extract publicId from either authenticated or raw URL
+    const m = url.match(/\/image\/(?:upload|authenticated)\/[^/]*\/v\d+\/([^\.]+)\.pdf/);
+    const publicId = m ? m[1] : null;
     if (!publicId) return res.redirect(url);
-    const expiresAt = Math.floor(Date.now() / 1000) + 300; // 5 minutes
+    const expiresAt = Math.floor(Date.now() / 1000) + 300;
     const signedUrl = cloudinary.utils.private_download_url(publicId, 'pdf', {
       resource_type: 'image',
       type: 'authenticated',
