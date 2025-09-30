@@ -15,7 +15,7 @@ interface Props {
     timeRange: string;
 }
 
-export const StatsOverview: React.FC<Props> = ({ timeRange }) => {
+export const StatsOverview: React.FC<Props> = () => {
     const stats = [
         {
             title: "Tổng doanh thu",
