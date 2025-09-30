@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   AiOutlineUser,
-  AiOutlineHeart,
   AiOutlineStar,
   AiOutlineClockCircle,
   AiOutlineSetting,
@@ -134,9 +133,9 @@ const UserDropdown = () => {
                     <FaStore /> Đơn hàng của tôi
                   </DropdownMenuItem>
                 </Link>
-                <Link to="/wishlist">
+                <Link to="/own/product">
                   <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
-                    <AiOutlineHeart /> Tin đăng đã lưu
+                    <FaStore /> Tin của tôi
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">

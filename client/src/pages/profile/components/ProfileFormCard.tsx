@@ -95,6 +95,16 @@ const ProfileFormCard: React.FC = () => {
         districtCode: addressInfo.districtCode,
         wardCode: addressInfo.wardCode,
       });
+      useAuthStore.getState().updateUser({
+        profile: {
+          address: {
+            houseNumber: addressInfo.houseNumber,
+            provinceCode: addressInfo.provinceCode,
+            districtCode: addressInfo.districtCode,
+            wardCode: addressInfo.wardCode,
+          },
+        },
+      });
       toast.success("Cập nhật thành công");
     } catch (err) {
       toast.error("Cập nhật thất bại", {
