@@ -128,7 +128,8 @@ router.post("/draft", authenticate, requireUser, generateDraftPdf);
  *       404:
  *         description: Contract or PDF not found
  */
-router.get("/:id/pdf", authenticate, requireUser, getContractPdf);
+// Public access to contract PDF (either public URL or time-limited signed URL)
+router.get("/:id/pdf", getContractPdf);
 
 export default router;
 
