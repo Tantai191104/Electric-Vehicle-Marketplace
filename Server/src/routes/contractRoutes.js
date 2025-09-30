@@ -102,6 +102,32 @@ router.get("/template", authenticate, requireUser, getContractTemplate);
 router.post("/draft", authenticate, requireUser, generateDraftPdf);
 
 // Serve signed Cloudinary URL so clients avoid 401 when accessing authenticated PDFs
+/**
+ * @swagger
+ * /contracts/{id}/pdf:
+ *   get:
+ *     summary: Get a temporary signed URL to view the contract PDF inline
+ *     description: Redirects to a time-limited signed Cloudinary URL for the contract's PDF (draft or final). Requires authentication and ownership (buyer or seller).
+ *     tags: [Contracts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Contract ID
+ *     responses:
+ *       302:
+ *         description: Redirect to signed PDF URL
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Contract or PDF not found
+ */
 router.get("/:id/pdf", authenticate, requireUser, getContractPdf);
 
 export default router;
