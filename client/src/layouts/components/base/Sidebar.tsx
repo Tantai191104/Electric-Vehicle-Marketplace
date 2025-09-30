@@ -1,6 +1,4 @@
-// SideBar.jsx
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
     FaHome,
@@ -31,7 +29,6 @@ export default function SideBar() {
     const [autoCollapsed, setAutoCollapsed] = useState(false);
     const logout = useAuthStore((s) => s.clearAuth);
 
-    // Tự động collapse khi màn hình nhỏ hơn 900px
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth < 900) {
@@ -52,56 +49,38 @@ export default function SideBar() {
         logout();
         setTimeout(() => {
             window.location.href = "/auth/login";
-        }, 1200);
+        }, 800);
     };
 
     return (
         <aside
-            className={`bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100 min-h-screen flex flex-col transition-all duration-500 ease-in-out ${collapsed ? "w-20 shadow-md" : "w-72 shadow-2xl"
+            className={`bg-white border-r border-gray-200 h-screen flex flex-col transition-all duration-500 ease-in-out ${collapsed ? "w-20" : "w-64"
                 }`}
-            style={{
-                boxShadow: collapsed
-                    ? "0 2px 8px rgba(0,0,0,0.08)"
-                    : "0 4px 24px rgba(16, 185, 129, 0.15)",
-            }}
         >
             {/* Logo & Toggle */}
-            <div className="flex items-center justify-between px-4 py-6 border-b border-gray-700">
+            <div className="flex items-center justify-between px-4 py-6 border-b border-gray-200">
                 {!collapsed && (
                     <div className="flex items-center h-[40px] whitespace-nowrap">
-                        {/* Electric Vehicle Icon */}
-                        <div className="relative h-10 w-10 mr-3 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
-                            <FaCar className="text-white text-lg" />
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
-                                <FaBolt className="text-gray-900 text-xs" />
+                        <div className="relative h-10 w-10 mr-3 bg-yellow-400 rounded-lg flex items-center justify-center">
+                            <FaCar className="text-black text-lg" />
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-black rounded-full flex items-center justify-center">
+                                <FaBolt className="text-yellow-400 text-xs" />
                             </div>
                         </div>
                         <div className="flex flex-col">
-                            <span
-                                className="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
-                                style={{
-                                    fontFamily: "Inter, sans-serif",
-                                }}
-                            >
-                                EV Market
-                            </span>
-                            <span className="text-xs text-gray-400 -mt-1">
-                                Admin Panel
-                            </span>
+                            <span className="text-xl font-bold text-black">EV Market</span>
+                            <span className="text-xs text-gray-500 -mt-1">Admin Panel</span>
                         </div>
                     </div>
                 )}
                 <button
                     onClick={() => {
-                        // Nếu đang autoCollapsed thì mở sidebar thủ công sẽ tắt autoCollapsed
-                        if (autoCollapsed && collapsed) {
-                            setAutoCollapsed(false);
-                        }
+                        if (autoCollapsed && collapsed) setAutoCollapsed(false);
                         setCollapsed(!collapsed);
                     }}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition-all duration-200 hover:scale-105"
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
                 >
-                    <FaBars className="text-gray-300" />
+                    <FaBars className="text-gray-600" />
                 </button>
             </div>
 
@@ -114,20 +93,19 @@ export default function SideBar() {
                             <li key={item.to}>
                                 <Link
                                     to={item.to}
-                                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02]
-                                        ${isActive
-                                            ? "bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg scale-[1.02]"
-                                            : "hover:bg-gray-700/50 hover:text-white text-gray-300"
-                                        }
-                                    `}
+                                    className={`group flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-300
+                    ${isActive
+                                            ? "bg-yellow-400 text-black shadow"
+                                            : "text-gray-700 hover:bg-gray-100"
+                                        }`}
                                     style={{
-                                        opacity: collapsed ? 0.8 : 1,
-                                        transform: collapsed ? "translateX(-5px)" : "translateX(0)",
-                                        transition: `all 0.4s ${0.05 * idx}s ease-out`,
+                                        transition: `all 0.3s ${0.05 * idx}s ease-out`,
                                     }}
                                 >
                                     <span
-                                        className={`text-lg transition-all duration-300 ${isActive ? "text-white" : "text-gray-400 group-hover:text-white"
+                                        className={`text-lg ${isActive
+                                            ? "text-black"
+                                            : "text-gray-500 group-hover:text-black"
                                             }`}
                                     >
                                         {item.icon}
@@ -138,7 +116,7 @@ export default function SideBar() {
                                         </span>
                                     )}
                                     {!collapsed && isActive && (
-                                        <div className="ml-auto w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                                        <div className="ml-auto w-2 h-2 bg-black rounded-full"></div>
                                     )}
                                 </Link>
                             </li>
@@ -147,36 +125,28 @@ export default function SideBar() {
                 </ul>
             </nav>
 
-            {/* User info section */}
-            {!collapsed && (
-                <div className="px-4 py-3 border-t border-gray-700 bg-gray-800/50">
-                    <div className="flex items-center gap-3 px-2 py-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                            <FaUser className="text-white text-xs" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-sm font-medium text-white">Admin</span>
-                            <span className="text-xs text-gray-400">Quản trị viên</span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Logout button */}
-            <div className={`mt-2 ${collapsed ? "px-2 py-2" : "px-4 py-4"}`}>
-                <button
-                    className={`group flex items-center w-full px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-[1.02]
-                        ${collapsed ? "justify-center" : "justify-center gap-3"}
-                    `}
-                    onClick={handleLogout}
-                >
-                    <FaSignOutAlt className="text-base text-white" />
+            {/* User info + Logout */}
+            <div className="px-4 py-4 border-t border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between gap-3">
                     {!collapsed && (
-                        <span className="text-sm text-white font-medium">
-                            Đăng xuất
-                        </span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                                <FaUser className="text-black text-xs" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-sm font-medium text-black">Admin</span>
+                                <span className="text-xs text-gray-500">Quản trị viên</span>
+                            </div>
+                        </div>
                     )}
-                </button>
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center justify-center w-9 h-9 rounded-lg bg-black text-white hover:bg-gray-800 transition"
+                        title="Đăng xuất"
+                    >
+                        <FaSignOutAlt className="text-sm" />
+                    </button>
+                </div>
             </div>
         </aside>
     );

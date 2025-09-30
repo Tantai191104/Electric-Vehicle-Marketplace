@@ -36,5 +36,13 @@ import type { User } from "@/types/authType";
   async fetchOrders() {
     const response = await API.get("/profile/orders");
     return response.data;
+  },
+  async fetchTransactions() {
+    const response = await API.get("/profile/wallet/transactions");
+    return response.data;
+  },
+  async fetchOwnedProducts() {
+    const response = await API.get("/products/my/products");
+    return response.data;
   }
 };
