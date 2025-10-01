@@ -1,25 +1,56 @@
 import { useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FiDownload, FiFileText, FiLoader } from "react-icons/fi";
 
-// Utils
 import { exportToPDF } from "@/utils/pdfExport";
 import { replaceSignatureCanvasWithImages, clearSignature } from "@/utils/signatureHandler";
-
-// Components & Types
-import { mockContractData } from "@/types/contractTypes";
 import { ContractTemplate } from "./ContractTemplate";
+import { contractServices } from "@/services/contractServices";
+import type { ContractInfo } from "@/types/contractTypes";
+import numberToVietnameseWords from "@/utils/numberToWords";
 
 export default function ContractPage() {
+    const { state } = useLocation();
+    const navigate = useNavigate();
     const contractRef = useRef<HTMLDivElement>(null);
     const buyerSigRef = useRef<SignatureCanvas>(null) as React.RefObject<SignatureCanvas>;
-    const sellerSigRef = useRef<SignatureCanvas>(null) as React.RefObject<SignatureCanvas>;
 
     const [isExporting, setIsExporting] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
+    const [contractId, setContractId] = useState<string | null>(null);
+
+    const { product, buyer, seller } = state || {};
+
+    if (!product || !buyer || !seller) {
+        return (
+            <div className="pt-32 text-center">
+                <p className="text-red-600 font-semibold">Không tìm thấy dữ liệu hợp đồng</p>
+                <Button onClick={() => navigate(-1)}>Quay lại</Button>
+            </div>
+        );
+    }
+    console.log("ContractPage state:", product, buyer, seller);
+    const contractData: ContractInfo = {
+        contractNumber: `HD${new Date().getFullYear()}${String(
+            Math.floor(Math.random() * 10000)
+        ).padStart(4, "0")}`,
+        seller,
+        buyer,
+        vehicle: {
+            name: `${product.brand} ${product.model}`,
+            plateNumber: product.plateNumber || "Chưa có biển số",
+            year: product.year,
+            brand: product.brand,
+            model: product.model,
+        },
+        price: product.price,
+        priceInWords: numberToVietnameseWords(product.price),
+        signDate: new Date().toLocaleDateString("vi-VN"),
+    };
 
     const handleExportPDF = async () => {
         if (!contractRef.current) {
@@ -27,14 +58,36 @@ export default function ContractPage() {
             return;
         }
 
+        // Kiểm tra chữ ký
+        if (!buyerSigRef.current || buyerSigRef.current.isEmpty()) {
+            setExportError("Vui lòng ký tên trước khi xuất PDF");
+            return;
+        }
+
         setIsExporting(true);
         setExportError(null);
 
         try {
-            // Clone element và xử lý signatures TRƯỚC khi export
+            // Bước 1: Tạo contract trong database
+            console.log("Đang tạo contract...");
+            const contractResponse = await contractServices.createContract({
+                product_id: product._id,
+                seller_id: seller.idNumber,
+            });
+
+            const newContractId = contractResponse.data.contractId;
+            setContractId(newContractId);
+            console.log("Contract đã tạo với ID:", newContractId);
+
+            // Bước 3: Tạo PDF với contract ID mới
             const clonedElement = contractRef.current.cloneNode(true) as HTMLDivElement;
-            
-            // Tạo container tạm để xử lý
+
+            // Cập nhật contract number trong DOM clone
+            const contractNumberElement = clonedElement.querySelector('[data-contract-number]');
+            if (contractNumberElement) {
+                contractNumberElement.textContent = `Số hợp đồng: HD${newContractId}`;
+            }
+
             const tempContainer = document.createElement("div");
             tempContainer.style.cssText = `
                 position: absolute;
@@ -48,106 +101,127 @@ export default function ContractPage() {
                 padding: 40px;
                 box-sizing: border-box;
             `;
-            
+
             tempContainer.appendChild(clonedElement);
             document.body.appendChild(tempContainer);
 
-            // Thay thế signature canvas bằng images
-            await replaceSignatureCanvasWithImages(clonedElement, {
-                buyer: buyerSigRef,
-                seller: sellerSigRef
-            });
+            await replaceSignatureCanvasWithImages(clonedElement, { signer: buyerSigRef });
+            await new Promise((resolve) => setTimeout(resolve, 200));
 
-            // Đợi DOM render
-            await new Promise(resolve => setTimeout(resolve, 200));
-
-            // Export PDF với container đã xử lý
-            await exportToPDF({
+            const pdfBlob = await exportToPDF({
                 element: tempContainer,
-                filename: `hop-dong-mua-ban-xe-${Date.now()}.pdf`,
+                filename: `hop-dong-${newContractId}.pdf`,
                 quality: 0.95,
-                scale: 2
+                scale: 2,
             });
 
-            // Cleanup
             document.body.removeChild(tempContainer);
 
+            // Bước 4: Upload PDF lên server
+            if (pdfBlob !== undefined && pdfBlob !== null) {
+                console.log("Đang upload PDF lên server...");
+                const pdfFile = new File([pdfBlob], `hop-dong-${newContractId}.pdf`, {
+                    type: 'application/pdf'
+                });
+
+                const uploadResponse = await contractServices.signContract(
+                    newContractId,
+                    pdfFile,
+                    window.location.href // finalUrl - URL trang hiện tại
+                );
+
+                console.log("Upload thành công:", uploadResponse);
+
+                // Bước 5: Download PDF cho user
+                const url = window.URL.createObjectURL(pdfBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `hop-dong-${newContractId}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+                // Hiển thị thông báo thành công
+                alert(`Hợp đồng đã được tạo và lưu thành công! ID: ${newContractId}`);
+
+                // Chuyển hướng về trang chính hoặc trang contracts
+                // navigate('/contracts'); // Uncomment nếu có trang danh sách contracts
+            }
+
         } catch (err) {
-            console.error("PDF Export Error:", err);
-            setExportError(err instanceof Error ? err.message : "Lỗi không xác định");
-            
-            // Cleanup nếu có lỗi
-            const temp = document.querySelector("body > div[style*='position: absolute']");
-            if (temp) temp.remove();
+            console.error("Lỗi trong quá trình xử lý:", err);
+
+            if (err instanceof Error) {
+                if (err.message.includes('network') || err.message.includes('fetch')) {
+                    setExportError("Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet.");
+                } else if (err.message.includes('403') || err.message.includes('401')) {
+                    setExportError("Không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại.");
+                } else {
+                    setExportError(`Lỗi: ${err.message}`);
+                }
+            } else {
+                setExportError("Có lỗi xảy ra trong quá trình tạo hợp đồng");
+            }
         } finally {
             setIsExporting(false);
         }
     };
 
-    const handleClearBuyerSignature = () => {
-        clearSignature(buyerSigRef);
-    };
-
-    const handleClearSellerSignature = () => {
-        clearSignature(sellerSigRef);
-    };
-
     return (
-        <div className="min-h-screen" style={{ backgroundColor: '#f9fafb' }}>
+        <div className="min-h-screen bg-gray-50">
             <div className="max-w-4xl mx-auto pt-32 pb-6 px-6 space-y-6">
-                {/* Error Alert */}
                 {exportError && (
-                    <Alert style={{ borderColor: '#fecaca', backgroundColor: '#fef2f2' }}>
-                        <AlertDescription style={{ color: '#991b1b' }}>
-                            {exportError}
+                    <Alert variant="destructive">
+                        <AlertDescription>{exportError}</AlertDescription>
+                    </Alert>
+                )}
+
+                {contractId && (
+                    <Alert>
+                        <AlertDescription>
+                            Hợp đồng đã được tạo với mã số: <strong>HD{contractId}</strong>
                         </AlertDescription>
                     </Alert>
                 )}
 
-                {/* Contract */}
-                <Card style={{ boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
+                <Card>
                     <CardContent className="p-0">
                         <ContractTemplate
                             ref={contractRef}
-                            contractData={mockContractData}
-                            buyerSigRef={buyerSigRef}
-                            sellerSigRef={sellerSigRef}
-                            onClearBuyerSignature={handleClearBuyerSignature}
-                            onClearSellerSignature={handleClearSellerSignature}
+                            contractData={contractData}
+                            signerSigRef={buyerSigRef}
+                            onClearSignature={() => clearSignature(buyerSigRef)}
                         />
                     </CardContent>
                 </Card>
 
-                {/* Export Button */}
-                <div style={{ textAlign: 'center' }}>
+                <div className="text-center space-y-4">
                     <Button
                         onClick={handleExportPDF}
                         disabled={isExporting}
-                        style={{
-                            background: '#111827',
-                            color: 'white',
-                            padding: '12px 32px',
-                            fontSize: '18px',
-                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                            transition: 'all 0.2s'
-                        }}
+                        className="px-8 py-3 text-lg"
+                        size="lg"
                     >
                         {isExporting ? (
                             <>
-                                <FiLoader style={{ width: '20px', height: '20px', marginRight: '8px' }} className="animate-spin" />
-                                Đang xuất PDF...
+                                <FiLoader className="w-5 h-5 mr-2 animate-spin" />
+                                Đang xử lý hợp đồng...
                             </>
                         ) : (
                             <>
-                                <FiDownload style={{ width: '20px', height: '20px', marginRight: '8px' }} />
-                                Xuất PDF hợp đồng
+                                <FiDownload className="w-5 h-5 mr-2" />
+                                Ký và lưu hợp đồng
                             </>
                         )}
                     </Button>
 
-                    <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '12px' }}>
-                        <FiFileText style={{ width: '16px', height: '16px', display: 'inline', marginRight: '4px' }} />
-                        PDF sẽ được tải xuống tự động sau khi tạo thành công
+                    <p className="text-sm text-gray-500">
+                        <FiFileText className="w-4 h-4 inline mr-1" />
+                        {isExporting
+                            ? "Đang tạo hợp đồng, upload file và lưu vào hệ thống..."
+                            : "Hợp đồng sẽ được tạo, lưu trữ và tải xuống tự động"
+                        }
                     </p>
                 </div>
             </div>

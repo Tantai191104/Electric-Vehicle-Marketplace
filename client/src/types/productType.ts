@@ -20,7 +20,7 @@ export type Product = {
   height?: number;
   weight?: number;
   specifications: Record<string, string>;
-  seller: Seller; // 👈 sửa lại thành object thay vì string
+  seller: Seller; 
   status: string;
   isFeatured: boolean;
   views: number;

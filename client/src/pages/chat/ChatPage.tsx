@@ -11,6 +11,7 @@ import type { Conversation, Message } from "@/types/chatType";
 import { useAuthStore } from "@/store/auth";
 import FixedHeader from "@/layouts/components/base/FixedHeader";
 import { chatService } from "@/services/chatServices";
+import { LucideMessageSquareMore } from "lucide-react";
 
 export const ChatPage: React.FC = () => {
     const { id: conversationId } = useParams<{ id: string }>();
@@ -382,7 +383,7 @@ export const ChatPage: React.FC = () => {
                     ) : (
                         <div className="flex-1 flex items-center justify-center p-6">
                             <div className="text-center">
-                                <div className="text-4xl mb-3 text-gray-500">💬</div>
+                                <div className="text-4xl mb-3 text-gray-500"><LucideMessageSquareMore /></div>
                                 <p className="text-gray-400 text-sm">Chọn một cuộc trò chuyện để bắt đầu</p>
                             </div>
                         </div>
