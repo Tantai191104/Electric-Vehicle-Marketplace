@@ -11,13 +11,17 @@ cloudinary.config({
 });
 
 export function detectResourceType(mime) {
-  return String(mime || "").startsWith("video") ? "video" : "image";
+  const m = String(mime || "");
+  if (m.startsWith("video")) return "video";
+  // Serve PDFs under image to allow inline preview
+  if (m.includes("pdf")) return "image";
+  return "image";
 }
 
 // Helper function to upload with unsigned preset
 export async function uploadWithUnsignedPreset(buffer, options = {}) {
   const defaultOptions = {
-    resource_type: 'raw',
+    resource_type: 'image',
     folder: 'contracts',
     format: 'pdf',
     upload_preset: 'unsigned_contracts'
