@@ -334,16 +334,16 @@ export async function getContractPdf(req, res) {
     const url = contract.finalPdfUrl || contract.draftPdfUrl;
     if (!url) return res.status(404).send('No PDF');
     // If URL is already public (type upload), just redirect
-    if (/\/image\/upload\//.test(url)) {
+    if (/\/(?:image|raw)\/upload\//.test(url)) {
       return res.redirect(url);
     }
     // Otherwise, try to extract publicId from either authenticated or raw URL
-    const m = url.match(/\/image\/(?:upload|authenticated)\/[^/]*\/v\d+\/([^\.]+)\.pdf/);
+    const m = url.match(/\/(?:image|raw)\/(?:upload|authenticated)\/[^/]*\/v\d+\/([^\.]+)\.pdf/);
     const publicId = m ? m[1] : null;
     if (!publicId) return res.redirect(url);
     const expiresAt = Math.floor(Date.now() / 1000) + 300;
     const signedUrl = cloudinary.utils.private_download_url(publicId, 'pdf', {
-      resource_type: 'image',
+      resource_type: /\/raw\//.test(url) ? 'raw' : 'image',
       type: 'authenticated',
       expires_at: expiresAt,
       secure: true,
