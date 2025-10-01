@@ -15,7 +15,7 @@ interface Props {
     timeRange: string;
 }
 
-export const StatsOverview: React.FC<Props> = ({ timeRange }) => {
+export const StatsOverview: React.FC<Props> = () => {
     const stats = [
         {
             title: "Tổng doanh thu",
@@ -90,8 +90,8 @@ export const StatsOverview: React.FC<Props> = ({ timeRange }) => {
                                 <Badge
                                     variant={isPositive ? "default" : "destructive"}
                                     className={`gap-1 text-xs shadow-sm ${isPositive
-                                            ? "bg-gray-900 text-white hover:bg-gray-800"
-                                            : "bg-red-100 text-red-700 border border-red-200"
+                                        ? "bg-gray-900 text-white hover:bg-gray-800"
+                                        : "bg-red-100 text-red-700 border border-red-200"
                                         }`}
                                 >
                                     {isPositive ? <FiArrowUp className="w-3 h-3" /> : <FiArrowDown className="w-3 h-3" />}

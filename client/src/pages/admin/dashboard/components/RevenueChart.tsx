@@ -6,7 +6,7 @@ interface Props {
   timeRange: string;
 }
 
-export const RevenueChart: React.FC<Props> = ({ timeRange }) => {
+export const RevenueChart: React.FC<Props> = () => {
   const chartData = [
     { date: "1/11", revenue: 125000000, orders: 45 },
     { date: "2/11", revenue: 185000000, orders: 67 },
