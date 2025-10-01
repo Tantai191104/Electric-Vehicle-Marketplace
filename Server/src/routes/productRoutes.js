@@ -159,9 +159,7 @@ router.get("/", optionalAuth, listProducts);
  *                     pages:
  *                       type: integer
  */
-// Guest, User, Admin can view vehicles
-// Chỉ User mới xem chi tiết sản phẩm (Guest không được xem chi tiết, Admin không cần xem)
-router.get("/vehicles", authenticate, requireUser, getVehicles);
+router.get("/vehicles", optionalAuth, getVehicles);
 
 /**
  * @swagger
@@ -228,9 +226,7 @@ router.get("/vehicles", authenticate, requireUser, getVehicles);
  *                     pages:
  *                       type: integer
  */
-// Guest, User, Admin can view batteries
-// Chỉ User mới xem chi tiết sản phẩm (Guest không được xem chi tiết, Admin không cần xem)
-router.get("/batteries", authenticate, requireUser, getBatteries);
+router.get("/batteries", optionalAuth, getBatteries);
 
 /**
  * @swagger
@@ -297,9 +293,7 @@ router.get("/batteries", authenticate, requireUser, getBatteries);
  *                     pages:
  *                       type: integer
  */
-// Guest, User, Admin can view motorcycles
-// Chỉ User mới xem chi tiết sản phẩm (Guest không được xem chi tiết, Admin không cần xem)
-router.get("/motorcycles", authenticate, requireUser, getMotorcycles);
+router.get("/motorcycles", optionalAuth, getMotorcycles);
 
 /**
  * @swagger
@@ -329,9 +323,7 @@ router.get("/motorcycles", authenticate, requireUser, getMotorcycles);
  *       404:
  *         description: Product not found
  */
-// Guest, User, Admin can view product details
-// Chỉ User mới xem chi tiết sản phẩm (Guest không được xem chi tiết, Admin không cần xem)
-router.get("/:id", authenticate, requireUser, getProductById);
+router.get("/:id", optionalAuth, getProductById);
 
 // Routes below require authentication
 
