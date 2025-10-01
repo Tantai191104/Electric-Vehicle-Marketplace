@@ -22,7 +22,7 @@ export const authenticate = (req, res, next) => {
       });
     }
 
-    req.user = { id: decoded.userId || decoded.sub, role: decoded.role, email: decoded.email };
+    req.user = { sub: decoded.userId || decoded.sub, id: decoded.userId || decoded.sub, role: decoded.role, email: decoded.email  , isAuthenticated: true  };
     next();
   } catch (e) {
     return res.status(STATUS_CODE.UNAUTHORIZED).json({
