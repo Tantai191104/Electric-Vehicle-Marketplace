@@ -3,107 +3,8 @@ import Contract from "../models/Contract.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import cloudinary from "../config/cloudinary.js";
-import PDFDocument from "pdfkit";
-import { PDFDocument as PDFLibDocument, rgb } from "pdf-lib";
 
-function renderContractHtml({ sellerName, buyerName, productTitle, unitPrice }) {
-  const price = new Intl.NumberFormat('vi-VN').format(Number(unitPrice) || 0);
-  return `<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hợp đồng mua bán</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; padding: 24px; line-height: 1.6; }
-    h1 { font-size: 20px; margin: 0 0 16px; }
-    .row { margin: 12px 0; }
-    .signed { color: #10b981; font-weight: 600; }
-    .unsigned { color: #ef4444; font-weight: 600; }
-    .box { border: 1px dashed #e5e7eb; padding: 12px; border-radius: 8px; }
-  </style>
-  </head>
-  <body>
-    <h1>Hợp đồng mua bán</h1>
-    <div class="row">Sản phẩm: <strong>${productTitle}</strong></div>
-    <div class="row">Giá: <strong>${price} VND</strong></div>
-    <div class="row box">Bên bán: <strong>${sellerName}</strong> <span class="signed">(đã ký)</span></div>
-    <div class="row box">Bên mua: <strong>${buyerName}</strong> <span class="unsigned">(chưa ký)</span></div>
-    <div class="row">Vui lòng ký trên ứng dụng để tiếp tục.</div>
-  </body>
-  </html>`;
-}
-
-export async function getContractTemplate(req, res) {
-  try {
-    const { product_id, seller_id } = req.query;
-    const buyerId = req.user?.sub || req.user?.id;
-    if (!product_id) return res.status(400).send('Missing product_id');
-    const product = await Product.findById(product_id).select('title price seller');
-    if (!product) return res.status(404).send('Product not found');
-    const sellerId = seller_id || String(product.seller);
-    const seller = await User.findById(sellerId).select('profile.fullName name');
-    const buyer = await User.findById(buyerId).select('profile.fullName name');
-    const html = renderContractHtml({
-      sellerName: seller?.profile?.fullName || seller?.name || 'Người bán',
-      buyerName: buyer?.profile?.fullName || buyer?.name || 'Người mua',
-      productTitle: product.title,
-      unitPrice: Number(product.price) || 0,
-    });
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.send(html);
-  } catch (err) {
-    return res.status(500).send('Internal Server Error');
-  }
-}
-
-export async function generateDraftPdf(req, res) {
-  try {
-    const { contractId } = req.body;
-    if (!contractId) return res.status(400).json({ error: 'Missing contractId' });
-    const contract = await Contract.findById(contractId);
-    if (!contract) return res.status(404).json({ error: 'Contract not found' });
-    const buyerId = req.user?.sub || req.user?.id;
-    if (String(contract.buyerId) !== String(buyerId)) return res.status(403).json({ error: 'Not your contract' });
-
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
-    const chunks = [];
-    doc.on('data', (c) => chunks.push(c));
-    doc.on('end', async () => {
-      const buffer = Buffer.concat(chunks);
-      const uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({
-          resource_type: 'raw',
-          folder: 'contracts',
-          format: 'pdf',
-          upload_preset: 'unsigned_contracts'
-        }, (err, result) => {
-          if (err) return resolve({ success: false, error: err.message });
-          resolve({ success: true, url: result.secure_url });
-        }).end(buffer);
-      });
-      if (!uploaded.success) return res.status(500).json({ error: uploaded.error || 'Upload failed' });
-      contract.draftPdfUrl = uploaded.url;
-      await contract.save();
-      return res.json({ success: true, data: { draftPdfUrl: contract.draftPdfUrl } });
-    });
-
-    const m = contract.metadata || {};
-    const price = new Intl.NumberFormat('vi-VN').format(Number(m.unitPrice) || 0);
-    doc.fontSize(20).text('HỢP ĐỒNG MUA BÁN', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(`Sản phẩm: ${m.productTitle || ''}`);
-    doc.text(`Giá: ${price} VND`);
-    doc.moveDown();
-    doc.text(`Bên bán: ${m.sellerName || ''} (đã ký)`);
-    doc.text(`Bên mua: ${m.buyerName || ''} (chưa ký)`);
-    doc.moveDown();
-    doc.text('Vui lòng ký trên ứng dụng để tiếp tục.');
-    doc.end();
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-}
+// Removed server-side HTML/PDF rendering. Contracts are now rendered and signed fully on client.
 
 const initiateSchema = z.object({
   product_id: z.string(),
@@ -173,6 +74,7 @@ export async function initiateContract(req, res) {
 
 const signSchema = z.object({
   contractId: z.string(),
+  finalUrl: z.string().url().optional(),
 });
 
 export async function signContract(req, res) {
@@ -190,12 +92,23 @@ export async function signContract(req, res) {
       return res.status(403).json({ error: "Not your contract" });
     }
 
-    // Expect a PDF uploaded from mobile app as field 'pdf' OR signature data
+    // Expect a finalUrl (client-generated PDF), or a PDF file, or signature data
     const file = (req.files && req.files[0]) || req.file;
     const signatureDataUrl = req.body?.signature || req.body?.signatureDataUrl;
+    const finalUrl = req.body?.finalUrl;
+
+    // Fast path: client already uploaded to Cloudinary and gave us public URL
+    if (finalUrl && typeof finalUrl === 'string') {
+      contract.finalPdfUrl = finalUrl;
+      contract.status = 'signed';
+      contract.buyerSignedAt = new Date();
+      contract.signedAt = new Date();
+      await contract.save();
+      return res.json({ success: true, data: { contractId: contract._id, status: contract.status, finalPdfUrl: contract.finalPdfUrl } });
+    }
 
     if (!file && !signatureDataUrl) {
-      return res.status(400).json({ error: "Missing signed PDF file (field 'pdf') or signature data" });
+      return res.status(400).json({ error: "Missing finalUrl or signed PDF file (field 'pdf') or signature data" });
     }
 
     // Handle signature insertion using pdf-lib
