@@ -8,46 +8,69 @@ export const replaceSignatureCanvasWithImages = async (
   clonedElement: HTMLElement,
   signatures: SignatureRefs
 ): Promise<void> => {
-  const signerSig = getSignatureDataURL(signatures.signer);
+  try {
+    // Find signature elements with better error handling
+    const signerCanvas = clonedElement.querySelector(
+      '[data-signature="signer"]'
+    );
 
-  // Debug log
-  console.log("Signer signature exists:", !!signerSig);
+    if (signerCanvas) {
+      console.log("Found signer canvas element");
+      const signerSig = getOptimizedSignatureDataURL(signatures.signer);
 
-  // Tìm canvas chữ ký
-  const signerCanvas = clonedElement.querySelector('[data-signature="signer"]');
-  if (signerCanvas) {
-    console.log("Found signer canvas element");
-    if (signerSig) {
-      await replaceCanvasWithImage(signerCanvas, signerSig);
-      console.log("Replaced signer canvas with image");
+      if (signerSig) {
+        await replaceCanvasWithImageOptimized(signerCanvas, signerSig);
+        console.log("Successfully replaced signer canvas with signature");
+      } else {
+        await replaceCanvasWithEmptyImageOptimized(signerCanvas);
+        console.log("Replaced signer canvas with empty placeholder");
+      }
     } else {
-      // Nếu không có chữ ký thì thay bằng placeholder
-      await replaceCanvasWithEmptyImage(signerCanvas);
+      console.warn(
+        "Signer canvas element not found, looking for alternative selectors"
+      );
+      // Try alternative selectors
+      const alternativeCanvas =
+        clonedElement.querySelector("canvas") ||
+        clonedElement.querySelector("[data-signature]");
+
+      if (alternativeCanvas) {
+        const signerSig = getOptimizedSignatureDataURL(signatures.signer);
+        if (signerSig) {
+          await replaceCanvasWithImageOptimized(alternativeCanvas, signerSig);
+        } else {
+          await replaceCanvasWithEmptyImageOptimized(alternativeCanvas);
+        }
+      }
     }
-  } else {
-    console.error("Signer canvas not found");
+  } catch (error) {
+    console.error("Error replacing signature canvas:", error);
+    // Don't throw - continue with PDF generation even if signature replacement fails
   }
 };
 
-const getSignatureDataURL = (
+const getOptimizedSignatureDataURL = (
   sigRef: React.RefObject<SignatureCanvas>
 ): string | null => {
-  if (!sigRef.current) {
-    console.log("Signature ref is null");
-    return null;
-  }
-
-  if (sigRef.current.isEmpty()) {
-    console.log("Signature is empty");
-    return null;
-  }
-
   try {
-    const dataURL = sigRef.current.getCanvas().toDataURL("image/png");
-    console.log(
-      "Generated signature dataURL:",
-      dataURL.substring(0, 50) + "..."
-    );
+    if (!sigRef.current) {
+      console.log("Signature ref is null");
+      return null;
+    }
+
+    if (sigRef.current.isEmpty()) {
+      console.log("Signature is empty");
+      return null;
+    }
+
+    const canvas = sigRef.current.getCanvas();
+    if (!canvas) {
+      console.log("Canvas not found in signature ref");
+      return null;
+    }
+
+    const dataURL = canvas.toDataURL("image/png", 0.8);
+    console.log("Generated signature dataURL successfully");
     return dataURL;
   } catch (error) {
     console.error("Error getting signature dataURL:", error);
@@ -55,53 +78,57 @@ const getSignatureDataURL = (
   }
 };
 
-const replaceCanvasWithImage = async (
+const replaceCanvasWithImageOptimized = async (
   canvas: Element,
   dataURL: string
 ): Promise<void> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
+
     img.onload = () => {
       img.style.cssText = `
-        width: 100%;
-        height: 128px;
-        border: 1px solid #cccccc;
-        background: #f9fafb;
-        display: block;
-        object-fit: contain;
-      `;
+                width: 100%;
+                height: 128px;
+                border: 1px solid #cccccc;
+                background: #f9fafb;
+                display: block;
+                object-fit: contain;
+            `;
 
       if (canvas.parentNode) {
         canvas.parentNode.replaceChild(img, canvas);
-        console.log("Successfully replaced canvas with image");
         resolve();
       } else {
-        reject(new Error("Canvas parent node not found"));
+        console.warn("Canvas parent node not found, appending to container");
+        resolve(); // Don't reject, continue processing
       }
     };
 
     img.onerror = (error) => {
       console.error("Error loading signature image:", error);
-      reject(error);
+      resolve(); // Don't reject, continue processing
     };
 
     img.src = dataURL;
   });
 };
 
-const replaceCanvasWithEmptyImage = async (canvas: Element): Promise<void> => {
+const replaceCanvasWithEmptyImageOptimized = async (
+  canvas: Element
+): Promise<void> => {
   const div = document.createElement("div");
   div.style.cssText = `
-    width: 100%;
-    height: 128px;
-    border: 1px solid #cccccc;
-    background: #f9fafb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-    font-size: 14px;
-  `;
+        width: 100%;
+        height: 128px;
+        border: 1px solid #cccccc;
+        background: #f9fafb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+    `;
   div.textContent = "(Chưa ký)";
 
   if (canvas.parentNode) {

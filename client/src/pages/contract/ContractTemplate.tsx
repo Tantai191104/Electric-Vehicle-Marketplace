@@ -6,7 +6,7 @@ import type { ContractInfo } from "@/types/contractTypes";
 
 interface Props {
     contractData: ContractInfo;
-    signerSigRef: React.RefObject<SignatureCanvas>;
+     signerSigRef: React.RefObject<SignatureCanvas | null>;
     onClearSignature: () => void;
 }
 
@@ -167,7 +167,7 @@ const ContractTerms: React.FC = () => (
 
 interface SignatureSectionProps {
     title: string;
-    sigRef: React.RefObject<SignatureCanvas>;
+    sigRef: React.RefObject<SignatureCanvas | null>;
     onClear: () => void;
     signerName: string;
     dataSignature: string;

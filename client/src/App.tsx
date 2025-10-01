@@ -8,7 +8,15 @@ function App() {
     <QueryProvider>
       <BrowserRouter>
         <AppRoutes />
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 2000,
+          }}
+          richColors
+          expand={true}
+        />
+
       </BrowserRouter>
     </QueryProvider>
   );
