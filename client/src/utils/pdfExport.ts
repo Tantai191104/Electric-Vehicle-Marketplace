@@ -2,217 +2,149 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
 export interface PDFExportOptions {
-    element: HTMLElement;
-    filename?: string;
-    quality?: number;
-    scale?: number;
+  element: HTMLElement;
+  filename?: string;
+  quality?: number;
+  scale?: number;
+  returnBlob?: boolean;
 }
 
 export const exportToPDF = async ({
-    element,
-    filename = `document-${Date.now()}.pdf`,
-    quality = 0.95,
-    scale = 2
-}: PDFExportOptions): Promise<void> => {
-    // Tạo container tạm với style an toàn
-    const tempContainer = createTempContainer();
-    const clonedElement = element.cloneNode(true) as HTMLElement;
-    
-    // Áp dụng styles an toàn cho PDF
-    applyPDFSafeStyles(clonedElement);
-    tempContainer.appendChild(clonedElement);
-    document.body.appendChild(tempContainer);
-
-    try {
-        // Đợi DOM render
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Tạo canvas
-        const canvas = await html2canvas(tempContainer, {
-            scale,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "white",
-            width: 794,
-            height: tempContainer.scrollHeight,
-            scrollX: 0,
-            scrollY: 0,
-            logging: false,
-            removeContainer: false
-        });
-
-        const imgData = canvas.toDataURL('image/jpeg', quality);
-        
-        // Tạo PDF với multi-page support
-        const pdf = createPDFFromCanvas(canvas, imgData);
-        pdf.save(filename);
-
-    } finally {
-        // Cleanup
-        if (document.body.contains(tempContainer)) {
-            document.body.removeChild(tempContainer);
-        }
+  element,
+  filename = `document-${Date.now()}.pdf`,
+  quality = 0.85,
+  scale = 1.5,
+  returnBlob = false,
+}: PDFExportOptions): Promise<Blob | void> => {
+  try {
+    // Đảm bảo element có trong DOM và visible
+    if (!document.body.contains(element)) {
+      throw new Error("Element not found in DOM");
     }
-};
 
-const createTempContainer = (): HTMLDivElement => {
-    const container = document.createElement("div");
-    container.style.cssText = `
-        position: absolute;
-        left: -9999px;
-        top: 0;
-        width: 794px;
-        background: white;
-        font-family: Arial, sans-serif;
-        color: black;
-        line-height: 1.6;
-        padding: 40px;
-        box-sizing: border-box;
-    `;
-    return container;
-};
+    // Optimized html2canvas options với error handling
+    const canvas = await html2canvas(element, {
+      scale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "white",
+      width: element.offsetWidth || 794,
+      height: element.offsetHeight || element.scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
+      logging: false,
+      removeContainer: false,
+      foreignObjectRendering: false, // Disable to avoid iframe issues
+      imageTimeout: 15000,
+      onclone: (clonedDoc) => {
+        // Ensure all styles are properly applied
+        const clonedElement = clonedDoc.querySelector("body > div");
+        if (clonedElement) {
+          (clonedElement as HTMLElement).style.visibility = "visible";
+          (clonedElement as HTMLElement).style.position = "static";
+          (clonedElement as HTMLElement).style.left = "0";
+          (clonedElement as HTMLElement).style.top = "0";
+        }
 
-const createPDFFromCanvas = (canvas: HTMLCanvasElement, imgData: string): jsPDF => {
-    const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
+        // Apply all inline styles to cloned elements
+        applyInlineStylesToClone(clonedDoc);
+      },
     });
 
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 295; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
+    if (!canvas || canvas.width === 0 || canvas.height === 0) {
+      throw new Error("Failed to create canvas from element");
+    }
 
-    // Thêm trang đầu
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+    const imgData = canvas.toDataURL("image/jpeg", quality);
+    const pdf = createOptimizedPDF(canvas, imgData);
+
+    if (returnBlob) {
+      return pdf.output("blob");
+    } else {
+      pdf.save(filename);
+    }
+  } catch (error) {
+    console.error("PDF Export Error:", error);
+    throw new Error(
+      `PDF export failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+};
+
+const applyInlineStylesToClone = (clonedDoc: Document): void => {
+  const allElements = clonedDoc.querySelectorAll("*");
+
+  allElements.forEach((element) => {
+    const htmlElement = element as HTMLElement;
+
+    // Ensure visibility
+    if (htmlElement.style.visibility === "hidden") {
+      htmlElement.style.visibility = "visible";
+    }
+
+    // Fix positioning issues
+    if (
+      htmlElement.style.position === "absolute" &&
+      htmlElement.style.left === "-9999px"
+    ) {
+      htmlElement.style.position = "static";
+      htmlElement.style.left = "0";
+    }
+  });
+};
+
+const createOptimizedPDF = (
+  canvas: HTMLCanvasElement,
+  imgData: string
+): jsPDF => {
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+    compress: true,
+    precision: 2,
+  });
+
+  const imgWidth = 210;
+  const pageHeight = 295;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  addPagesOptimized(pdf, imgData, imgWidth, imgHeight, pageHeight);
+
+  return pdf;
+};
+
+const addPagesOptimized = (
+  pdf: jsPDF,
+  imgData: string,
+  imgWidth: number,
+  imgHeight: number,
+  pageHeight: number
+): void => {
+  let heightLeft = imgHeight;
+  let position = 0;
+  let isFirstPage = true;
+
+  while (heightLeft > 0) {
+    if (!isFirstPage) {
+      pdf.addPage();
+    }
+
+    pdf.addImage(
+      imgData,
+      "JPEG",
+      0,
+      position,
+      imgWidth,
+      Math.min(imgHeight, pageHeight),
+      undefined,
+      "FAST"
+    );
+
     heightLeft -= pageHeight;
-
-    // Thêm các trang tiếp theo
-    while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
-    }
-
-    return pdf;
-};
-
-const applyPDFSafeStyles = (element: HTMLElement): void => {
-    // Reset root element
-    element.style.cssText = `
-        background: white;
-        color: black;
-        font-family: Arial, sans-serif;
-        line-height: 1.6;
-        padding: 0;
-        margin: 0;
-    `;
-
-    // Xóa tất cả buttons
-    const buttons = element.querySelectorAll('button');
-    buttons.forEach(button => button.remove());
-
-    // Áp dụng styles cho từng element
-    const allElements = element.querySelectorAll('*');
-    allElements.forEach((el: Element) => {
-        const htmlEl = el as HTMLElement;
-        applyElementStyles(htmlEl);
-    });
-};
-
-const applyElementStyles = (element: HTMLElement): void => {
-    // Reset style
-    element.style.cssText = '';
-
-    // Typography styles
-    if (element.classList.contains('text-3xl')) {
-        element.style.cssText = 'font-size: 30px; font-weight: bold; color: black; text-align: center; margin: 0 0 8px 0;';
-    } else if (element.classList.contains('text-lg')) {
-        element.style.cssText = 'font-size: 18px; font-weight: 600; color: black; margin: 0 0 16px 0;';
-    } else if (element.classList.contains('text-sm')) {
-        element.style.cssText = 'font-size: 14px; color: #666666;';
-    } else if (element.classList.contains('text-xs')) {
-        element.style.cssText = 'font-size: 12px; color: #888888;';
-    }
-
-    // Table styles
-    applyTableStyles(element);
-    
-    // Layout styles
-    applyLayoutStyles(element);
-    
-    // Text alignment
-    if (element.classList.contains('text-center')) {
-        element.style.textAlign = 'center';
-    }
-
-    // Font weights
-    if (element.classList.contains('font-bold') || element.tagName === 'STRONG') {
-        element.style.fontWeight = 'bold';
-    }
-    if (element.classList.contains('font-semibold')) {
-        element.style.fontWeight = '600';
-    }
-
-    // Margins
-    applyMarginStyles(element);
-
-    // Remove problematic positioning
-    if (element.classList.contains('relative')) {
-        element.style.position = 'static';
-    }
-};
-
-const applyTableStyles = (element: HTMLElement): void => {
-    if (element.tagName === 'TABLE') {
-        element.style.cssText = 'width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;';
-    } else if (element.tagName === 'TD') {
-        let tdStyle = 'padding: 12px; border: 1px solid #cccccc; vertical-align: top;';
-        
-        if (element.classList.contains('font-semibold') || element.classList.contains('bg-gray-50')) {
-            tdStyle += ' font-weight: 600; background: #f9f9f9;';
-        }
-        if (element.classList.contains('text-green-600')) {
-            tdStyle += ' color: #16a34a; font-weight: 600;';
-        }
-        
-        element.style.cssText = tdStyle;
-    }
-};
-
-const applyLayoutStyles = (element: HTMLElement): void => {
-    // Background styles
-    if (element.classList.contains('bg-gray-50')) {
-        element.style.cssText = 'background: #f9f9f9; padding: 16px; margin: 8px 0; border-radius: 8px;';
-    }
-
-    // Grid layouts
-    if (element.classList.contains('grid-cols-2')) {
-        element.style.cssText = 'display: flex; gap: 32px; margin: 48px 0 0 0;';
-    }
-    if (element.closest('.grid-cols-2') && element !== element.closest('.grid-cols-2')) {
-        element.style.cssText = 'flex: 1; text-align: center;';
-    }
-
-    // Space between children
-    if (element.classList.contains('space-y-4')) {
-        element.style.display = 'block';
-        Array.from(element.children).forEach((child, index) => {
-            if (index > 0) {
-                (child as HTMLElement).style.marginTop = '16px';
-            }
-        });
-    }
-};
-
-const applyMarginStyles = (element: HTMLElement): void => {
-    if (element.classList.contains('mb-8')) element.style.marginBottom = '32px';
-    if (element.classList.contains('mb-4')) element.style.marginBottom = '16px';
-    if (element.classList.contains('mb-2')) element.style.marginBottom = '8px';
-    if (element.classList.contains('mt-12')) element.style.marginTop = '48px';
-    if (element.classList.contains('mt-2')) element.style.marginTop = '8px';
+    position = heightLeft > 0 ? -pageHeight : position;
+    isFirstPage = false;
+  }
 };
