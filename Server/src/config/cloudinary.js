@@ -17,10 +17,9 @@ export function detectResourceType(mime) {
 // Helper function to upload with unsigned preset
 export async function uploadWithUnsignedPreset(buffer, options = {}) {
   const defaultOptions = {
-    resource_type: 'image',
+    resource_type: 'raw',
     folder: 'contracts',
     format: 'pdf',
-    type: 'upload',
     upload_preset: 'unsigned_contracts'
   };
   
