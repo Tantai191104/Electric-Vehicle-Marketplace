@@ -25,6 +25,7 @@
     "moment": "^2.30.1",
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.1",
+<<<<<<< HEAD
     "multer": "^2.0.2",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.15.2",
@@ -32,6 +33,10 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0",
+=======
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+>>>>>>> main
     "zod": "^4.1.5"
   },
   "devDependencies": {
