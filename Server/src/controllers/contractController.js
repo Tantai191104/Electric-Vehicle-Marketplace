@@ -4,6 +4,7 @@ import Product from "../models/Product.js";
 import User from "../models/User.js";
 import cloudinary from "../config/cloudinary.js";
 import PDFDocument from "pdfkit";
+import { PDFDocument as PDFLibDocument, rgb } from "pdf-lib";
 
 function renderContractHtml({ sellerName, buyerName, productTitle, unitPrice }) {
   const price = new Intl.NumberFormat('vi-VN').format(Number(unitPrice) || 0);
@@ -71,7 +72,13 @@ export async function generateDraftPdf(req, res) {
     doc.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       const uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload' }, (err, result) => {
+        cloudinary.uploader.upload_stream({ 
+          resource_type: 'image', 
+          folder: 'contracts', 
+          format: 'pdf', 
+          type: 'upload',
+          upload_preset: 'unsigned_contracts'
+        }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
           resolve({ success: true, url: result.secure_url });
         }).end(buffer);
@@ -184,31 +191,99 @@ export async function signContract(req, res) {
       return res.status(403).json({ error: "Not your contract" });
     }
 
-    // Expect a PDF uploaded from mobile app as field 'pdf'
+    // Expect a PDF uploaded from mobile app as field 'pdf' OR signature data
     const file = (req.files && req.files[0]) || req.file;
-    if (!file) {
-      return res.status(400).json({ error: "Missing signed PDF file (field 'pdf')" });
+    const signatureDataUrl = req.body?.signature || req.body?.signatureDataUrl;
+    
+    if (!file && !signatureDataUrl) {
+      return res.status(400).json({ error: "Missing signed PDF file (field 'pdf') or signature data" });
     }
 
-    // If client sends a signed PDF file, upload directly. Otherwise, if a signature image/data URL is provided,
-    // render a final PDF on the server including the buyer signature and upload that instead.
+    // Handle signature insertion using pdf-lib
     let uploaded;
-    const signatureDataUrl = req.body?.signature || req.body?.signatureDataUrl;
+    
     if (file && !signatureDataUrl) {
+      // Direct PDF upload without signature
       uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload' }, (err, result) => {
+        cloudinary.uploader.upload_stream({ 
+          resource_type: 'image', 
+          folder: 'contracts', 
+          format: 'pdf', 
+          type: 'upload',
+          upload_preset: 'unsigned_contracts'
+        }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
           resolve({ success: true, url: result.secure_url });
         }).end(file.buffer);
       });
+    } else if (signatureDataUrl && contract.draftPdfUrl) {
+      // Insert signature into existing PDF using pdf-lib
+      try {
+        // 1. Load existing PDF from draftPdfUrl
+        const existingPdfResponse = await fetch(contract.draftPdfUrl);
+        if (!existingPdfResponse.ok) {
+          throw new Error('Failed to fetch draft PDF');
+        }
+        const existingPdfBytes = await existingPdfResponse.arrayBuffer();
+        
+        // 2. Load PDF with pdf-lib
+        const pdfDoc = await PDFLibDocument.load(existingPdfBytes);
+        const pages = pdfDoc.getPages();
+        const lastPage = pages[pages.length - 1];
+        
+        // 3. Extract signature base64 and embed as PNG
+        if (signatureDataUrl.startsWith('data:image/png')) {
+          const base64 = signatureDataUrl.split(',')[1] || '';
+          const signatureImage = await pdfDoc.embedPng(base64);
+          
+          // 4. Draw signature at specific position (bottom right area)
+          const { width: pageWidth, height: pageHeight } = lastPage.getSize();
+          const signatureWidth = 150;
+          const signatureHeight = 50;
+          
+          lastPage.drawImage(signatureImage, {
+            x: pageWidth - signatureWidth - 50, // 50px from right edge
+            y: 100, // 100px from bottom
+            width: signatureWidth,
+            height: signatureHeight,
+          });
+        }
+        
+        // 5. Save modified PDF
+        const pdfBytes = await pdfDoc.save();
+        
+        // 6. Upload to Cloudinary
+        uploaded = await new Promise((resolve) => {
+          cloudinary.uploader.upload_stream({ 
+            resource_type: 'image', 
+            folder: 'contracts', 
+            format: 'pdf',
+            type: 'upload',
+            upload_preset: 'unsigned_contracts'
+          }, (err, result) => {
+            if (err) return resolve({ success: false, error: err.message });
+            resolve({ success: true, url: result.secure_url });
+          }).end(Buffer.from(pdfBytes));
+        });
+      } catch (error) {
+        console.error('Error processing signature:', error);
+        return res.status(500).json({ error: 'Failed to process signature: ' + error.message });
+      }
     } else {
+      // Fallback: create new PDF with PDFKit (original logic)
       uploaded = await new Promise((resolve) => {
         const doc = new PDFDocument({ size: 'A4', margin: 50 });
         const chunks = [];
         doc.on('data', (c) => chunks.push(c));
         doc.on('end', async () => {
           const buffer = Buffer.concat(chunks);
-          cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'contracts', format: 'pdf', type: 'upload' }, (err, result) => {
+          cloudinary.uploader.upload_stream({ 
+            resource_type: 'image', 
+            folder: 'contracts', 
+            format: 'pdf', 
+            type: 'upload',
+            upload_preset: 'unsigned_contracts'
+          }, (err, result) => {
             if (err) return resolve({ success: false, error: err.message });
             return resolve({ success: true, url: result.secure_url });
           }).end(buffer);
