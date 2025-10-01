@@ -73,7 +73,7 @@ export async function generateDraftPdf(req, res) {
       const buffer = Buffer.concat(chunks);
       const uploaded = await new Promise((resolve) => {
         cloudinary.uploader.upload_stream({
-          resource_type: 'image',
+          resource_type: 'raw',
           folder: 'contracts',
           format: 'pdf',
           upload_preset: 'unsigned_contracts'
@@ -205,7 +205,7 @@ export async function signContract(req, res) {
       // Direct PDF upload without signature
       uploaded = await new Promise((resolve) => {
         cloudinary.uploader.upload_stream({ 
-          resource_type: 'image', 
+          resource_type: 'raw', 
           folder: 'contracts', 
           format: 'pdf',
           upload_preset: 'unsigned_contracts'
@@ -253,7 +253,7 @@ export async function signContract(req, res) {
         // 6. Upload to Cloudinary
         uploaded = await new Promise((resolve) => {
           cloudinary.uploader.upload_stream({
-            resource_type: 'image',
+            resource_type: 'raw',
             folder: 'contracts',
             format: 'pdf',
             upload_preset: 'unsigned_contracts'
@@ -275,7 +275,7 @@ export async function signContract(req, res) {
         doc.on('end', async () => {
           const buffer = Buffer.concat(chunks);
           cloudinary.uploader.upload_stream({
-            resource_type: 'image',
+            resource_type: 'raw',
             folder: 'contracts',
             format: 'pdf',
             upload_preset: 'unsigned_contracts'
