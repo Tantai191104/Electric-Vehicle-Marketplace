@@ -35,7 +35,7 @@ export const register = async (req, res, next) => {
 
     const hashed = await hashPassword(password);
     const user = await User.create({
-      name, email, password: hashed, phone: phone || null, role: role || "customer", isActive: true,
+      name, email, password: hashed, phone: phone || null, role: role || "user", isActive: true,
     });
 
     const accessToken = signJwt({ userId: user._id, role: user.role }, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES || "15m" });

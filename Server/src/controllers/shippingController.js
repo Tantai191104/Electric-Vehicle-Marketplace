@@ -2,6 +2,7 @@ import { ghnClient, getGhnHeaders } from "../config/ghn.js";
 import Product from "../models/Product.js";
 import { z } from "zod";
 import Order from "../models/Order.js";
+import Contract from "../models/Contract.js";
 import User from "../models/User.js";
 import WalletTransaction from "../models/WalletTransaction.js";
 
@@ -52,11 +53,36 @@ export async function calcShippingFee(req, res) {
       delete body.product_id;
     }
     delete body.items;
+    // GHN API expects 'service_id' and 'service_type_id' (with underscores)
+    // We'll resolve a valid service_id for this route to avoid "route not found service"
     body.service_type_id = 2;
+
+    // Try to resolve available services for the given route and pick a valid service_id
+    try {
+      const svcResp = await ghnClient.post(
+        "/v2/shipping-order/available-services",
+        {
+          shop_id: Number(process.env.GHN_SHOP_ID),
+          from_district: Number(body.from_district_id),
+          to_district: Number(body.to_district_id),
+        },
+        { headers }
+      );
+      let svcPayload;
+      try { svcPayload = typeof svcResp.data === 'string' ? JSON.parse(svcResp.data) : svcResp.data; } catch { svcPayload = {}; }
+      const services = Array.isArray(svcPayload?.data) ? svcPayload.data : [];
+      const preferred = services.find((s) => Number(s.service_type_id) === 2) || services[0];
+      if (preferred && preferred.service_id) {
+        body.service_id = Number(preferred.service_id);
+      }
+    } catch {}
     body.length = Math.min(Math.max(Number(body.length), 1), 200);
     body.width = Math.min(Math.max(Number(body.width), 1), 200);
     body.height = Math.min(Math.max(Number(body.height), 1), 200);
     body.weight = Math.min(Math.max(Number(body.weight), 1), 1600000);
+
+    // Debug: Log the request body being sent to GHN
+    console.log('GHN Fee Request Body:', JSON.stringify(body, null, 2));
 
     const resp = await ghnClient.post("/v2/shipping-order/fee", body, {
       headers,
@@ -187,9 +213,17 @@ export async function createShippingOrder(req, res) {
     const headers = getGhnHeaders();
     const b = parsed.data;
 
+    // Debug logging: raw request body to help diagnose address/ward issues
+    try {
+      console.log('[SHIPPING][ORDER][REQ] raw body =', JSON.stringify(req.body));
+      console.log('[SHIPPING][ORDER][REQ] parsed body =', JSON.stringify(b));
+    } catch {}
+
     // Resolve product info if provided to support wallet check and local order creation
     let productDoc = null;
     let sellerId = b.seller_id || null;
+    let sellerDoc = null;
+    let sellerAddr = null;
     let unitPrice = typeof b.unit_price === 'number' ? b.unit_price : null;
     let shippingFee = typeof b.shipping_fee === 'number' ? b.shipping_fee : null;
     if (b.product_id) {
@@ -199,6 +233,13 @@ export async function createShippingOrder(req, res) {
           if (unitPrice === null || Number.isNaN(unitPrice)) unitPrice = Number(productDoc.price) || 0;
           if (!sellerId && productDoc.seller) sellerId = String(productDoc.seller);
         }
+      } catch {}
+    }
+    // Resolve seller info/address for sender fields
+    if (sellerId) {
+      try {
+        sellerDoc = await User.findById(sellerId).select('name phone profile.address');
+        sellerAddr = sellerDoc?.profile?.address || sellerDoc?.address || null;
       } catch {}
     }
 
@@ -221,16 +262,19 @@ export async function createShippingOrder(req, res) {
       }
     }
     const body = {
+      service_id: b.service_type_id ?? 2,
       service_type_id: b.service_type_id ?? 2,
       payment_type_id: b.payment_type_id ?? 2,
       required_note: b.required_note ?? 'KHONGCHOXEMHANG',
-      from_name: b.from_name ?? null,
-      from_phone: b.from_phone ?? null,
-      from_address: b.from_address ?? null,
-      from_ward_name: b.from_ward_name ?? null,
-      from_district_name: b.from_district_name ?? null,
-      from_province_name: b.from_province_name ?? null,
-      from_district_id: b.from_district_id ?? null,
+      from_name: b.from_name ?? (sellerDoc?.name || null),
+      from_phone: b.from_phone ?? (sellerDoc?.phone || null),
+      from_address: b.from_address ?? (sellerAddr?.houseNumber || null),
+      from_ward_name: b.from_ward_name ?? (sellerAddr?.ward || null),
+      from_district_name: b.from_district_name ?? (sellerAddr?.district || null),
+      from_province_name: b.from_province_name ?? (sellerAddr?.province || null),
+      // Prefer codes if FE/DB has them to avoid mismatch with GHN
+      from_ward_code: b.from_ward_code ?? (sellerAddr?.wardCode ? String(sellerAddr.wardCode) : undefined),
+      from_district_id: b.from_district_id ?? (sellerAddr?.districtCode ? Number(sellerAddr.districtCode) : undefined),
       to_name: b.to_name,
       to_phone: b.to_phone,
       to_address: b.to_address,
@@ -260,11 +304,26 @@ export async function createShippingOrder(req, res) {
       items: b.items ?? [],
     };
 
+    // Extra debug for resolved sender
+    try {
+      console.log('[SHIPPING][ORDER][SENDER_RESOLVED]', {
+        from_name: body.from_name,
+        from_phone: body.from_phone,
+        from_address: body.from_address,
+        from_ward_name: body.from_ward_name,
+        from_district_name: body.from_district_name,
+        from_province_name: body.from_province_name,
+        from_ward_code: body.from_ward_code,
+        from_district_id: body.from_district_id,
+      });
+    } catch {}
+
     const resp = await ghnClient.post('/v2/shipping-order/create', body, {
       headers,
       responseType: 'text',
       transformResponse: [(x) => x],
     });
+    try { console.log('[SHIPPING][ORDER][GHN][BODY] =>', JSON.stringify(body)); } catch {}
     let payload;
     try {
       payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
@@ -292,6 +351,18 @@ export async function createShippingOrder(req, res) {
 
       // Only proceed if we have at least product and pricing context
       if (b.product_id && typeof unitPrice === 'number') {
+        // Require signed contract before charging and creating order
+        const existingSigned = await Contract.findOne({
+          buyerId,
+          productId: b.product_id,
+          status: 'signed'
+        }).sort({ createdAt: -1 });
+        if (!existingSigned) {
+          payload = payload || {};
+          payload.error = 'CONTRACT_REQUIRED';
+          payload.message = 'Vui lòng ký hợp đồng trước khi tạo đơn hàng';
+          return res.status(400).json(payload);
+        }
         const fee = typeof shippingFee === 'number' ? shippingFee : 0;
         const totalAmount = Math.max(0, Math.round(unitPrice));
         const finalAmountCalc = totalAmount + Math.max(0, Math.round(fee));
@@ -355,6 +426,19 @@ export async function createShippingOrder(req, res) {
             { status: 'pending', description: 'Đơn hàng tạo trên GHN', updatedBy: buyerId },
           ],
         });
+
+        // Attach contract info to order and link back
+        try {
+          if (existingSigned?.finalPdfUrl) {
+            orderDoc.contract = orderDoc.contract || {};
+            orderDoc.contract.contractId = existingSigned._id;
+            orderDoc.contract.pdfUrl = existingSigned.finalPdfUrl;
+            orderDoc.contract.signedAt = existingSigned.signedAt || new Date();
+            await orderDoc.save();
+            existingSigned.orderId = orderDoc._id;
+            await existingSigned.save();
+          }
+        } catch {}
 
         // Update product status to "sold" when order is created successfully
         await Product.findByIdAndUpdate(b.product_id, { status: 'sold' });

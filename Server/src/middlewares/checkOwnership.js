@@ -5,7 +5,7 @@ import Product from "../models/Product.js";
 export const preventSelfPurchase = async (req, res, next) => {
   try {
     const user = req.user;
-    const { productId } = req.params;
+    const productId = req.body.product_id;
 
     if (!productId) {
       return res.status(STATUS_CODE.BAD_REQUEST).json({

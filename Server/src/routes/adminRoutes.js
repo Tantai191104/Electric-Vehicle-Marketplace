@@ -1,16 +1,11 @@
 import express from "express";
 import {
-  getAllUsers,
-  getUserById,
-  updateUser,
-  deleteUser,
   getAllProducts,
   getProductById,
   updateProduct,
   deleteProduct,
   getAllOrders,
   getOrderById,
-  updateOrderStatus,
   getAdminStats,
   getSystemStats,
   reportViolation,
@@ -90,128 +85,13 @@ router.get("/stats", getAdminStats);
  */
 router.get("/system-stats", getSystemStats);
 
-/**
- * @swagger
- * /admin/users:
- *   get:
- *     summary: Get all users (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Page number
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *         description: Number of items per page
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *         description: Search by name or email
- *       - in: query
- *         name: role
- *         schema:
- *           type: string
- *           enum: [user, admin]
- *         description: Filter by role
- *     responses:
- *       200:
- *         description: List of users
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Admin access required
- */
-router.get("/users", getAllUsers);
+// User management routes removed - use /api/users/* instead
 
-/**
- * @swagger
- * /admin/users/{id}:
- *   get:
- *     summary: Get user by ID (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *     responses:
- *       200:
- *         description: User details
- *       404:
- *         description: User not found
- */
-router.get("/users/:id", getUserById);
+// User detail route removed - use /api/users/:id instead
 
-/**
- * @swagger
- * /admin/users/{id}:
- *   put:
- *     summary: Ban/Unban user (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               isActive:
- *                 type: boolean
- *                 description: false = ban user, true = unban user
- *               role:
- *                 type: string
- *                 enum: [user, admin]
- *                 description: Change user role (optional)
- *     responses:
- *       200:
- *         description: User status updated successfully (Admin chỉ có thể ban/unban)
- *       400:
- *         description: Admin chỉ có thể cập nhật isActive và role
- */
-router.put("/users/:id", updateUser);
+// User update route removed - use /api/users/:id instead
 
-/**
- * @swagger
- * /admin/users/{id}:
- *   delete:
- *     summary: Ban user (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *     responses:
- *       200:
- *         description: User banned successfully (Admin không xóa user, chỉ ban user)
- */
-router.delete("/users/:id", deleteUser);
+// User delete route removed - use /api/users/:id instead
 
 // Admin xét duyệt sản phẩm
 /**
@@ -412,41 +292,7 @@ router.get("/orders", getAllOrders);
  */
 router.get("/orders/:id", getOrderById);
 
-/**
- * @swagger
- * /admin/orders/{id}/status:
- *   put:
- *     summary: Update order status (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Order ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - status
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [pending, confirmed, shipped, delivered, cancelled, refunded]
- *               notes:
- *                 type: string
- *                 description: Admin notes
- *     responses:
- *       200:
- *         description: Order status updated successfully
- */
-router.put("/orders/:id/status", updateOrderStatus);
+// Order status update route removed - use /api/profile/orders/:orderId/status instead
 
 /**
  * @swagger
