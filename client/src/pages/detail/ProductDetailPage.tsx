@@ -27,24 +27,16 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     const findExistingConversation = useFindExistingConversation();
     const { user } = useAuthStore();
 
-    if (isLoading) {
-        return <LoadingState />;
-    }
-
-    if (error) {
-        return <ErrorState onRetry={() => refetch()} />;
-    }
-
-    if (!data) {
-        return <NotFoundState onGoBack={() => navigate(-1)} />;
-    }
+    if (isLoading) return <LoadingState />;
+    if (error) return <ErrorState onRetry={() => refetch()} />;
+    if (!data) return <NotFoundState onGoBack={() => navigate(-1)} />;
 
     const product = data;
-    console.log("Product data:", product);
+
     const handleContact = async (): Promise<void> => {
         if (!user) {
             toast.error("Bạn cần đăng nhập để liên hệ với người bán");
-            navigate('/auth/login');
+            navigate("/auth/login");
             return;
         }
         if (user._id === product.seller._id) {
@@ -62,54 +54,71 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
             }
 
             const toastId = toast.loading("Đang tạo cuộc hội thoại...");
-            console.log("Creating new conversation with:", {
-                productId: product._id,
-                sellerId: product.seller._id
-            });
-
             const newConversation = await createConversation.mutateAsync({
                 productId: product._id,
-                sellerId: product.seller._id
+                sellerId: product.seller._id,
             });
 
             toast.dismiss(toastId);
             toast.success("Tạo cuộc hội thoại thành công!");
 
-            await new Promise(resolve => setTimeout(resolve, 500));
-
             navigate(`/chat/${newConversation._id}`);
-
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Có lỗi xảy ra khi tạo cuộc hội thoại";
+            const errorMessage =
+                error instanceof Error ? error.message : "Có lỗi xảy ra khi tạo cuộc hội thoại";
             toast.error(errorMessage);
             console.error("Error creating conversation:", error);
         }
     };
 
-
     const handleBuyNow = async (): Promise<void> => {
         if (!user) {
             toast.error("Bạn cần đăng nhập để mua hàng");
-            navigate('/auth/login');
+            navigate("/auth/login");
             return;
         }
 
-        if (user._id === product.seller) {
+        if (user._id === product.seller._id) {
             toast.error("Bạn không thể mua sản phẩm của chính mình");
             return;
         }
 
-        try {
-            // For battery products, redirect to checkout page
-            if (product.category === 'battery') {
-                toast.success("Chuyển đến trang thanh toán...");
-                navigate(`/checkout/${product._id}/1`);
-            }
-        } catch (error) {
-            // Error đã được handle trong hook
-            console.error("Failed to process buy now:", error);
+        if (product.category === "battery") {
+            toast.success("Chuyển đến trang thanh toán...");
+            navigate(`/checkout/${product._id}/1`);
         }
     };
+
+    const handleCreateContract = () => {
+        if (!user) {
+            toast.error("Bạn cần đăng nhập để lập hợp đồng");
+            navigate("/auth/login");
+            return;
+        }
+
+        if (user._id === product.seller._id) {
+            toast.error("Bạn không thể lập hợp đồng với chính mình");
+            return;
+        }
+
+        navigate("/contract", {
+            state: {
+                product,
+                buyer: {
+                    name: user.name,
+                    idNumber: user._id || "",
+                    address: user.profile.address || "",
+                    phone: user.phone || ""
+                },
+                seller: {
+                    name: product.seller.name,
+                    idNumber: product.seller._id || "",
+                    address: product.seller.address || "",
+                }
+            }
+        });
+    };
+
 
     return (
         <div
@@ -141,6 +150,7 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                     <ActionButtons
                         onContact={handleContact}
                         onBuyNow={handleBuyNow}
+                        onContract={handleCreateContract}
                         isContactLoading={createConversation.isPending}
                         isInWishlist={product.isInWishlist || false}
                         category={product.category}
