@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import { authenticate } from "../middlewares/authenticate.js";
 import { requireUser } from "../middlewares/authorize.js";
-import { initiateContract, signContract, getContractTemplate, generateDraftPdf } from "../controllers/contractController.js";
+import { initiateContract, signContract, getContractTemplate, generateDraftPdf, getContractPdf } from "../controllers/contractController.js";
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -100,6 +100,36 @@ router.get("/template", authenticate, requireUser, getContractTemplate);
  *         description: Uploaded draft
  */
 router.post("/draft", authenticate, requireUser, generateDraftPdf);
+
+// Serve signed Cloudinary URL so clients avoid 401 when accessing authenticated PDFs
+/**
+ * @swagger
+ * /contracts/{id}/pdf:
+ *   get:
+ *     summary: Get a temporary signed URL to view the contract PDF inline
+ *     description: Redirects to a time-limited signed Cloudinary URL for the contract's PDF (draft or final). Requires authentication and ownership (buyer or seller).
+ *     tags: [Contracts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Contract ID
+ *     responses:
+ *       302:
+ *         description: Redirect to signed PDF URL
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Contract or PDF not found
+ */
+// Public access to contract PDF (either public URL or time-limited signed URL)
+router.get("/:id/pdf", getContractPdf);
 
 export default router;
 

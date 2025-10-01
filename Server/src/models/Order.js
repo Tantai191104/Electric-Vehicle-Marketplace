@@ -45,6 +45,7 @@ const orderSchema = new mongoose.Schema(
     },
     
     contract: {
+      contractId: { type: mongoose.Schema.Types.ObjectId, ref: "Contract", default: null },
       pdfUrl: { type: String, default: null },
       signedAt: { type: Date, default: null },
       contractNumber: { type: String, default: null }
