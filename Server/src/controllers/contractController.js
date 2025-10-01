@@ -72,11 +72,10 @@ export async function generateDraftPdf(req, res) {
     doc.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       const uploaded = await new Promise((resolve) => {
-        cloudinary.uploader.upload_stream({ 
-          resource_type: 'image', 
-          folder: 'contracts', 
-          format: 'pdf', 
-          type: 'upload',
+        cloudinary.uploader.upload_stream({
+          resource_type: 'image',
+          folder: 'contracts',
+          format: 'pdf',
           upload_preset: 'unsigned_contracts'
         }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
@@ -194,22 +193,21 @@ export async function signContract(req, res) {
     // Expect a PDF uploaded from mobile app as field 'pdf' OR signature data
     const file = (req.files && req.files[0]) || req.file;
     const signatureDataUrl = req.body?.signature || req.body?.signatureDataUrl;
-    
+
     if (!file && !signatureDataUrl) {
       return res.status(400).json({ error: "Missing signed PDF file (field 'pdf') or signature data" });
     }
 
     // Handle signature insertion using pdf-lib
     let uploaded;
-    
+
     if (file && !signatureDataUrl) {
       // Direct PDF upload without signature
       uploaded = await new Promise((resolve) => {
         cloudinary.uploader.upload_stream({ 
           resource_type: 'image', 
           folder: 'contracts', 
-          format: 'pdf', 
-          type: 'upload',
+          format: 'pdf',
           upload_preset: 'unsigned_contracts'
         }, (err, result) => {
           if (err) return resolve({ success: false, error: err.message });
@@ -225,22 +223,22 @@ export async function signContract(req, res) {
           throw new Error('Failed to fetch draft PDF');
         }
         const existingPdfBytes = await existingPdfResponse.arrayBuffer();
-        
+
         // 2. Load PDF with pdf-lib
         const pdfDoc = await PDFLibDocument.load(existingPdfBytes);
         const pages = pdfDoc.getPages();
         const lastPage = pages[pages.length - 1];
-        
+
         // 3. Extract signature base64 and embed as PNG
         if (signatureDataUrl.startsWith('data:image/png')) {
           const base64 = signatureDataUrl.split(',')[1] || '';
           const signatureImage = await pdfDoc.embedPng(base64);
-          
+
           // 4. Draw signature at specific position (bottom right area)
           const { width: pageWidth, height: pageHeight } = lastPage.getSize();
           const signatureWidth = 150;
           const signatureHeight = 50;
-          
+
           lastPage.drawImage(signatureImage, {
             x: pageWidth - signatureWidth - 50, // 50px from right edge
             y: 100, // 100px from bottom
@@ -248,17 +246,16 @@ export async function signContract(req, res) {
             height: signatureHeight,
           });
         }
-        
+
         // 5. Save modified PDF
         const pdfBytes = await pdfDoc.save();
-        
+
         // 6. Upload to Cloudinary
         uploaded = await new Promise((resolve) => {
-          cloudinary.uploader.upload_stream({ 
-            resource_type: 'image', 
-            folder: 'contracts', 
+          cloudinary.uploader.upload_stream({
+            resource_type: 'image',
+            folder: 'contracts',
             format: 'pdf',
-            type: 'upload',
             upload_preset: 'unsigned_contracts'
           }, (err, result) => {
             if (err) return resolve({ success: false, error: err.message });
@@ -277,11 +274,10 @@ export async function signContract(req, res) {
         doc.on('data', (c) => chunks.push(c));
         doc.on('end', async () => {
           const buffer = Buffer.concat(chunks);
-          cloudinary.uploader.upload_stream({ 
-            resource_type: 'image', 
-            folder: 'contracts', 
-            format: 'pdf', 
-            type: 'upload',
+          cloudinary.uploader.upload_stream({
+            resource_type: 'image',
+            folder: 'contracts',
+            format: 'pdf',
             upload_preset: 'unsigned_contracts'
           }, (err, result) => {
             if (err) return resolve({ success: false, error: err.message });
@@ -306,7 +302,7 @@ export async function signContract(req, res) {
             doc.text('Chữ ký bên mua:', { continued: false });
             doc.moveDown(0.5);
             doc.image(sigBuffer, { width: 200 });
-          } catch {}
+          } catch { }
         } else {
           doc.text('Chữ ký bên mua: (điện tử)', { continued: false });
         }
