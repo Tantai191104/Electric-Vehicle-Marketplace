@@ -42,4 +42,6 @@ export interface Message {
   isRead: boolean;
   createdAt: string;
   updatedAt: string;
+  isPending?: boolean; // Trạng thái đang gửi
+  error?: boolean; // Trạng thái lỗi
 }

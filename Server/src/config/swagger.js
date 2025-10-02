@@ -14,22 +14,23 @@ const options = {
     info: {
       title: 'EV Server API',
       version: '1.0.0',
-      description: 'API documentation for EV Server - User Management and Authentication System',
+      description:
+        'API documentation for EV Server - User Management and Authentication System',
       contact: {
         name: 'API Support',
-        email: 'support@ev.com'
+        email: 'support@ev.com',
       },
       license: {
         name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT'
-      }
+        url: 'https://opensource.org/licenses/MIT',
+      },
     },
     servers: [
       // Relative URL allows Swagger UI to use current origin (works locally and on Render)
       {
         url: process.env.API_BASE_URL || '/',
-        description: 'Current origin'
-      }
+        description: 'Current origin',
+      },
     ],
     components: {
       securitySchemes: {
@@ -37,14 +38,15 @@ const options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"'
+          description:
+            'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"',
         },
         cookieAuth: {
           type: 'apiKey',
           in: 'cookie',
           name: 'accessToken',
-          description: 'JWT token stored in httpOnly cookie'
-        }
+          description: 'JWT token stored in httpOnly cookie',
+        },
       },
       schemas: {
         User: {
@@ -54,47 +56,47 @@ const options = {
             _id: {
               type: 'string',
               description: 'Unique identifier for the user',
-              example: '507f1f77bcf86cd799439011'
+              example: '507f1f77bcf86cd799439011',
             },
             name: {
               type: 'string',
               minLength: 2,
               maxLength: 50,
               description: 'Full name of the user',
-              example: 'John Doe'
+              example: 'John Doe',
             },
             email: {
               type: 'string',
               format: 'email',
               description: 'Email address of the user',
-              example: 'john.doe@example.com'
+              example: 'john.doe@example.com',
             },
             role: {
               type: 'string',
               enum: ['customer', 'staff', 'admin'],
               default: 'customer',
               description: 'Role of the user in the system',
-              example: 'customer'
+              example: 'customer',
             },
             isActive: {
               type: 'boolean',
               default: true,
               description: 'Whether the user account is active',
-              example: true
+              example: true,
             },
             createdAt: {
               type: 'string',
               format: 'date-time',
               description: 'Timestamp when the user was created',
-              example: '2024-01-15T10:30:00.000Z'
+              example: '2024-01-15T10:30:00.000Z',
             },
             updatedAt: {
               type: 'string',
               format: 'date-time',
               description: 'Timestamp when the user was last updated',
-              example: '2024-01-15T10:30:00.000Z'
-            }
-          }
+              example: '2024-01-15T10:30:00.000Z',
+            },
+          },
         },
         RegisterRequest: {
           type: 'object',
@@ -105,28 +107,29 @@ const options = {
               minLength: 2,
               maxLength: 50,
               description: 'Full name of the user',
-              example: 'John Doe'
+              example: 'John Doe',
             },
             email: {
               type: 'string',
               format: 'email',
               description: 'Email address of the user',
-              example: 'john.doe@example.com'
+              example: 'john.doe@example.com',
             },
             password: {
               type: 'string',
               minLength: 6,
               maxLength: 72,
               description: 'Password for the user account',
-              example: 'password123'
+              example: 'password123',
             },
             role: {
               type: 'string',
               enum: ['customer', 'staff', 'admin'],
-              description: 'Role of the user in the system (optional, defaults to customer)',
-              example: 'customer'
-            }
-          }
+              description:
+                'Role of the user in the system (optional, defaults to customer)',
+              example: 'customer',
+            },
+          },
         },
         LoginRequest: {
           type: 'object',
@@ -136,16 +139,16 @@ const options = {
               type: 'string',
               format: 'email',
               description: 'Email address of the user',
-              example: 'john.doe@example.com'
+              example: 'john.doe@example.com',
             },
             password: {
               type: 'string',
               minLength: 6,
               maxLength: 72,
               description: 'Password for the user account',
-              example: 'password123'
-            }
-          }
+              example: 'password123',
+            },
+          },
         },
         AuthResponse: {
           type: 'object',
@@ -153,36 +156,36 @@ const options = {
             _id: {
               type: 'string',
               description: 'Unique identifier for the user',
-              example: '507f1f77bcf86cd799439011'
+              example: '507f1f77bcf86cd799439011',
             },
             name: {
               type: 'string',
               description: 'Full name of the user',
-              example: 'John Doe'
+              example: 'John Doe',
             },
             email: {
               type: 'string',
               format: 'email',
               description: 'Email address of the user',
-              example: 'john.doe@example.com'
+              example: 'john.doe@example.com',
             },
             role: {
               type: 'string',
               enum: ['customer', 'staff', 'admin'],
               description: 'Role of the user in the system',
-              example: 'customer'
+              example: 'customer',
             },
             accessToken: {
               type: 'string',
               description: 'JWT access token for API authentication',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
             },
             refreshToken: {
               type: 'string',
               description: 'JWT refresh token for getting new access tokens',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-            }
-          }
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+            },
+          },
         },
         RefreshTokenResponse: {
           type: 'object',
@@ -190,9 +193,9 @@ const options = {
             accessToken: {
               type: 'string',
               description: 'New JWT access token',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-            }
-          }
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+            },
+          },
         },
         LogoutResponse: {
           type: 'object',
@@ -200,9 +203,9 @@ const options = {
             message: {
               type: 'string',
               description: 'Logout confirmation message',
-              example: 'Logged out'
-            }
-          }
+              example: 'Logged out',
+            },
+          },
         },
         ErrorResponse: {
           type: 'object',
@@ -210,12 +213,12 @@ const options = {
             error: {
               type: 'string',
               description: 'Error message',
-              example: 'Validation failed'
+              example: 'Validation failed',
             },
             message: {
               type: 'string',
               description: 'Error message',
-              example: 'User not found'
+              example: 'User not found',
             },
             details: {
               type: 'array',
@@ -224,17 +227,17 @@ const options = {
                 properties: {
                   field: {
                     type: 'string',
-                    description: 'Field that caused the error'
+                    description: 'Field that caused the error',
                   },
                   message: {
                     type: 'string',
-                    description: 'Error message for the field'
-                  }
-                }
+                    description: 'Error message for the field',
+                  },
+                },
               },
-              description: 'Detailed validation errors'
-            }
-          }
+              description: 'Detailed validation errors',
+            },
+          },
         },
         SuccessResponse: {
           type: 'object',
@@ -242,30 +245,30 @@ const options = {
             message: {
               type: 'string',
               description: 'Success message',
-              example: 'Operation completed successfully'
+              example: 'Operation completed successfully',
             },
             data: {
               type: 'object',
-              description: 'Response data'
-            }
-          }
-        }
-      }
+              description: 'Response data',
+            },
+          },
+        },
+      },
     },
     security: [
       {
-        bearerAuth: []
+        bearerAuth: [],
       },
       {
-        cookieAuth: []
-      }
-    ]
+        cookieAuth: [],
+      },
+    ],
   },
   apis: [
     path.join(projectRoot, 'routes', '*.js').replace(/\\/g, '/'),
     path.join(projectRoot, 'controllers', '*.js').replace(/\\/g, '/'),
     path.join(projectRoot, 'index.js').replace(/\\/g, '/'),
-  ]
+  ],
 };
 
 const specs = swaggerJsdoc(options);

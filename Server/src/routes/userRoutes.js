@@ -1,7 +1,12 @@
-import express from "express";
-import { listUsers, getUserById, updateUser, deleteUser } from "../controllers/userController.js";
-import { authenticate } from "../middlewares/authenticate.js";
-import { requireAdmin } from "../middlewares/authorize.js";
+import express from 'express';
+import {
+  listUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  createUser,
+  loginUser,
+} from '../controllers/userController.js';
 
 const router = express.Router();
 
@@ -37,7 +42,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/register", createUser);
+router.post('/register', createUser);
 
 /**
  * @swagger
@@ -100,8 +105,7 @@ router.post("/register", createUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/login", loginUser);
-
+router.post('/login', loginUser);
 
 /**
  * @swagger
@@ -134,7 +138,7 @@ router.post("/login", loginUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/list", listUsers);
+router.get('/list', listUsers);
 
 /**
  * @swagger
@@ -179,7 +183,7 @@ router.get("/list", listUsers);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/:id", getUserById);
+router.get('/:id', getUserById);
 
 /**
  * @swagger
@@ -257,7 +261,7 @@ router.get("/:id", getUserById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put("/:id", updateUser);
+router.put('/:id', updateUser);
 
 /**
  * @swagger
@@ -306,6 +310,6 @@ router.put("/:id", updateUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", deleteUser);
+router.delete('/:id', deleteUser);
 
 export default router;
