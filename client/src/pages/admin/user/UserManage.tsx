@@ -70,8 +70,13 @@ export default function UserManage() {
 
       {/* Loading overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-          <span className="text-gray-700">Loading...</span>
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-xl">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="text-gray-700 font-medium">
+              {isLoading ? "Đang xử lý..." : "Đang tải người dùng..."}
+            </span>
+          </div>
         </div>
       )}
 
