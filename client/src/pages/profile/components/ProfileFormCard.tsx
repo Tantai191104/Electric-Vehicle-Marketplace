@@ -20,6 +20,7 @@ import {
 import AddressDialog from "./AddressDialog";
 import { userServices } from "@/services/userServices";
 import { toast } from "sonner";
+import type { User } from "@/types/authType";
 
 type ProfileForm = {
   name: string;
@@ -38,11 +39,10 @@ type AddressInfo = {
   wardName: string;
 };
 
-
-
 const ProfileFormCard: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const [openAddressModal, setOpenAddressModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [addressInfo, setAddressInfo] = useState<AddressInfo>({
     houseNumber: "",
     provinceCode: "",
@@ -62,17 +62,21 @@ const ProfileFormCard: React.FC = () => {
     },
   });
 
+  // Initialize form data from user store
   useEffect(() => {
     if (user) {
+      const addressStr = user.profile?.address
+        ? `${user.profile.address.houseNumber || ""}, ${user.profile.address.ward || ""}, ${user.profile.address.district || ""}, ${user.profile.address.province || ""}`.replace(/^,+|,+$/g, '').replace(/,+/g, ', ')
+        : "";
+
       form.reset({
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
-        address: user.profile?.address
-          ? `${user.profile.address.houseNumber}, ${user.profile.address.ward}, ${user.profile.address.district}, ${user.profile.address.province}`
-          : "",
+        address: addressStr,
       });
 
+      // Initialize address info
       if (user.profile?.address) {
         setAddressInfo({
           houseNumber: user.profile.address.houseNumber || "",
@@ -87,29 +91,128 @@ const ProfileFormCard: React.FC = () => {
     }
   }, [user, form]);
 
-  const handleSubmit: SubmitHandler<ProfileForm> = async () => {
+  const handleSubmit: SubmitHandler<ProfileForm> = async (data) => {
+    if (!user) {
+      toast.error("Không tìm thấy thông tin người dùng");
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      await userServices.updateProfile({
+      // Prepare update data for LocationsPayload
+      const updateData = {
         houseNumber: addressInfo.houseNumber,
         provinceCode: addressInfo.provinceCode,
         districtCode: addressInfo.districtCode,
         wardCode: addressInfo.wardCode,
-      });
-      useAuthStore.getState().updateUser({
+      };
+      // Call API to update profile location
+      const response = await userServices.updateProfile(updateData);
+
+      console.log("Update response:", response);
+
+      // Create updated user object for store
+      const updatedUser: User = {
+        ...user,
+        name: data.name.trim(),
+        phone: data.phone.trim(),
         profile: {
+          ...user.profile,
           address: {
             houseNumber: addressInfo.houseNumber,
             provinceCode: addressInfo.provinceCode,
             districtCode: addressInfo.districtCode,
             wardCode: addressInfo.wardCode,
+            province: addressInfo.provinceName,
+            district: addressInfo.districtName,
+            ward: addressInfo.wardName,
           },
         },
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Update user in store
+      updateUser(updatedUser);
+
+      // Update form display value
+      const newAddressStr = `${addressInfo.houseNumber}, ${addressInfo.wardName}, ${addressInfo.districtName}, ${addressInfo.provinceName}`
+        .replace(/^,+|,+$/g, '')
+        .replace(/,+/g, ', ');
+
+      form.setValue("address", newAddressStr);
+
+      toast.success("Cập nhật thông tin thành công!", {
+        description: "Thông tin cá nhân đã được cập nhật",
       });
-      toast.success("Cập nhật thành công");
+
     } catch (err) {
-      toast.error("Cập nhật thất bại", {
-        description: err instanceof Error ? err.message : undefined,
+      console.error("Update profile error:", err);
+
+      let errorMessage = "Cập nhật thất bại";
+      let errorDescription = "Vui lòng thử lại sau";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+
+        // Handle specific error cases
+        if (err.message.includes("network") || err.message.includes("fetch")) {
+          errorDescription = "Lỗi kết nối mạng";
+        } else if (err.message.includes("validation")) {
+          errorDescription = "Dữ liệu không hợp lệ";
+        } else if (err.message.includes("unauthorized")) {
+          errorDescription = "Phiên đăng nhập hết hạn";
+        }
+      }
+
+      toast.error(errorMessage, {
+        description: errorDescription,
       });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddressSubmit = (data: {
+    street: string;
+    province: string;
+    district: string;
+    ward: string;
+    provinceName?: string;
+    districtName?: string;
+    wardName?: string;
+  }) => {
+    try {
+      // Update address info state
+      const newAddressInfo = {
+        houseNumber: data.street,
+        provinceCode: data.province,
+        districtCode: data.district,
+        wardCode: data.ward,
+        provinceName: data.provinceName || "",
+        districtName: data.districtName || "",
+        wardName: data.wardName || "",
+      };
+
+      setAddressInfo(newAddressInfo);
+
+      // Update form display value
+      const addressStr = `${data.street}, ${data.wardName}, ${data.districtName}, ${data.provinceName}`
+        .replace(/^,+|,+$/g, '')
+        .replace(/,+/g, ', ');
+
+      form.setValue("address", addressStr);
+
+      // Close modal
+      setOpenAddressModal(false);
+
+      toast.info("Địa chỉ đã được cập nhật", {
+        description: "Nhấn 'Lưu thay đổi' để hoàn tất",
+      });
+
+    } catch (error) {
+      console.error("Address update error:", error);
+      toast.error("Cập nhật địa chỉ thất bại");
     }
   };
 
@@ -131,19 +234,45 @@ const ProfileFormCard: React.FC = () => {
               error={form.formState.errors.name?.message}
               className="flex-1"
             >
-              <Input {...form.register("name")} />
+              <Input
+                {...form.register("name", {
+                  required: "Tên không được để trống",
+                  minLength: {
+                    value: 2,
+                    message: "Tên phải có ít nhất 2 ký tự"
+                  }
+                })}
+                placeholder="Nhập tên của bạn"
+                disabled={isLoading}
+              />
             </CardFormRow>
+
             <CardFormRow
               label="Số điện thoại"
               error={form.formState.errors.phone?.message}
               className="flex-1"
             >
-              <Input {...form.register("phone")} />
+              <Input
+                {...form.register("phone", {
+                  pattern: {
+                    value: /^[0-9]{10,11}$/,
+                    message: "Số điện thoại không hợp lệ"
+                  }
+                })}
+                placeholder="Nhập số điện thoại"
+                disabled={isLoading}
+              />
             </CardFormRow>
           </div>
 
           <CardFormRow label="Email" error={form.formState.errors.email?.message}>
-            <Input readOnly type="email" {...form.register("email")} />
+            <Input
+              readOnly
+              type="email"
+              {...form.register("email")}
+              className="bg-gray-50"
+              title="Email không thể thay đổi"
+            />
           </CardFormRow>
 
           <CardFormRow
@@ -155,30 +284,25 @@ const ProfileFormCard: React.FC = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      className="text-yellow-700 border-yellow-300 px-2 py-1 text-xs font-semibold"
+                      className="text-yellow-700 border-yellow-300 hover:bg-yellow-50 px-2 py-1 text-xs font-semibold"
+                      disabled={isLoading}
                     >
                       Cập nhật địa chỉ
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl">
                     <AddressDialog
-                      onSubmit={(data) => {
-                        form.setValue(
-                          "address",
-                          `${data.street}, ${data.wardName}, ${data.districtName}, ${data.provinceName}`
-                        );
-                        setAddressInfo({
-                          houseNumber: data.street,
-                          provinceCode: data.province,
-                          districtCode: data.district,
-                          wardCode: data.ward,
-                          provinceName: data.provinceName || "",
-                          districtName: data.districtName || "",
-                          wardName: data.wardName || "",
-                        });
-                        setOpenAddressModal(false);
-                      }}
+                      onSubmit={handleAddressSubmit}
                       onClose={() => setOpenAddressModal(false)}
+                      initialData={{
+                        street: addressInfo.houseNumber,
+                        province: addressInfo.provinceCode,
+                        district: addressInfo.districtCode,
+                        ward: addressInfo.wardCode,
+                        provinceName: addressInfo.provinceName,
+                        districtName: addressInfo.districtName,
+                        wardName: addressInfo.wardName,
+                      }}
                     />
                   </DialogContent>
                 </Dialog>
@@ -186,15 +310,28 @@ const ProfileFormCard: React.FC = () => {
             }
             error={form.formState.errors.address?.message}
           >
-            <Input readOnly {...form.register("address")} />
+            <Input
+              readOnly
+              {...form.register("address")}
+              className="bg-gray-50"
+              placeholder="Chưa có địa chỉ"
+            />
           </CardFormRow>
 
           <div className="flex justify-end">
             <Button
               type="submit"
-              className="bg-yellow-400 hover:bg-yellow-500 text-white"
+              className="bg-yellow-400 hover:bg-yellow-500 text-white min-w-[120px]"
+              disabled={isLoading}
             >
-              Lưu thay đổi
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Đang lưu...
+                </div>
+              ) : (
+                "Lưu thay đổi"
+              )}
             </Button>
           </div>
         </form>

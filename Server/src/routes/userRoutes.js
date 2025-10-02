@@ -1,18 +1,17 @@
-import express from "express";
-import { listUsers, getUserById, updateUser, deleteUser } from "../controllers/userController.js";
-import { authenticate } from "../middlewares/authenticate.js";
-import { requireAdmin } from "../middlewares/authorize.js";
+import express from 'express';
+import {
+  listUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  createUser,
+  loginUser,
+} from '../controllers/userController.js';
 
 const router = express.Router();
 
 /**
  * @swagger
-<<<<<<< HEAD
- * tags:
- *   name: Users
- *   description: User management endpoints
- */
-=======
  * /api/users/register:
  *   post:
  *     summary: Create a new user (Alternative registration endpoint)
@@ -43,7 +42,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/register", createUser);
+router.post('/register', createUser);
 
 /**
  * @swagger
@@ -106,26 +105,8 @@ router.post("/register", createUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/login", loginUser);
->>>>>>> main
+router.post('/login', loginUser);
 
-
-<<<<<<< HEAD
-// Routes below require admin authentication (quản lý người dùng)
-router.use(authenticate, requireAdmin);
-
-/**
- * @swagger
- * /users/list:
- *   get:
- *     summary: List users (Admin only - for statistics and management)
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of users
-=======
 /**
  * @swagger
  * /api/users/list:
@@ -156,20 +137,11 @@ router.use(authenticate, requireAdmin);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
->>>>>>> main
  */
-router.get("/list", listUsers);
+router.get('/list', listUsers);
 
 /**
  * @swagger
-<<<<<<< HEAD
- * /users/{id}:
- *   get:
- *     summary: Get user by id (Admin only - for viewing user details)
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
-=======
  * /api/users/{id}:
  *   get:
  *     summary: Get user by ID
@@ -177,24 +149,12 @@ router.get("/list", listUsers);
  *     security:
  *       - bearerAuth: []
  *       - cookieAuth: []
->>>>>>> main
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
-<<<<<<< HEAD
- *     responses:
- *       200:
- *         description: User details
- */
-router.get("/:id", getUserById);
-
-// Note: Admin không thể update/delete user trực tiếp
-// Update user chỉ thông qua /api/admin/users/:id (ban/unban, quản lý vi phạm)
-// User tự update profile qua /api/profile/*
-=======
  *         description: User ID
  *         example: "507f1f77bcf86cd799439011"
  *     responses:
@@ -223,7 +183,7 @@ router.get("/:id", getUserById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/:id", getUserById);
+router.get('/:id', getUserById);
 
 /**
  * @swagger
@@ -301,7 +261,7 @@ router.get("/:id", getUserById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put("/:id", updateUser);
+router.put('/:id', updateUser);
 
 /**
  * @swagger
@@ -350,7 +310,6 @@ router.put("/:id", updateUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", deleteUser);
->>>>>>> main
+router.delete('/:id', deleteUser);
 
 export default router;
