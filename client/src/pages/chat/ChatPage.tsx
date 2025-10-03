@@ -12,6 +12,9 @@ import { useAuthStore } from "@/store/auth";
 import FixedHeader from "@/layouts/components/base/FixedHeader";
 import { LucideMessageSquareMore } from "lucide-react";
 import { ConnectionStatus } from "./components/ConnectionStatus";
+
+// ChatPage xử lý realtime và gửi đúng format
+
 export const ChatPage: React.FC = () => {
     const { id: conversationIdParam } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -21,30 +24,12 @@ export const ChatPage: React.FC = () => {
     const [newMessage, setNewMessage] = useState("");
     const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
     const [isSending, setIsSending] = useState<boolean>(false);
-    const [messageStatusMap, setMessageStatusMap] = useState<Record<string, boolean>>({});
     const messageEndRef = useRef<HTMLDivElement>(null);
 
     const { conversations, messages: fetchedMessages, isLoadingConversations, isLoadingMessages } = useChat(selectedConversationId || undefined);
 
-    // Tối ưu hóa onMessageStatusChange handler
     const { isConnected, error, sendMessage: socketSendMessage, markAsRead } = useSocketChat(
-        selectedConversationId ? String(selectedConversationId) : undefined,
-        {
-            onMessageStatusChange: useCallback(
-                ({ isSending, messageId }: { isSending: boolean; messageId: string }) => {
-                    console.log(`Message status change: messageId=${messageId}, isSending=${isSending}`);
-                    // Luôn cập nhật trạng thái của input
-                    setIsSending(isSending);
-                    
-                    // Cập nhật trạng thái tin nhắn trong map
-                    setMessageStatusMap(prev => ({
-                        ...prev,
-                        [messageId]: isSending
-                    }));
-                },
-                []
-            )
-        }
+        selectedConversationId ? String(selectedConversationId) : undefined
     );
 
     const messages = useMemo(() => {
@@ -101,29 +86,51 @@ export const ChatPage: React.FC = () => {
 
     // Gửi tin nhắn text
     const handleSendMessage = useCallback(async () => {
-        if (!newMessage.trim() || !selectedConversationId || !isConnected) {
-            if (!isConnected) toast.error("Không có kết nối mạng");
+        if (!newMessage.trim() || !selectedConversationId) return;
+        if (!isConnected) {
+            toast.error("Không có kết nối mạng");
             return;
         }
 
         const messageText = newMessage.trim();
         setNewMessage("");
-        
-        // Không cần gọi setIsSending ở đây vì sẽ được xử lý qua callback
-        
+        setIsSending(true); // Đặt trạng thái gửi
+
+        // Đảm bảo reset isSending sau tối đa 3 giây
+        const sendingTimeout = setTimeout(() => {
+            setIsSending(false);
+        }, 3000);
+
         try {
-            await socketSendMessage({
+            const tempId = `temp-${Date.now()}-${Math.random()}`;
+            const tempMessage: Message = {
+                _id: tempId,
+                conversationId: selectedConversationId,
+                senderId: user?._id || "",
+                text: messageText,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                files: [],
+                type: "text",
+                isRead: false,
+                isPending: true // Đánh dấu tin nhắn là đang chờ
+            };
+
+            setOptimisticMessages(prev => [...prev, tempMessage]);
+
+            const success = await socketSendMessage({
                 conversationId: String(selectedConversationId),
                 text: messageText
             });
-        } catch (error) {
-            console.error("Error sending message:", error);
-            toast.error("Gửi tin nhắn thất bại");
-            
-            // Nếu có lỗi bất ngờ, đảm bảo reset isSending
-            setIsSending(false);
+
+            if (!success) {
+                toast.error("Gửi tin nhắn thất bại");
+            }
+        } finally {
+            clearTimeout(sendingTimeout);
+            setIsSending(false); // Reset trạng thái gửi bất kể thành công hay thất bại
         }
-    }, [newMessage, selectedConversationId, socketSendMessage, isConnected]);
+    }, [newMessage, selectedConversationId, socketSendMessage, isConnected, user?._id]);
 
     // Gửi file
     const handleSendFile = useCallback(async (files: File[], text?: string) => {
@@ -175,42 +182,6 @@ export const ChatPage: React.FC = () => {
             }
         }
     }, [handleSendMessage, isSending, isLoadingMessages, newMessage]);
-
-    // Đảm bảo cleanup messageStatusMap khi component unmount
-    useEffect(() => {
-        return () => {
-            setMessageStatusMap({});
-        };
-    }, []);
-
-    // Tùy chọn: Thêm logic để tự động xóa trạng thái tin nhắn cũ khỏi messageStatusMap sau một thời gian
-    useEffect(() => {
-        const messageIds = Object.keys(messageStatusMap);
-        if (messageIds.length > 0) {
-            const timeoutId = setTimeout(() => {
-
-                const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-                const updatedStatusMap = { ...messageStatusMap };
-
-                messageIds.forEach(id => {
-                    // Nếu ID chứa timestamp (temp-{timestamp}-{random})
-                    if (id.startsWith('temp-')) {
-                        const parts = id.split('-');
-                        if (parts.length > 1) {
-                            const timestamp = parseInt(parts[1]);
-                            if (timestamp < fiveMinutesAgo) {
-                                delete updatedStatusMap[id];
-                            }
-                        }
-                    }
-                });
-
-                setMessageStatusMap(updatedStatusMap);
-            }, 10 * 60 * 1000); // Chạy mỗi 10 phút
-
-            return () => clearTimeout(timeoutId);
-        }
-    }, [messageStatusMap]);
 
     if (!isAuthenticated || !user) {
         return (
@@ -266,7 +237,6 @@ export const ChatPage: React.FC = () => {
                                 <ChatMessages
                                     messages={messages}
                                     isLoading={isLoadingMessages}
-                                    messageStatusMap={messageStatusMap} // Thêm dòng này
                                 />
                                 <div ref={messageEndRef} className="h-1" /> {/* Scroll target */}
                             </div>
