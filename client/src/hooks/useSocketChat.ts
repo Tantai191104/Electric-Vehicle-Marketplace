@@ -13,7 +13,10 @@ export const useSocketChat = (
     onReceiveMessage?: (message: Message) => void;
     onConversationUpdated?: (conversation: Conversation) => void;
     onNewConversation?: (conversation: Conversation) => void;
-    onMessageStatusChange?: (status: { isSending: boolean; messageId: string }) => void; // Thêm callback này
+    onMessageStatusChange?: (status: {
+      isSending: boolean;
+      messageId: string;
+    }) => void; // Thêm callback này
   }
 ) => {
   const { user, accessToken, isAuthenticated } = useAuthStore();
@@ -273,10 +276,10 @@ export const useSocketChat = (
     }): Promise<boolean> => {
       const conversationId = String(message.conversationId);
       const tempId = `temp-${Date.now()}-${Math.random()}`;
-      
+
       // Đảm bảo callback được gọi trước khi thực hiện bất kỳ thao tác nào khác
       events?.onMessageStatusChange?.({ isSending: true, messageId: tempId });
-      
+
       console.log("Starting to send message with tempId:", tempId); // Thêm log
 
       const tempMessage: Message = {
@@ -338,10 +341,15 @@ export const useSocketChat = (
                 msg._id === tempId ? { ...msg, isPending: false } : msg
               )
           );
-          
+
           // Thông báo hoàn tất gửi tin nhắn
-          console.log("Calling onMessageStatusChange with isSending=false due to timeout");
-          events?.onMessageStatusChange?.({ isSending: false, messageId: tempId });
+          console.log(
+            "Calling onMessageStatusChange with isSending=false due to timeout"
+          );
+          events?.onMessageStatusChange?.({
+            isSending: false,
+            messageId: tempId,
+          });
         }
       }, 2000);
 
@@ -353,8 +361,11 @@ export const useSocketChat = (
           (res: { success: boolean; error?: string; message?: Message }) => {
             messageAcknowledged = true;
             clearTimeout(timeoutId); // Xóa timeout để tránh gọi callback trùng lặp
-            
-            console.log("Socket response received:", res.success ? "success" : "failure");
+
+            console.log(
+              "Socket response received:",
+              res.success ? "success" : "failure"
+            );
 
             if (res && res.success) {
               // Cập nhật tin nhắn tạm thành tin nhắn đã gửi
@@ -372,8 +383,13 @@ export const useSocketChat = (
                 }
               );
               // Đảm bảo gọi callback TRƯỚC khi resolve promise
-              console.log("Calling onMessageStatusChange with isSending=false due to success");
-              events?.onMessageStatusChange?.({ isSending: false, messageId: tempId });
+              console.log(
+                "Calling onMessageStatusChange with isSending=false due to success"
+              );
+              events?.onMessageStatusChange?.({
+                isSending: false,
+                messageId: tempId,
+              });
               resolve(true);
             } else {
               // Nếu lỗi, đánh dấu tin nhắn lỗi
@@ -387,7 +403,10 @@ export const useSocketChat = (
                   )
               );
               // Luôn thông báo kết thúc gửi với tempId ban đầu
-              events?.onMessageStatusChange?.({ isSending: false, messageId: tempId });
+              events?.onMessageStatusChange?.({
+                isSending: false,
+                messageId: tempId,
+              });
               toast.error("Gửi tin nhắn thất bại", { description: res.error });
               resolve(false);
             }
