@@ -27,12 +27,13 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     const findExistingConversation = useFindExistingConversation();
     const { user } = useAuthStore();
 
+    console.log("Raw data from API:", data);
+
     if (isLoading) return <LoadingState />;
     if (error) return <ErrorState onRetry={() => refetch()} />;
-    if (!data) return <NotFoundState onGoBack={() => navigate(-1)} />;
-
-    const product = data;
-
+    if (!data || !data.product) return <NotFoundState onGoBack={() => navigate(-1)} />;
+    const product = data.product;
+    console.log("Extracted product data:", product);
     const handleContact = async (): Promise<void> => {
         if (!user) {
             toast.error("Bạn cần đăng nhập để liên hệ với người bán");
@@ -146,7 +147,7 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                     />
 
                     <ProductDescription
-                        description={product.description || product.additionalInfo || ""}
+                        description={product.description || ""}
                         className="mt-4 md:mt-5"
                     />
                 </div>

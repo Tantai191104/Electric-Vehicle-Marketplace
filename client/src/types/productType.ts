@@ -16,10 +16,10 @@ export type Seller = {
 };
 
 export type ContractTemplate = {
-  htmlContent: string;
-  sellerSignature: string;
-  pdfUrl: string;
-  createdAt: string;
+  htmlContent: string | null;
+  sellerSignature: string | null;
+  pdfUrl: string | null;
+  createdAt: string | null;
 };
 
 export type Contract = {
@@ -77,6 +77,7 @@ export type Product = {
   approvedAt?: string;
   approvedBy?: string;
   contractTemplate?: ContractTemplate; // Contract có thể có hoặc không
+  isInWishlist?: boolean; // Để check sản phẩm có trong wishlist không
 };
 
 export interface VehicleSpecifications {
@@ -156,4 +157,9 @@ export type ProductsResponse = {
     total: number;
     pages: number;
   };
+};
+
+export type ProductDetailResponse = {
+  success?: boolean;
+  product: Product;
 };
