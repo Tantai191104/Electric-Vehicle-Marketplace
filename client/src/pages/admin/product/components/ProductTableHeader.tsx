@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { FiPlus, FiFilter, FiRefreshCw } from "react-icons/fi";
+import { FiFilter, FiRefreshCw } from "react-icons/fi";
 
 interface Props {
     globalFilter: string;
@@ -29,7 +29,6 @@ export default function ProductTableHeader({
     setStatusFilter,
     conditionFilter,
     setConditionFilter,
-    onAddProduct,
     onRefresh,
     isLoading = false,
     totalProducts = 0,
@@ -62,12 +61,6 @@ export default function ProductTableHeader({
                         >
                             <FiRefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                             Làm mới
-                        </Button>
-                    )}
-                    {onAddProduct && (
-                        <Button onClick={onAddProduct} className="bg-green-600 hover:bg-green-700">
-                            <FiPlus className="w-4 h-4 mr-2" />
-                            Thêm sản phẩm
                         </Button>
                     )}
                 </div>
