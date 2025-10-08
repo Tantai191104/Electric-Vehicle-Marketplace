@@ -239,7 +239,7 @@ export async function createShippingOrder(req, res) {
     // Resolve seller info/address for sender fields
     if (sellerId) {
       try {
-        sellerDoc = await User.findById(sellerId).select('name phone profile.address');
+        sellerDoc = await User.findById(sellerId).select('name email phone profile.address');
         sellerAddr = sellerDoc?.profile?.address || sellerDoc?.address || null;
       } catch {}
     }
@@ -253,7 +253,7 @@ export async function createShippingOrder(req, res) {
     if (typeof unitPrice === 'number' && typeof shippingFee === 'number') {
       finalAmount = Math.max(0, Math.round(unitPrice) + Math.max(0, Math.round(shippingFee)));
       try {
-        const buyer = await User.findById(buyerId).select('wallet');
+        const buyer = await User.findById(buyerId).select('wallet email name phone preferences');
         if (!buyer) return res.status(404).json({ error: 'Buyer not found' });
         if ((buyer.wallet?.balance || 0) < finalAmount) {
           return res.status(400).json({ error: 'Số dư ví không đủ để thanh toán đơn hàng' });
@@ -477,7 +477,7 @@ export async function createShippingOrder(req, res) {
               sellerEmail: seller.email,
               sellerName: seller.name || 'Người bán',
               buyerName: buyer?.name || b.to_name || 'Khách hàng',
-              buyerPhone: buyer?.phone || b.to_phone || 'N/A',
+              buyerPhone: b.to_phone || 'N/A',
               buyerAddress,
               productTitle: product?.title || productDoc?.title || 'Sản phẩm',
               productImage: (product?.images && product.images[0]) || null,
