@@ -128,12 +128,6 @@ export default function ProductManage() {
         },
         [refetch]
     );
-
-    const handleAddProduct = useCallback(() => {
-        console.log("Add new product");
-        // Navigate to add product page or open add modal
-    }, []);
-
     // Handle refresh
     const handleRefresh = useCallback(() => {
         refetch();
@@ -237,7 +231,6 @@ export default function ProductManage() {
                 setStatusFilter={setStatusFilter}
                 conditionFilter={conditionFilter}
                 setConditionFilter={setConditionFilter}
-                onAddProduct={handleAddProduct}
                 onRefresh={handleRefresh}
                 isLoading={isLoading || isProcessing}
                 totalProducts={productsData.length}

@@ -1,87 +1,235 @@
+import React from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FiTrendingUp, FiDollarSign } from "react-icons/fi";
 
-interface Props {
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+interface RevenueChartProps {
+  title: string;
+  description: string;
   timeRange: string;
 }
 
-export const RevenueChart: React.FC<Props> = () => {
-  const chartData = [
-    { date: "1/11", revenue: 125000000, orders: 45 },
-    { date: "2/11", revenue: 185000000, orders: 67 },
-    { date: "3/11", revenue: 155000000, orders: 52 },
-    { date: "4/11", revenue: 210000000, orders: 78 },
-    { date: "5/11", revenue: 175000000, orders: 63 },
-    { date: "6/11", revenue: 245000000, orders: 89 },
-    { date: "7/11", revenue: 195000000, orders: 71 }
-  ];
+export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, timeRange }) => {
+  // Mock data based on timeRange
+  const getChartData = (range: string) => {
+    switch (range) {
+      case '7d':
+        return {
+          labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+          revenue: [125, 185, 155, 210, 175, 245, 195],
+          orders: [45, 67, 52, 78, 63, 89, 71],
+          growth: '+12.5%'
+        };
+      case '30d':
+        return {
+          labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
+          revenue: [890, 1250, 1100, 1540],
+          orders: [285, 412, 356, 523],
+          growth: '+18.3%'
+        };
+      case '90d':
+        return {
+          labels: ['Tháng 1', 'Tháng 2', 'Tháng 3'],
+          revenue: [3200, 4100, 4850],
+          orders: [1024, 1387, 1654],
+          growth: '+23.7%'
+        };
+      case '1y':
+        return {
+          labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+          revenue: [9200, 11500, 13800, 16200],
+          orders: [3240, 4125, 4980, 5890],
+          growth: '+28.5%'
+        };
+      default:
+        return {
+          labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+          revenue: [125, 185, 155, 210, 175, 245, 195],
+          orders: [45, 67, 52, 78, 63, 89, 71],
+          growth: '+12.5%'
+        };
+    }
+  };
 
-  const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0);
-  const totalOrders = chartData.reduce((sum, item) => sum + item.orders, 0);
+  const chartData = getChartData(timeRange);
+  const totalRevenue = chartData.revenue.reduce((sum, val) => sum + val, 0);
+  const totalOrders = chartData.orders.reduce((sum, val) => sum + val, 0);
+
+  const data = {
+    labels: chartData.labels,
+    datasets: [
+      {
+        label: 'Doanh thu (triệu VNĐ)',
+        data: chartData.revenue,
+        borderColor: '#1f2937',
+        backgroundColor: (context: any) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+          gradient.addColorStop(0, 'rgba(31, 41, 55, 0.2)');
+          gradient.addColorStop(1, 'rgba(31, 41, 55, 0.02)');
+          return gradient;
+        },
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#1f2937',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 3,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        pointHoverBackgroundColor: '#1f2937',
+        pointHoverBorderColor: '#ffffff',
+        pointHoverBorderWidth: 4,
+      }
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: '#1f2937',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: '#374151',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: false,
+        callbacks: {
+          title: (context: any) => {
+            return `${context[0].label}`;
+          },
+          label: (context: any) => {
+            const revenueValue = context.parsed.y;
+            const orderValue = chartData.orders[context.dataIndex];
+            return [
+              `Doanh thu: ${revenueValue} triệu VNĐ`,
+              `Đơn hàng: ${orderValue} giao dịch`
+            ];
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        grid: {
+          display: false,
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 12,
+            weight: 500,
+          },
+        },
+      },
+      y: {
+        display: true,
+        grid: {
+          color: '#e5e7eb',
+          borderDash: [2, 2],
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 12,
+            weight: 500,
+          },
+          callback: (value: any) => `${value}M`,
+        },
+      },
+    },
+    elements: {
+      point: {
+        hoverRadius: 8,
+      },
+    },
+  };
 
   return (
-    <Card className="border border-gray-200 shadow-lg bg-white">
-      <CardHeader className="pb-4 border-b border-gray-100">
+    <Card className="border border-gray-200 shadow-sm bg-white h-full">
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl flex items-center gap-2 text-gray-900">
-              <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center shadow-md">
+            <CardTitle className="text-lg flex items-center gap-3 text-gray-900">
+              <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
                 <FiDollarSign className="w-4 h-4 text-white" />
               </div>
-              Doanh thu theo thời gian
+              {title}
             </CardTitle>
             <p className="text-gray-600 text-sm mt-1">
-              Biểu đồ doanh thu và đơn hàng
+              {description}
             </p>
           </div>
-          <Badge className="gap-1 bg-gray-900 text-white border-gray-900 shadow-sm">
+          <Badge className="gap-1 bg-gray-900 text-white border-gray-900">
             <FiTrendingUp className="w-3 h-3" />
-            +12.5%
+            {chartData.growth}
           </Badge>
         </div>
       </CardHeader>
-      
-      <CardContent>
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-sm text-gray-600 font-medium">Tổng doanh thu</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {new Intl.NumberFormat('vi-VN').format(totalRevenue)} VNĐ
+
+      <CardContent className="pt-2">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+            <p className="text-xs text-gray-600 font-medium mb-1">Tổng doanh thu</p>
+            <p className="text-xl font-bold text-gray-900">
+              {totalRevenue}M VNĐ
             </p>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-sm text-gray-600 font-medium">Tổng đơn hàng</p>
-            <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
+          <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+            <p className="text-xs text-gray-600 font-medium mb-1">Tổng giao dịch</p>
+            <p className="text-xl font-bold text-gray-900">{totalOrders}</p>
           </div>
         </div>
 
-        <div className="space-y-3">
-          {chartData.map((item, index) => {
-            const maxRevenue = Math.max(...chartData.map(d => d.revenue));
-            const width = (item.revenue / maxRevenue) * 100;
-            
-            return (
-              <div key={index} className="flex items-center gap-4">
-                <div className="w-12 text-xs text-gray-600 font-medium">
-                  {item.date}
-                </div>
-                <div className="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden shadow-inner">
-                  <div 
-                    className="h-full bg-gray-900 rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-3 shadow-sm"
-                    style={{ width: `${width}%` }}
-                  >
-                    <span className="text-xs text-white font-semibold">
-                      {new Intl.NumberFormat('vi-VN', { notation: 'compact' }).format(item.revenue)}
-                    </span>
-                  </div>
-                </div>
-                <div className="w-16 text-xs text-gray-600 text-right">
-                  {item.orders} đơn
-                </div>
-              </div>
-            );
-          })}
+        {/* Chart */}
+        <div className="relative h-64 bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <Line data={data} options={options} />
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-900 rounded-full"></div>
+            <span className="text-sm text-gray-600 font-medium">Doanh thu</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+            <span className="text-sm text-gray-600 font-medium">Giao dịch</span>
+          </div>
         </div>
       </CardContent>
     </Card>
