@@ -58,7 +58,7 @@ export async function createProduct(req, res) {
   }
 }
 
-export async function listProducts(req, res) {
+export async function getProducts(req, res) {
   try {
     const result = getProductsValidation.safeParse(req.query);
     if (!result.success) {
@@ -68,8 +68,7 @@ export async function listProducts(req, res) {
       });
     }
 
-    const { page, limit, ...filters } = result.data;
-    const products = await listProductsService(filters, page, limit);
+    const products = await listProductsService(result.data);
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -79,7 +78,7 @@ export async function listProducts(req, res) {
 export async function getProductById(req, res) {
   try {
     const product = await getProductByIdService(req.params.id);
-    res.json(product);
+    res.json({ product });
   } catch (err) {
     res.status(404).json({ error: err.message });
   }
@@ -109,8 +108,8 @@ export async function updateProduct(req, res) {
 export async function deleteProduct(req, res) {
   try {
     const userId = req.user.sub || req.user.id;
-    const result = await deleteProductService(req.params.id, userId);
-    res.json(result);
+    await deleteProductService(req.params.id, userId);
+    res.json({ success: true });
   } catch (err) {
     if (err.message === "You can only delete your own products") {
       return res.status(403).json({ error: err.message });
@@ -121,16 +120,10 @@ export async function deleteProduct(req, res) {
 
 export async function getUserProducts(req, res) {
   try {
-    const result = getProductsValidation.safeParse(req.query);
-    if (!result.success) {
-      return res.status(400).json({ 
-        error: result.error.issues?.[0]?.message || "Validation error", 
-        details: result.error.issues 
-      });
-    }
-
-    const { page, limit } = result.data;
     const userId = req.user.sub || req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
     const products = await getUserProductsService(userId, page, limit);
     res.json(products);
   } catch (err) {
@@ -140,17 +133,31 @@ export async function getUserProducts(req, res) {
 
 export async function getVehicles(req, res) {
   try {
-    const result = getProductsValidation.safeParse(req.query);
-    if (!result.success) {
-      return res.status(400).json({ 
-        error: result.error.issues?.[0]?.message || "Validation error", 
-        details: result.error.issues 
-      });
-    }
+    const { page = 1, limit = 10, status = "active" } = req.query;
+    const query = { 
+      category: "vehicle",
+      ...(status && { status })
+    };
+    const skip = (Number(page) - 1) * Number(limit);
+    
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate('seller', 'name email phone profile.fullName profile.address')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Product.countDocuments(query)
+    ]);
 
-    const { page, limit, ...filters } = result.data;
-    const products = await listProductsService({ ...filters, category: 'vehicle' }, page, limit);
-    res.json(products);
+    res.json({
+      products,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -158,17 +165,31 @@ export async function getVehicles(req, res) {
 
 export async function getBatteries(req, res) {
   try {
-    const result = getProductsValidation.safeParse(req.query);
-    if (!result.success) {
-      return res.status(400).json({ 
-        error: result.error.issues?.[0]?.message || "Validation error", 
-        details: result.error.issues 
-      });
-    }
+    const { page = 1, limit = 10, status = "active" } = req.query;
+    const query = { 
+      category: "battery",
+      ...(status && { status })
+    };
+    const skip = (Number(page) - 1) * Number(limit);
+    
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate('seller', 'name email phone profile.fullName profile.address')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Product.countDocuments(query)
+    ]);
 
-    const { page, limit, ...filters } = result.data;
-    const products = await listProductsService({ ...filters, category: 'battery' }, page, limit);
-    res.json(products);
+    res.json({
+      products,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -176,17 +197,31 @@ export async function getBatteries(req, res) {
 
 export async function getMotorcycles(req, res) {
   try {
-    const result = getProductsValidation.safeParse(req.query);
-    if (!result.success) {
-      return res.status(400).json({ 
-        error: result.error.issues?.[0]?.message || "Validation error", 
-        details: result.error.issues 
-      });
-    }
+    const { page = 1, limit = 10, status = "active" } = req.query;
+    const query = { 
+      category: "motorcycle",
+      ...(status && { status })
+    };
+    const skip = (Number(page) - 1) * Number(limit);
+    
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate('seller', 'name email phone profile.fullName profile.address')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Product.countDocuments(query)
+    ]);
 
-    const { page, limit, ...filters } = result.data;
-    const products = await listProductsService({ ...filters, category: 'motorcycle' }, page, limit);
-    res.json(products);
+    res.json({
+      products,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -272,6 +307,67 @@ export async function markProductAsAvailable(req, res) {
       data: {
         productId: id,
         status: "active"
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// Update contract template for product (seller only)
+export async function updateProductContractTemplate(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.sub || req.user.id;
+    const { htmlContent, sellerSignature, pdfUrl } = req.body;
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ error: "Sản phẩm không tồn tại" });
+    }
+
+    if (product.seller.toString() !== userId) {
+      return res.status(403).json({ error: "Chỉ người bán mới có thể chỉnh sửa hợp đồng" });
+    }
+
+    product.contractTemplate = {
+      htmlContent: htmlContent || null,
+      sellerSignature: sellerSignature || null,
+      pdfUrl: pdfUrl || null,
+      createdAt: new Date()
+    };
+
+    await product.save();
+
+    res.json({
+      success: true,
+      message: "Cập nhật hợp đồng thành công",
+      data: {
+        productId: id,
+        contractTemplate: product.contractTemplate
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// Get contract template for product (anyone can view)
+export async function getProductContractTemplate(req, res) {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id).select('contractTemplate title seller');
+    
+    if (!product) {
+      return res.status(404).json({ error: "Sản phẩm không tồn tại" });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        productId: id,
+        productTitle: product.title,
+        contractTemplate: product.contractTemplate || null
       }
     });
   } catch (err) {

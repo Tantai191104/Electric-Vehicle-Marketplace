@@ -56,7 +56,14 @@ const productSchema = new mongoose.Schema(
     rejectionReason: { type: String },
     isFeatured: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
-    likes: { type: Number, default: 0 }
+    likes: { type: Number, default: 0 },
+    // Contract template (seller-customizable)
+    contractTemplate: {
+      htmlContent: { type: String, default: null },
+      sellerSignature: { type: String, default: null }, // base64 PNG
+      pdfUrl: { type: String, default: null }, // Seller's signed contract template PDF
+      createdAt: { type: Date, default: null }
+    }
   },
   { timestamps: true }
 );
