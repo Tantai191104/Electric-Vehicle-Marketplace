@@ -1,7 +1,7 @@
 import express from "express";
 import {
   createProduct,
-  listProducts,
+  getProducts,
   getProductById,
   updateProduct,
   deleteProduct,
@@ -94,7 +94,7 @@ const router = express.Router();
  *                       type: integer
  */
 // Guest, User, Admin can view products (GET /products) - Guest chỉ xem danh sách
-router.get("/", optionalAuth, listProducts);
+router.get("/", optionalAuth, getProducts);
 
 /**
  * @swagger
