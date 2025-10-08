@@ -11,8 +11,8 @@ interface Props {
 
 export default function UserTable({ table, columns }: Props) {
   return (
-    <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
-      <div className="overflow-x-auto h-[400px] md:h-[600px] lg:h-[700px]">
+    <div className="border border-gray-200 rounded-lg bg-white shadow-sm">
+      <div className="overflow-auto h-[400px] md:h-[500px] lg:h-[600px]">
         <table className="min-w-full table-auto border-collapse">
           <thead className="bg-gray-50 text-gray-800 text-sm uppercase tracking-wider sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -20,7 +20,7 @@ export default function UserTable({ table, columns }: Props) {
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-5 py-3 border-b border-gray-300 select-none cursor-pointer text-left font-semibold"
+                    className="px-4 py-3 border-b border-gray-300 select-none cursor-pointer text-left font-semibold"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <div className="flex items-center gap-2">
@@ -52,7 +52,9 @@ export default function UserTable({ table, columns }: Props) {
                   colSpan={columns.length}
                   className="text-center py-6 text-gray-500 italic"
                 >
-                  Không có dữ liệu
+                  <div className="flex flex-col items-center space-y-2">
+                    <div>Không có người dùng nào</div>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -66,7 +68,7 @@ export default function UserTable({ table, columns }: Props) {
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
-                        className="px-5 py-3 border-b border-gray-200 text-left"
+                        className="px-4 py-3 border-b border-gray-200 text-left"
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -76,7 +78,7 @@ export default function UserTable({ table, columns }: Props) {
                     ))}
                   </tr>
                 ))}
-                {/* Fill empty rows để bảng luôn cao nhất định */}
+                {/* Fill empty rows để bảng luôn có chiều cao nhất định */}
                 {table.getRowModel().rows.length < 10 &&
                   Array.from({
                     length: 10 - table.getRowModel().rows.length,
@@ -85,10 +87,10 @@ export default function UserTable({ table, columns }: Props) {
                       key={`empty-${idx}`}
                       className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
-                      {columns.map((col) => (
+                      {columns.map((_, colIdx) => (
                         <td
-                          key={col.id}
-                          className="px-5 py-3 border-b border-gray-200"
+                          key={colIdx}
+                          className="px-4 py-3 border-b border-gray-200"
                         >
                           &nbsp;
                         </td>

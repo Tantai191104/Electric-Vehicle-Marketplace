@@ -3,7 +3,7 @@ import {
   productServices,
   type ProductFilters,
 } from "@/services/productServices";
-import type { BatteryFormData, VehicleFormData } from "@/types/productType";
+import type { BatteryFormData, VehicleFormData, ProductDetailResponse } from "@/types/productType";
 
 // Query Keys
 export const productKeys = {
@@ -24,7 +24,7 @@ export const useProducts = (filters?: ProductFilters) => {
 
 // Hook để fetch chi tiết 1 product (tạm thời comment vì chưa có API)
 export const useProduct = (id: string) => {
-  return useQuery({
+  return useQuery<ProductDetailResponse>({
     queryKey: productKeys.detail(id),
     queryFn: async () => {
       return productServices.fetchProductById(id);

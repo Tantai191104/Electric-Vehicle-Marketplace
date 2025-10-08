@@ -10,4 +10,8 @@ export const orderServices = {
     const response = await API.post("/shipping/order", data);
     return response.data;
   },
+  async cancelOrder(order_code: string) {
+    const response = await API.post(`/shipping/cancel`, { order_code });
+    return response.data;
+  }
 };

@@ -24,6 +24,7 @@ import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
 import TransactionsPage from "@/pages/transaction/TransactionsPage";
 import OwnProduct from "@/pages/Product/own/OwnProduct";
 import ContractPage from "@/pages/contract/ContractPage";
+import OrderManage from "@/pages/admin/orders/OrderManage";
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
   animate: { opacity: 1, y: 0, scale: 1 },
@@ -98,6 +99,7 @@ export default function App() {
               path="users"
               element={animatePage(<UserManage />)}
             />
+            <Route path="orders" element={animatePage(<OrderManage />)} />
             <Route path="products" element={animatePage(<ProductManage />)} />
           </Route>
         </Route>

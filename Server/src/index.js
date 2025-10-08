@@ -31,6 +31,14 @@ import { errorHandler } from './middlewares/errorHandler.js';
 
 await connectDB(process.env.MONGO_URI);
 
+// Verify email connection (non-fatal)
+if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  await verifyEmailConnection();
+} else {
+  console.warn('⚠️  Email credentials not configured. Email notifications will be disabled.');
+  console.warn('⚠️  Add EMAIL_USER and EMAIL_PASSWORD to .env to enable email notifications.');
+}
+
 const app = express();
 app.use(cors({ origin: true, credentials: true })); // nếu FE khác domain
 app.use(express.json());

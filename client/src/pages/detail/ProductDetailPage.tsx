@@ -27,18 +27,26 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     const findExistingConversation = useFindExistingConversation();
     const { user } = useAuthStore();
 
+    console.log("Raw data from API:", data);
+
     if (isLoading) return <LoadingState />;
     if (error) return <ErrorState onRetry={() => refetch()} />;
-    if (!data) return <NotFoundState onGoBack={() => navigate(-1)} />;
-
-    const product = data;
-
+    if (!data || !data.product) return <NotFoundState onGoBack={() => navigate(-1)} />;
+    const product = data.product;
+    console.log("Extracted product data:", product);
     const handleContact = async (): Promise<void> => {
         if (!user) {
             toast.error("Bạn cần đăng nhập để liên hệ với người bán");
             navigate("/auth/login");
             return;
         }
+
+        // Check product và seller trước
+        if (!product || !product.seller || !product._id) {
+            toast.error("Thông tin sản phẩm chưa sẵn sàng");
+            return;
+        }
+
         if (user._id === product.seller._id) {
             toast.error("Bạn không thể liên hệ với chính mình");
             return;
@@ -70,6 +78,7 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
             console.error("Error creating conversation:", error);
         }
     };
+
 
     const handleBuyNow = async (): Promise<void> => {
         if (!user) {
@@ -138,7 +147,7 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                     />
 
                     <ProductDescription
-                        description={product.description || product.additionalInfo || ""}
+                        description={product.description || ""}
                         className="mt-4 md:mt-5"
                     />
                 </div>

@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatNumberWithDots } from "@/utils/numberFormatter";
-import axiosInstance from "@/lib/axios";
 import { toast } from "sonner";
+import { CancelOrderModal } from "./CancelOrderModal";
+import { useCancelOrder } from "@/hooks/useCancelOrder";
+import type { Order } from "@/types/orderType";
 import {
   FiPackage,
   FiTruck,
@@ -21,80 +23,20 @@ import {
 } from "react-icons/fi";
 import { MdPayment, MdLocalShipping } from "react-icons/md";
 
-// Types
-interface OrderTimeline {
-  status: string;
-  description: string;
-  updatedBy: string;
-  _id: string;
-  timestamp: string;
-}
-
-interface OrderUser {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface OrderProduct {
-  _id: string;
-  title: string;
-  images: string[];
-}
-
-interface ShippingAddress {
-  fullName: string;
-  phone: string;
-  address: string;
-  city: string;
-  province: string;
-  zipCode?: string;
-}
-
-interface Shipping {
-  method: string;
-  trackingNumber: string;
-  carrier: string;
-  estimatedDelivery?: string;
-  actualDelivery?: string;
-}
-
-interface Payment {
-  method: string;
-  status: string;
-  transactionId: string;
-  paidAt: string;
-}
-
-export interface Order {
-  _id: string;
-  orderNumber: string;
-  buyerId: OrderUser;
-  sellerId: OrderUser;
-  productId: OrderProduct;
-  quantity: number;
-  unitPrice: number;
-  totalAmount: number;
-  shippingFee: number;
-  commission: number;
-  finalAmount: number;
-  status: string;
-  timeline: OrderTimeline[];
-  shipping: Shipping;
-  shippingAddress: ShippingAddress;
-  payment: Payment;
-  notes?: string;
-  adminNotes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface OrderCardProps {
   order: Order;
   navigate: (path: string) => void;
 }
 
 export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
+  const {
+    isLoading,
+    showConfirmModal,
+    orderToCancel,
+    initiateCancelOrder,
+    confirmCancelOrder,
+    closeCancelModal
+  } = useCancelOrder();
   const statusConfig = {
     pending: {
       label: "Chờ xử lý",
@@ -102,46 +44,41 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
       textColor: "text-gray-800",
       borderColor: "border-gray-300"
     },
-    processing: {
-      label: "Đang xử lý",
-      bgColor: "bg-gray-200",
-      textColor: "text-black",
-      borderColor: "border-gray-400"
+    confirmed: {
+      label: "Đã xác nhận",
+      bgColor: "bg-blue-100",
+      textColor: "text-blue-800",
+      borderColor: "border-blue-300"
     },
     shipping: {
       label: "Đang giao",
-      bgColor: "bg-gray-300",
-      textColor: "text-black",
-      borderColor: "border-gray-400"
+      bgColor: "bg-yellow-100",
+      textColor: "text-yellow-800",
+      borderColor: "border-yellow-300"
     },
     delivered: {
       label: "Đã giao",
-      bgColor: "bg-black",
-      textColor: "text-white",
-      borderColor: "border-black"
+      bgColor: "bg-green-100",
+      textColor: "text-green-800",
+      borderColor: "border-green-300"
     },
     cancelled: {
       label: "Đã hủy",
-      bgColor: "bg-gray-100",
-      textColor: "text-gray-600",
-      borderColor: "border-gray-300"
+      bgColor: "bg-red-100",
+      textColor: "text-red-800",
+      borderColor: "border-red-300"
+    },
+    refunded: {
+      label: "Đã hoàn tiền",
+      bgColor: "bg-purple-100",
+      textColor: "text-purple-800",
+      borderColor: "border-purple-300"
     }
   };
 
   const status = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.pending;
 
   // Handler functions
-  const handleCancelOrder = async (orderId: string) => {
-    try {
-      await axiosInstance.post(`/orders/${orderId}/cancel`);
-      toast.success('Đơn hàng đã được hủy thành công');
-      window.location.reload();
-    } catch (error) {
-      console.error('Error canceling order:', error);
-      toast.error('Không thể hủy đơn hàng');
-    }
-  };
-
   const handleTrackOrder = (trackingNumber: string, carrier: string) => {
     let trackingUrl = '';
     switch (carrier.toLowerCase()) {
@@ -175,10 +112,15 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
               <CardTitle className="text-lg font-bold text-black">
                 Đơn hàng #{order.orderNumber}
               </CardTitle>
+              {order.shipping?.trackingNumber && (
+                <Badge variant="outline" className="text-xs border-blue-500 text-blue-600 bg-blue-50">
+                  GHN
+                </Badge>
+              )}
             </div>
             <Badge className={`flex items-center gap-1 ${status.bgColor} ${status.textColor} border-0`}>
               {order.status === "pending" && <FiClock className="w-3 h-3" />}
-              {order.status === "processing" && <FiPackage className="w-3 h-3" />}
+              {order.status === "confirmed" && <FiPackage className="w-3 h-3" />}
               {order.status === "shipping" && <FiTruck className="w-3 h-3" />}
               {order.status === "delivered" && <FiCheckCircle className="w-3 h-3" />}
               {status.label}
@@ -280,8 +222,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
                   <FiCreditCard className="w-4 h-4" />
                   <span className="font-medium text-black">
                     {order.payment.method === "wallet" ? "Ví hệ thống" :
-                      order.payment.method === "bank_transfer" ? "Chuyển khoản" :
-                        order.payment.method === "credit_card" ? "Thẻ tín dụng" : "COD"}
+                      order.payment.method === "vnpay" ? "VNPay" :
+                        order.payment.method === "zalopay" ? "ZaloPay" :
+                          order.payment.method === "bank_transfer" ? "Chuyển khoản" : "COD"}
                   </span>
                 </div>
               </div>
@@ -367,10 +310,18 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
           {order.status === "pending" && (
             <Button
               variant="outline"
-              className="flex-1 border-gray-400 text-gray-600 hover:bg-gray-400 hover:text-white transition-all duration-200"
-              onClick={() => handleCancelOrder(order._id)}
+              className="flex-1 border-red-400 text-red-600 hover:bg-red-400 hover:text-white transition-all duration-200 disabled:opacity-50"
+              onClick={() => initiateCancelOrder(order)}
+              disabled={isLoading}
             >
-              Hủy đơn hàng
+              {isLoading ? (
+                <>
+                  <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></div>
+                  Đang hủy...
+                </>
+              ) : (
+                order.shipping?.trackingNumber ? "Hủy đơn GHN" : "Hủy đơn hàng"
+              )}
             </Button>
           )}
 
@@ -395,6 +346,15 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
           )}
         </div>
       </CardContent>
+
+      {/* Cancel Order Modal */}
+      <CancelOrderModal
+        isOpen={showConfirmModal}
+        onClose={closeCancelModal}
+        onConfirm={confirmCancelOrder}
+        order={orderToCancel}
+        isLoading={isLoading}
+      />
     </Card>
   );
 };

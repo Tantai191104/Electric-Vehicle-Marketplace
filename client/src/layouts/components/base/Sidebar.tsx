@@ -7,8 +7,9 @@ import {
     FaSignOutAlt,
     FaBars,
     FaCar,
-    FaChargingStation,
     FaBolt,
+    FaCarSide,
+    FaRegIdCard,
 } from "react-icons/fa";
 import { useAuthStore } from "@/store/auth";
 import { authServices } from "@/services/authServices";
@@ -16,11 +17,9 @@ import { authServices } from "@/services/authServices";
 const adminLinks = [
     { to: "/admin", label: "Dashboard", icon: <FaHome /> },
     { to: "/admin/users", label: "Người dùng", icon: <FaUser /> },
-    { to: "/admin/products", label: "Sản phẩm", icon: <FaCar /> },
+    { to: "/admin/products", label: "Sản phẩm", icon: <FaCarSide /> },
     { to: "/admin/orders", label: "Đơn hàng", icon: <FaClipboardList /> },
-    { to: "/admin/vehicles", label: "Xe điện", icon: <FaCar /> },
-    { to: "/admin/stations", label: "Trạm sạc", icon: <FaChargingStation /> },
-    { to: "/admin/subscriptions", label: "Gói đăng ký", icon: <FaBolt /> },
+    { to: "/admin/subscriptions", label: "Gói đăng ký", icon: <FaRegIdCard /> },
 ];
 
 export default function SideBar() {

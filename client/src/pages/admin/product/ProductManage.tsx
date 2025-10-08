@@ -128,12 +128,6 @@ export default function ProductManage() {
         },
         [refetch]
     );
-
-    const handleAddProduct = useCallback(() => {
-        console.log("Add new product");
-        // Navigate to add product page or open add modal
-    }, []);
-
     // Handle refresh
     const handleRefresh = useCallback(() => {
         refetch();
@@ -204,7 +198,8 @@ export default function ProductManage() {
     // Handle error state
     if (error) {
         return (
-            <div className="w-full p-6 rounded-xl shadow-sm bg-gray-50">
+            <div className="w-full h-full flex flex-col overflow-hidden">
+                <div className="p-6 bg-gray-50 rounded-xl shadow-sm flex flex-col h-full overflow-hidden">
                 <div className="flex flex-col items-center justify-center py-12">
                     <div className="text-red-500 text-6xl mb-4">⚠️</div>
                     <h2 className="text-xl font-semibold text-gray-800 mb-2">
@@ -220,6 +215,7 @@ export default function ProductManage() {
                         Thử lại
                     </button>
                 </div>
+                </div>
             </div>
         );
     }
@@ -227,7 +223,8 @@ export default function ProductManage() {
     const isProcessing = approveMutation.isPending || rejectMutation.isPending;
 
     return (
-        <div className="w-full p-6 rounded-xl shadow-sm bg-gray-50 relative">
+        <div className="w-full h-full flex flex-col overflow-hidden relative">
+            <div className="p-6 bg-gray-50 rounded-xl shadow-sm flex flex-col h-full overflow-hidden">
             <ProductTableHeader
                 globalFilter={globalFilter}
                 setGlobalFilter={setGlobalFilter}
@@ -237,7 +234,6 @@ export default function ProductManage() {
                 setStatusFilter={setStatusFilter}
                 conditionFilter={conditionFilter}
                 setConditionFilter={setConditionFilter}
-                onAddProduct={handleAddProduct}
                 onRefresh={handleRefresh}
                 isLoading={isLoading || isProcessing}
                 totalProducts={productsData.length}
@@ -256,8 +252,10 @@ export default function ProductManage() {
                 </div>
             )}
 
-            <div className={`${isLoading || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
-                <ProductTable table={table} columns={columns} />
+            <div className={`flex-1 flex flex-col ${isLoading || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+                <div className="flex-1">
+                    <ProductTable table={table} columns={columns} />
+                </div>
                 <ProductTablePagination
                     table={table}
                     pageSize={pageSize}
@@ -301,6 +299,7 @@ export default function ProductManage() {
                 product={productToReject}
                 isLoading={rejectMutation.isPending}
             />
+            </div>
         </div>
     );
 }
