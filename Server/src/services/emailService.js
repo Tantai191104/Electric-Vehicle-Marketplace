@@ -118,11 +118,17 @@ export async function sendBuyerOrderConfirmation({
   };
 
   try {
+    // Check if email is configured
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      console.warn('⚠️ Email not configured, skipping buyer confirmation email');
+      return { success: false, error: 'Email not configured' };
+    }
+
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Buyer confirmation email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Failed to send buyer confirmation email:', error);
+    console.error('❌ Failed to send buyer confirmation email:', error.message);
     return { success: false, error: error.message };
   }
 }
@@ -267,11 +273,17 @@ export async function sendSellerOrderNotification({
   };
 
   try {
+    // Check if email is configured
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      console.warn('⚠️ Email not configured, skipping seller notification email');
+      return { success: false, error: 'Email not configured' };
+    }
+
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Seller notification email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Failed to send seller notification email:', error);
+    console.error('❌ Failed to send seller notification email:', error.message);
     return { success: false, error: error.message };
   }
 }
