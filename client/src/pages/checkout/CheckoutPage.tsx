@@ -29,7 +29,8 @@ export default function CheckoutPage() {
     const [discount] = useState(0);
     const [couponCode] = useState("");
 
-    const { data: product, isLoading: productLoading, error: productError } = useProduct(productId || "");
+    const { data: productData, isLoading: productLoading, error: productError } = useProduct(productId || "");
+    const product = productData?.product;
 
     const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
         fullName: user?.name || "",
@@ -54,10 +55,10 @@ export default function CheckoutPage() {
     // Lấy phí vận chuyển
     useEffect(() => {
         async function fetchShippingFee() {
-            if (!product || !user) return;
+            if (!product || !user || !product.seller?.address) return;
             const payload = {
                 service_type_id: 2,
-                from_district_id: product.seller.address.districtCode,
+                from_district_id: Number(product.seller.address.districtCode) || 0,
                 from_ward_code: product.seller.address.wardCode,
                 to_district_id: Number(user?.profile.address.districtCode) || 0,
                 to_ward_code: user?.profile.address.wardCode,
@@ -68,8 +69,13 @@ export default function CheckoutPage() {
                 insurance_value: product.price || 0,
                 coupon: null,
             };
-            const result = await orderServices.getShippingFee(payload as ShippingFeePayload);
-            setShippingFee(result.data.total);
+            try {
+                const result = await orderServices.getShippingFee(payload as ShippingFeePayload);
+                setShippingFee(result.data.total);
+            } catch (error) {
+                console.error("Error fetching shipping fee:", error);
+                setShippingFee(0);
+            }
         }
         fetchShippingFee();
     }, [product, user]);
@@ -148,44 +154,45 @@ export default function CheckoutPage() {
             }
 
             const orderPayload: OrderPayload = {
-                productName: product.title,
+                productName: product.title || "",
                 from_name: product.seller.name,
-                from_phone: product.seller.phone,
-                from_address: `${product.seller.address.houseNumber}, ${product.seller.address.ward}, ${product.seller.address.district}, ${product.seller.address.province}`,
-                from_ward_name: product.seller.address.ward,
-                from_district_name: product.seller.address.district,
-                from_province_name: product.seller.address.province,
+                from_phone: product.seller.phone || "",
+                from_address: product.seller.address ? 
+                    `${product.seller.address.houseNumber}, ${product.seller.address.ward}, ${product.seller.address.district}, ${product.seller.address.province}` : "",
+                from_ward_name: product.seller.address?.ward || "",
+                from_district_name: product.seller.address?.district || "",
+                from_province_name: product.seller.address?.province || "",
                 to_name: shippingInfo.fullName,
                 to_phone: shippingInfo.phone,
                 to_address: `${shippingInfo.houseNumber}, ${shippingInfo.ward}, ${shippingInfo.district}, ${shippingInfo.city}`,
                 to_ward_name: shippingInfo.ward,
                 to_district_name: shippingInfo.district,
                 to_province_name: shippingInfo.city,
-                length: product.length,
-                width: product.width,
-                height: product.height,
-                weight: product.weight,
+                length: product.length || 0,
+                width: product.width || 0,
+                height: product.height || 0,
+                weight: product.weight || 0,
                 service_type_id: 2,
                 payment_type_id: 2,
                 insurance_value: 0,
                 cod_amount: totalAmount,
                 required_note: "KHONGCHOXEMHANG",
                 shipping_fee: shippingFee,
-                unit_price: product.price,
+                unit_price: product.price || 0,
                 content: `${product.title} x${product.brand}`,
                 product_id: product._id,
                 seller_id: product.seller._id,
                 items: [
                     {
-                        name: product.title,
-                        code: product._id,
+                        name: product.title || "",
+                        code: product._id || "",
                         quantity: 1,
-                        price: product.price,
-                        length: product.length,
-                        width: product.width,
-                        height: product.height,
-                        weight: product.weight,
-                        category: { "level1": product.category }
+                        price: product.price || 0,
+                        length: product.length || 0,
+                        width: product.width || 0,
+                        height: product.height || 0,
+                        weight: product.weight || 0,
+                        category: { "level1": product.category || "vehicle" }
                     }
                 ]
             };
