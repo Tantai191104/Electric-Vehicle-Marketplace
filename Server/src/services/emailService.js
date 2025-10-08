@@ -1,5 +1,31 @@
 import { transporter } from '../config/email.js';
 
+async function sendViaSendGrid(to, subject, html) {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const from = process.env.EMAIL_USER;
+  if (!apiKey || !from) {
+    throw new Error('SendGrid not configured: missing SENDGRID_API_KEY or EMAIL_USER');
+  }
+  const resp = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: from },
+      subject,
+      content: [{ type: 'text/html', value: html }],
+    }),
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`SendGrid error ${resp.status}: ${text}`);
+  }
+  return true;
+}
+
 /**
  * Send order confirmation email to buyer
  * @param {Object} params - Email parameters
@@ -118,12 +144,17 @@ export async function sendBuyerOrderConfirmation({
   };
 
   try {
-    // Check if email is configured
+    // Prefer SendGrid HTTP if configured
+    if (String(process.env.EMAIL_PROVIDER || '').toLowerCase() === 'sendgrid') {
+      await sendViaSendGrid(buyerEmail, `✅ Đặt hàng thành công - Mã đơn hàng ${orderCode}`, htmlContent);
+      console.log('✅ Buyer confirmation email sent via SendGrid');
+      return { success: true };
+    }
+    // SMTP fallback (requires EMAIL_USER/PASSWORD and reachable SMTP)
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       console.warn('⚠️ Email not configured, skipping buyer confirmation email');
       return { success: false, error: 'Email not configured' };
     }
-
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Buyer confirmation email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
@@ -273,12 +304,17 @@ export async function sendSellerOrderNotification({
   };
 
   try {
-    // Check if email is configured
+    // Prefer SendGrid HTTP if configured
+    if (String(process.env.EMAIL_PROVIDER || '').toLowerCase() === 'sendgrid') {
+      await sendViaSendGrid(sellerEmail, `🎉 Bán hàng thành công - Mã đơn hàng ${orderCode}`, htmlContent);
+      console.log('✅ Seller notification email sent via SendGrid');
+      return { success: true };
+    }
+    // SMTP fallback (requires EMAIL_USER/PASSWORD and reachable SMTP)
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       console.warn('⚠️ Email not configured, skipping seller notification email');
       return { success: false, error: 'Email not configured' };
     }
-
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Seller notification email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
