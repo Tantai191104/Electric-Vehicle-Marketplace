@@ -5,6 +5,7 @@ import Order from "../models/Order.js";
 import Contract from "../models/Contract.js";
 import User from "../models/User.js";
 import WalletTransaction from "../models/WalletTransaction.js";
+import { sendBuyerOrderConfirmation, sendSellerOrderNotification } from "../services/emailService.js";
 
 
 const feeBodySchema = z.object({
@@ -442,6 +443,54 @@ export async function createShippingOrder(req, res) {
 
         // Update product status to "sold" when order is created successfully
         await Product.findByIdAndUpdate(b.product_id, { status: 'sold' });
+
+        // Send email notifications to buyer and seller
+        try {
+          const buyer = await User.findById(buyerId).select('name email');
+          const seller = await User.findById(sellerId).select('name email');
+          const product = await Product.findById(b.product_id).select('title images').lean();
+          
+          // Send buyer confirmation email
+          if (buyer?.email) {
+            await sendBuyerOrderConfirmation({
+              buyerEmail: buyer.email,
+              buyerName: buyer.name || 'Khách hàng',
+              productTitle: product?.title || productDoc?.title || 'Sản phẩm',
+              productImage: (product?.images && product.images[0]) || null,
+              unitPrice,
+              shippingFee: shippingFee || 0,
+              totalAmount: finalAmountCalc,
+              orderCode: orderCode || orderDoc.orderNumber,
+            });
+          }
+
+          // Send seller notification email
+          if (seller?.email) {
+            const buyerAddress = [
+              b.to_address,
+              b.to_ward_name,
+              b.to_district_name,
+              b.to_province_name
+            ].filter(Boolean).join(', ');
+
+            await sendSellerOrderNotification({
+              sellerEmail: seller.email,
+              sellerName: seller.name || 'Người bán',
+              buyerName: buyer?.name || b.to_name || 'Khách hàng',
+              buyerPhone: buyer?.phone || b.to_phone || 'N/A',
+              buyerAddress,
+              productTitle: product?.title || productDoc?.title || 'Sản phẩm',
+              productImage: (product?.images && product.images[0]) || null,
+              unitPrice,
+              shippingFee: shippingFee || 0,
+              totalAmount: finalAmountCalc,
+              orderCode: orderCode || orderDoc.orderNumber,
+            });
+          }
+        } catch (emailError) {
+          console.error('Email notification failed (non-fatal):', emailError);
+          // Don't fail the order creation if email fails
+        }
 
         // Attach local order info to response
         payload.localOrder = {
