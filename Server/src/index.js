@@ -1,12 +1,12 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import jwt from 'jsonwebtoken';
-import { connectDB } from './config/db.js';
-import { specs, swaggerUi } from './config/swagger.js';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
+import { connectDB } from "./config/db.js";
+import { verifyEmailConnection } from "./config/email.js";
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +30,14 @@ import adminRoutes from './routes/adminRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 await connectDB(process.env.MONGO_URI);
+
+// Verify email connection (non-fatal)
+if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  await verifyEmailConnection();
+} else {
+  console.warn('⚠️  Email credentials not configured. Email notifications will be disabled.');
+  console.warn('⚠️  Add EMAIL_USER and EMAIL_PASSWORD to .env to enable email notifications.');
+}
 
 const app = express();
 app.use(cors({ origin: true, credentials: true })); // nếu FE khác domain
