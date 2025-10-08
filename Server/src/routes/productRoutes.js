@@ -11,6 +11,8 @@ import {
   getMotorcycles,
   markProductAsSold,
   markProductAsAvailable,
+  updateProductContractTemplate,
+  getProductContractTemplate,
 } from "../controllers/productController.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { optionalAuth, requireUser, requireAdmin, requireAuth } from "../middlewares/authorize.js";
@@ -675,5 +677,67 @@ router.patch("/:id/mark-sold", authenticate, requireUser, markProductAsSold);
  */
 // Người bán có thể đánh dấu sản phẩm chưa bán (nếu muốn bán lại)
 router.patch("/:id/mark-available", authenticate, requireUser, markProductAsAvailable);
+
+/**
+ * @swagger
+ * /products/{id}/contract-template:
+ *   put:
+ *     summary: Update contract template for product (seller only)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               htmlContent:
+ *                 type: string
+ *                 description: Custom HTML contract template
+ *               sellerSignature:
+ *                 type: string
+ *                 description: Seller signature (base64 PNG)
+ *               pdfUrl:
+ *                 type: string
+ *                 description: URL of seller-signed contract PDF
+ *     responses:
+ *       200:
+ *         description: Template updated
+ *       403:
+ *         description: Not product owner
+ *       404:
+ *         description: Product not found
+ */
+router.put("/:id/contract-template", authenticate, requireUser, updateProductContractTemplate);
+
+/**
+ * @swagger
+ * /products/{id}/contract-template:
+ *   get:
+ *     summary: Get contract template for product
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Contract template
+ *       404:
+ *         description: Product not found
+ */
+router.get("/:id/contract-template", getProductContractTemplate);
 
 export default router;
