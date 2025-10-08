@@ -6,16 +6,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { User } from "@/types/authType";
+import type { Order } from "@/types/orderType";
 import type { Table } from "@tanstack/react-table";
 
 interface Props {
-  table: Table<User>;
+  table: Table<Order>;
   pageSize: number;
   setPageSize: (val: number) => void;
 }
 
-export default function UserTablePagination({
+export default function OrderTablePagination({
   table,
   pageSize,
   setPageSize,
@@ -64,7 +64,7 @@ export default function UserTablePagination({
           </SelectContent>
         </Select>
         <span className="text-sm text-gray-600">
-          Tổng: {table.getCoreRowModel().rows.length} người dùng
+          Tổng: {table.getCoreRowModel().rows.length} đơn hàng
         </span>
       </div>
     </div>

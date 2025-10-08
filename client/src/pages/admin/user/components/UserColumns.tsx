@@ -70,8 +70,18 @@ export const getUserColumns = (
               return "bg-gray-100 text-gray-800";
           }
         };
-        const capitalizeFirstLetter = (str: string) =>
-          str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        const getRoleText = (role: string) => {
+          switch (role) {
+            case "staff":
+              return "Nhân viên";
+            case "admin":
+              return "Quản trị viên";
+            case "user":
+              return "Người dùng";
+            default:
+              return "Không xác định";
+          }
+        };
         return (
           <Badge
             variant="outline"
@@ -79,7 +89,7 @@ export const getUserColumns = (
               role
             )} border-0 px-2 py-1 text-sm rounded-full font-semibold`}
           >
-            {capitalizeFirstLetter(role)}
+            {getRoleText(role)}
           </Badge>
         );
       },
@@ -100,8 +110,16 @@ export const getUserColumns = (
               return "bg-gray-100 text-gray-800";
           }
         };
-        const capitalizeFirstLetter = (str: string) =>
-          str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        const getStatusText = (status: string) => {
+          switch (status) {
+            case "active":
+              return "Hoạt động";
+            case "inactive":
+              return "Vô hiệu hóa";
+            default:
+              return "Không xác định";
+          }
+        };
         return (
           <Badge
             variant="outline"
@@ -109,7 +127,7 @@ export const getUserColumns = (
               status
             )} border-0 px-2 py-1 text-sm rounded-full font-semibold`}
           >
-            {capitalizeFirstLetter(status)}
+            {getStatusText(status)}
           </Badge>
         );
       },

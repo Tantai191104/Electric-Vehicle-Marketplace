@@ -39,6 +39,13 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
             navigate("/auth/login");
             return;
         }
+
+        // Check product và seller trước
+        if (!product || !product.seller || !product._id) {
+            toast.error("Thông tin sản phẩm chưa sẵn sàng");
+            return;
+        }
+
         if (user._id === product.seller._id) {
             toast.error("Bạn không thể liên hệ với chính mình");
             return;
@@ -70,6 +77,7 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
             console.error("Error creating conversation:", error);
         }
     };
+
 
     const handleBuyNow = async (): Promise<void> => {
         if (!user) {

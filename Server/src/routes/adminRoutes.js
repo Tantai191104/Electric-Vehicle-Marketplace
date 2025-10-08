@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express';
 import {
   getAllProducts,
   getProductById,
@@ -8,16 +8,17 @@ import {
   getOrderById,
   getAdminStats,
   getSystemStats,
+  getOrdersSummary,
   reportViolation,
   getViolations,
   handleViolation,
   getPlatformRevenue,
   approveProduct,
   rejectProduct,
-  getPendingProducts
-} from "../controllers/adminController.js";
-import { authenticate } from "../middlewares/authenticate.js";
-import { requireAdmin } from "../middlewares/authorize.js";
+  getPendingProducts,
+} from '../controllers/adminController.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { requireAdmin } from '../middlewares/authorize.js';
 
 const router = express.Router();
 
@@ -35,13 +36,32 @@ router.use(authenticate, requireAdmin);
  * @swagger
  * /admin/stats:
  *   get:
- *     summary: Get admin dashboard statistics
+ *     summary: Get admin dashboard statistics with percentage changes
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: range
+ *         schema:
+ *           type: string
+ *           enum: [7d, 30d, 3m, 1y]
+ *         description: Predefined time range (7 days, 30 days, 3 months, 1 year)
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for custom time range (ISO format)
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for custom time range (ISO format)
  *     responses:
  *       200:
- *         description: Admin statistics
+ *         description: Admin statistics with percentage changes compared to previous period
  *         content:
  *           application/json:
  *             schema:
@@ -49,41 +69,367 @@ router.use(authenticate, requireAdmin);
  *               properties:
  *                 success:
  *                   type: boolean
+ *                   example: true
  *                 data:
  *                   type: object
  *                   properties:
  *                     totalUsers:
  *                       type: number
+ *                       example: 1250
+ *                       description: Total number of active users
  *                     totalProducts:
  *                       type: number
+ *                       example: 450
+ *                       description: Total number of active products
  *                     totalOrders:
  *                       type: number
+ *                       example: 320
+ *                       description: Total number of orders in time range
  *                     totalRevenue:
  *                       type: number
+ *                       example: 15000000
+ *                       description: Total revenue in VND
+ *                     totalCommission:
+ *                       type: number
+ *                       example: 750000
+ *                       description: Total platform commission in VND
+ *                     pendingViolations:
+ *                       type: number
+ *                       example: 5
+ *                       description: Number of pending user violations
+ *                     percentageChanges:
+ *                       type: object
+ *                       properties:
+ *                         users:
+ *                           type: number
+ *                           example: 15.5
+ *                           description: Percentage change in users compared to previous period
+ *                         products:
+ *                           type: number
+ *                           example: -2.3
+ *                           description: Percentage change in products compared to previous period
+ *                         orders:
+ *                           type: number
+ *                           example: 25.0
+ *                           description: Percentage change in orders compared to previous period
+ *                         revenue:
+ *                           type: number
+ *                           example: 12.8
+ *                           description: Percentage change in revenue compared to previous period
+ *                         commission:
+ *                           type: number
+ *                           example: 12.8
+ *                           description: Percentage change in commission compared to previous period
  *                     recentOrders:
  *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           buyerId:
+ *                             type: object
+ *                             properties:
+ *                               name:
+ *                                 type: string
+ *                               email:
+ *                                 type: string
+ *                           sellerId:
+ *                             type: object
+ *                             properties:
+ *                               name:
+ *                                 type: string
+ *                               email:
+ *                                 type: string
+ *                           productId:
+ *                             type: object
+ *                             properties:
+ *                               title:
+ *                                 type: string
+ *                               price:
+ *                                 type: number
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                       description: 5 most recent orders
  *                     recentUsers:
  *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           role:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                       description: 5 most recent users
+ *       400:
+ *         description: Bad request (invalid date or range)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid date range"
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden - Admin access required
+ *       500:
+ *         description: Internal server error
  */
-router.get("/stats", getAdminStats);
+router.get('/stats', getAdminStats);
 
 /**
  * @swagger
  * /admin/system-stats:
  *   get:
- *     summary: Get system-wide statistics
+ *     summary: Get system-wide statistics for charts and analytics
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: System statistics
+ *         description: System statistics for dashboard charts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     usersByRole:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "user"
+ *                             description: User role
+ *                           count:
+ *                             type: number
+ *                             example: 1200
+ *                             description: Number of users with this role
+ *                       description: Distribution of users by role
+ *                     productsByCategory:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "xe-dien"
+ *                             description: Product category
+ *                           count:
+ *                             type: number
+ *                             example: 450
+ *                             description: Number of products in this category
+ *                       description: Distribution of products by category
+ *                     ordersByStatus:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "delivered"
+ *                             description: Order status
+ *                           count:
+ *                             type: number
+ *                             example: 320
+ *                             description: Number of orders with this status
+ *                       description: Distribution of orders by status
+ *                     revenueByMonth:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: object
+ *                             properties:
+ *                               year:
+ *                                 type: number
+ *                                 example: 2024
+ *                               month:
+ *                                 type: number
+ *                                 example: 10
+ *                           revenue:
+ *                             type: number
+ *                             example: 5000000
+ *                             description: Total revenue for this month in VND
+ *                           count:
+ *                             type: number
+ *                             example: 45
+ *                             description: Number of completed orders this month
+ *                       description: Revenue and order count by month (last 12 months)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       500:
+ *         description: Internal server error
  */
-router.get("/system-stats", getSystemStats);
+router.get('/system-stats', getSystemStats);
+
+/**
+ * @swagger
+ * /admin/orders/summary:
+ *   get:
+ *     summary: Get orders summary statistics (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: range
+ *         schema:
+ *           type: string
+ *           enum: [7d, 30d, 90d, 1y]
+ *         description: Predefined time range (7 days, 30 days, 90 days, 1 year)
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for custom time range (ISO format)
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for custom time range (ISO format)
+ *     responses:
+ *       200:
+ *         description: Orders summary statistics with proper order status breakdown
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     categories:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["Chờ xử lý", "Đã xác nhận", "Đang vận chuyển", "Đã giao", "Đã hủy", "Đã hoàn tiền"]
+ *                       description: Order status categories in Vietnamese (pending, confirmed, shipped, delivered, cancelled, refunded)
+ *                     values:
+ *                       type: array
+ *                       items:
+ *                         type: number
+ *                       example: [25, 40, 15, 150, 10, 5]
+ *                       description: Number of orders for each status [pending, confirmed, shipped, delivered, cancelled, refunded]
+ *                     total:
+ *                       type: number
+ *                       example: 245
+ *                       description: Total number of orders
+ *                     successRate:
+ *                       type: string
+ *                       example: "61.2"
+ *                       description: Success rate percentage based on delivered orders (formatted to 1 decimal place)
+ *                     statusBreakdown:
+ *                       type: object
+ *                       properties:
+ *                         pending:
+ *                           type: number
+ *                           example: 25
+ *                           description: Number of pending orders
+ *                         confirmed:
+ *                           type: number
+ *                           example: 40
+ *                           description: Number of confirmed orders
+ *                         shipped:
+ *                           type: number
+ *                           example: 15
+ *                           description: Number of shipped orders
+ *                         delivered:
+ *                           type: number
+ *                           example: 150
+ *                           description: Number of delivered orders
+ *                         cancelled:
+ *                           type: number
+ *                           example: 10
+ *                           description: Number of cancelled orders
+ *                         refunded:
+ *                           type: number
+ *                           example: 5
+ *                           description: Number of refunded orders
+ *                       description: Detailed breakdown of orders by status
+ *       400:
+ *         description: Bad request (invalid date range or format)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid date range"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       403:
+ *         description: Forbidden - Admin access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Admin access required"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+router.get('/orders/summary', getOrdersSummary);
 
 // User management routes removed - use /api/users/* instead
 
@@ -119,7 +465,7 @@ router.get("/system-stats", getSystemStats);
  *       200:
  *         description: Danh sách sản phẩm chờ duyệt
  */
-router.get("/products/pending", getPendingProducts);
+router.get('/products/pending', getPendingProducts);
 
 /**
  * @swagger
@@ -144,7 +490,7 @@ router.get("/products/pending", getPendingProducts);
  *       400:
  *         description: Sản phẩm không cần xét duyệt
  */
-router.patch("/products/:id/approve", approveProduct);
+router.patch('/products/:id/approve', approveProduct);
 
 /**
  * @swagger
@@ -179,7 +525,7 @@ router.patch("/products/:id/approve", approveProduct);
  *       400:
  *         description: Sản phẩm không cần xét duyệt
  */
-router.patch("/products/:id/reject", rejectProduct);
+router.patch('/products/:id/reject', rejectProduct);
 
 // Admin không cần xem tất cả sản phẩm, chỉ quản lý khi có vi phạm
 
@@ -215,7 +561,7 @@ router.patch("/products/:id/reject", rejectProduct);
  *       200:
  *         description: Product status updated (Admin chỉ quản lý vi phạm)
  */
-router.put("/products/:id", updateProduct);
+router.put('/products/:id', updateProduct);
 
 /**
  * @swagger
@@ -236,7 +582,7 @@ router.put("/products/:id", updateProduct);
  *       200:
  *         description: Product deleted (Admin chỉ xóa sản phẩm vi phạm)
  */
-router.delete("/products/:id", deleteProduct);
+router.delete('/products/:id', deleteProduct);
 
 /**
  * @swagger
@@ -269,7 +615,7 @@ router.delete("/products/:id", deleteProduct);
  *       200:
  *         description: List of orders
  */
-router.get("/orders", getAllOrders);
+router.get('/orders', getAllOrders);
 
 /**
  * @swagger
@@ -290,7 +636,7 @@ router.get("/orders", getAllOrders);
  *       200:
  *         description: Order details
  */
-router.get("/orders/:id", getOrderById);
+router.get('/orders/:id', getOrderById);
 
 // Order status update route removed - use /api/profile/orders/:orderId/status instead
 
@@ -331,7 +677,7 @@ router.get("/orders/:id", getOrderById);
  *       200:
  *         description: List of violations
  */
-router.get("/violations", getViolations);
+router.get('/violations', getViolations);
 
 /**
  * @swagger
@@ -375,7 +721,7 @@ router.get("/violations", getViolations);
  *       200:
  *         description: Violation reported successfully
  */
-router.post("/users/:userId/violations", reportViolation);
+router.post('/users/:userId/violations', reportViolation);
 
 /**
  * @swagger
@@ -414,7 +760,7 @@ router.post("/users/:userId/violations", reportViolation);
  *       200:
  *         description: Violation handled successfully
  */
-router.put("/users/:userId/violations/:violationId", handleViolation);
+router.put('/users/:userId/violations/:violationId', handleViolation);
 
 /**
  * @swagger
@@ -447,7 +793,43 @@ router.put("/users/:userId/violations/:violationId", handleViolation);
  *     responses:
  *       200:
  *         description: Platform revenue report
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         totalRevenue:
+ *                           type: number
+ *                         totalCommission:
+ *                           type: number
+ *                         totalOrders:
+ *                           type: number
+ *                         avgOrderValue:
+ *                           type: number
+ *                     timeline:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: object
+ *                           totalRevenue:
+ *                             type: number
+ *                           totalCommission:
+ *                             type: number
+ *                           orderCount:
+ *                             type: number
+ *                           avgOrderValue:
+ *                             type: number
  */
-router.get("/revenue", getPlatformRevenue);
+router.get('/revenue', getPlatformRevenue);
 
 export default router;

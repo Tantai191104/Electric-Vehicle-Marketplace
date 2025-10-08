@@ -1,14 +1,14 @@
-import type { Product } from "@/types/productType";
+import type { Order } from "@/types/orderType";
 import { flexRender } from "@tanstack/react-table";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 import { FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
 
 interface Props {
-  table: Table<Product>;
-  columns: ColumnDef<Product>[];
+  table: Table<Order>;
+  columns: ColumnDef<Order>[];
 }
 
-export default function ProductTable({ table, columns }: Props) {
+export default function OrderTable({ table, columns }: Props) {
   return (
     <div className="border border-gray-200 rounded-lg bg-white shadow-sm">
       <div className="overflow-auto h-[400px] md:h-[500px] lg:h-[600px]">
@@ -52,7 +52,7 @@ export default function ProductTable({ table, columns }: Props) {
                   className="text-center py-6 text-gray-500 italic"
                 >
                   <div className="flex flex-col items-center space-y-2">
-                    <div>Không có sản phẩm nào</div>
+                    <div>Không có đơn hàng nào</div>
                   </div>
                 </td>
               </tr>

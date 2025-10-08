@@ -14,6 +14,7 @@ import { Line } from 'react-chartjs-2';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FiTrendingUp, FiDollarSign } from "react-icons/fi";
+import { useRevenueData } from "@/hooks/useAdmin";
 
 ChartJS.register(
   CategoryScale,
@@ -33,59 +34,73 @@ interface RevenueChartProps {
 }
 
 export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, timeRange }) => {
-  // Mock data based on timeRange
-  const getChartData = (range: string) => {
+  const { data: revenueData, isLoading } = useRevenueData(timeRange);
+
+  // Fallback data for when API is not available
+  const getFallbackData = (range: string) => {
     switch (range) {
       case '7d':
-        return {
-          labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
-          revenue: [125, 185, 155, 210, 175, 245, 195],
-          orders: [45, 67, 52, 78, 63, 89, 71],
-          growth: '+12.5%'
-        };
+        return [
+          { date: 'T2', revenue: 125, orders: 45 },
+          { date: 'T3', revenue: 185, orders: 67 },
+          { date: 'T4', revenue: 155, orders: 52 },
+          { date: 'T5', revenue: 210, orders: 78 },
+          { date: 'T6', revenue: 175, orders: 63 },
+          { date: 'T7', revenue: 245, orders: 89 },
+          { date: 'CN', revenue: 195, orders: 71 },
+        ];
       case '30d':
-        return {
-          labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
-          revenue: [890, 1250, 1100, 1540],
-          orders: [285, 412, 356, 523],
-          growth: '+18.3%'
-        };
+        return [
+          { date: 'Tuần 1', revenue: 890, orders: 285 },
+          { date: 'Tuần 2', revenue: 1250, orders: 412 },
+          { date: 'Tuần 3', revenue: 1100, orders: 356 },
+          { date: 'Tuần 4', revenue: 1540, orders: 523 },
+        ];
       case '90d':
-        return {
-          labels: ['Tháng 1', 'Tháng 2', 'Tháng 3'],
-          revenue: [3200, 4100, 4850],
-          orders: [1024, 1387, 1654],
-          growth: '+23.7%'
-        };
+        return [
+          { date: 'Tháng 1', revenue: 3200, orders: 1024 },
+          { date: 'Tháng 2', revenue: 4100, orders: 1387 },
+          { date: 'Tháng 3', revenue: 4850, orders: 1654 },
+        ];
       case '1y':
-        return {
-          labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-          revenue: [9200, 11500, 13800, 16200],
-          orders: [3240, 4125, 4980, 5890],
-          growth: '+28.5%'
-        };
+        return [
+          { date: 'Q1', revenue: 9200, orders: 3240 },
+          { date: 'Q2', revenue: 11500, orders: 4125 },
+          { date: 'Q3', revenue: 13800, orders: 4980 },
+          { date: 'Q4', revenue: 16200, orders: 5890 },
+        ];
       default:
-        return {
-          labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
-          revenue: [125, 185, 155, 210, 175, 245, 195],
-          orders: [45, 67, 52, 78, 63, 89, 71],
-          growth: '+12.5%'
-        };
+        return [
+          { date: 'T2', revenue: 125, orders: 45 },
+          { date: 'T3', revenue: 185, orders: 67 },
+          { date: 'T4', revenue: 155, orders: 52 },
+          { date: 'T5', revenue: 210, orders: 78 },
+          { date: 'T6', revenue: 175, orders: 63 },
+          { date: 'T7', revenue: 245, orders: 89 },
+          { date: 'CN', revenue: 195, orders: 71 },
+        ];
     }
   };
 
-  const chartData = getChartData(timeRange);
-  const totalRevenue = chartData.revenue.reduce((sum, val) => sum + val, 0);
-  const totalOrders = chartData.orders.reduce((sum, val) => sum + val, 0);
+  // Use API data if available, otherwise use fallback data
+  const chartData = revenueData || getFallbackData(timeRange);
+  const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0);
+  const totalOrders = chartData.reduce((sum, item) => sum + item.orders, 0);
+
+  // Calculate growth rate (simplified - comparing first and last values)
+  const growthRate = chartData.length > 1
+    ? (((chartData[chartData.length - 1].revenue - chartData[0].revenue) / chartData[0].revenue) * 100).toFixed(1)
+    : '0.0';
+  const growthDisplay = `${parseFloat(growthRate) >= 0 ? '+' : ''}${growthRate}%`;
 
   const data = {
-    labels: chartData.labels,
+    labels: chartData.map(item => item.date),
     datasets: [
       {
         label: 'Doanh thu (triệu VNĐ)',
-        data: chartData.revenue,
+        data: chartData.map(item => item.revenue),
         borderColor: '#1f2937',
-        backgroundColor: (context: any) => {
+        backgroundColor: (context: { chart: { ctx: CanvasRenderingContext2D } }) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 200);
           gradient.addColorStop(0, 'rgba(31, 41, 55, 0.2)');
@@ -127,12 +142,12 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
-          title: (context: any) => {
+          title: (context: { label: string }[]) => {
             return `${context[0].label}`;
           },
-          label: (context: any) => {
+          label: (context: { parsed: { y: number }; dataIndex: number }) => {
             const revenueValue = context.parsed.y;
-            const orderValue = chartData.orders[context.dataIndex];
+            const orderValue = chartData[context.dataIndex].orders;
             return [
               `Doanh thu: ${revenueValue} triệu VNĐ`,
               `Đơn hàng: ${orderValue} giao dịch`
@@ -167,7 +182,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
             size: 12,
             weight: 500,
           },
-          callback: (value: any) => `${value}M`,
+          callback: (value: string | number) => `${value}M`,
         },
       },
     },
@@ -195,7 +210,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
           </div>
           <Badge className="gap-1 bg-gray-900 text-white border-gray-900">
             <FiTrendingUp className="w-3 h-3" />
-            {chartData.growth}
+            {growthDisplay}
           </Badge>
         </div>
       </CardHeader>
@@ -217,7 +232,16 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
 
         {/* Chart */}
         <div className="relative h-64 bg-gray-50 rounded-xl p-4 border border-gray-100">
-          <Line data={data} options={options} />
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin mb-2"></div>
+                <span className="text-sm text-gray-600">Đang tải dữ liệu...</span>
+              </div>
+            </div>
+          ) : (
+            <Line data={data} options={options} />
+          )}
         </div>
 
         {/* Legend */}

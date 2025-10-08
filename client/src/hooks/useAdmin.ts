@@ -12,3 +12,17 @@ export const useAdmin = () => {
   });
   return { usersQuery, productsQuery };
 };
+
+export const useTransactionStats = (timeRange: string) => {
+  return useQuery({
+    queryKey: ["transaction-stats", timeRange],
+    queryFn: () => adminServices.getTransactionStats({ range: timeRange }),
+  });
+};
+
+export const useRevenueData = (timeRange: string) => {
+  return useQuery({
+    queryKey: ["revenue-data", timeRange],
+    queryFn: () => adminServices.getPlatformRevenue({ range: timeRange }),
+  });
+};

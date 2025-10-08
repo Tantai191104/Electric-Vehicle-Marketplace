@@ -2,7 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { FiFilter, FiRefreshCw } from "react-icons/fi";
+import { FiFilter } from "react-icons/fi";
+import { RefreshCw } from "lucide-react";
 
 interface Props {
     globalFilter: string;
@@ -54,12 +55,11 @@ export default function ProductTableHeader({
                 <div className="flex items-center gap-2">
                     {onRefresh && (
                         <Button
-                            variant="outline"
                             onClick={onRefresh}
                             disabled={isLoading}
-                            className="px-3"
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
                         >
-                            <FiRefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                             Làm mới
                         </Button>
                     )}

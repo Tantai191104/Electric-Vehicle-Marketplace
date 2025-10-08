@@ -8,6 +8,7 @@ import {
 import { Doughnut } from 'react-chartjs-2';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FiActivity } from "react-icons/fi";
+import { useTransactionStats } from "@/hooks/useAdmin";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -18,50 +19,29 @@ interface TransactionChartProps {
 }
 
 export const TransactionChart: React.FC<TransactionChartProps> = ({ title, description, timeRange }) => {
-  const getTransactionData = (range: string) => {
-    switch (range) {
-      case '7d':
-        return {
-          categories: ['Thành công', 'Đang xử lý', 'Thất bại', 'Hủy bỏ'],
-          values: [1892, 156, 89, 45],
-          colors: ['#1f2937', '#6b7280', '#9ca3af', '#d1d5db']
-        };
-      case '30d':
-        return {
-          categories: ['Thành công', 'Đang xử lý', 'Thất bại', 'Hủy bỏ'],
-          values: [7542, 634, 287, 156],
-          colors: ['#1f2937', '#6b7280', '#9ca3af', '#d1d5db']
-        };
-      case '90d':
-        return {
-          categories: ['Thành công', 'Đang xử lý', 'Thất bại', 'Hủy bỏ'],
-          values: [22340, 1890, 945, 567],
-          colors: ['#1f2937', '#6b7280', '#9ca3af', '#d1d5db']
-        };
-      case '1y':
-        return {
-          categories: ['Thành công', 'Đang xử lý', 'Thất bại', 'Hủy bỏ'],
-          values: [89750, 7634, 3245, 2156],
-          colors: ['#1f2937', '#6b7280', '#9ca3af', '#d1d5db']
-        };
-      default:
-        return {
-          categories: ['Thành công', 'Đang xử lý', 'Thất bại', 'Hủy bỏ'],
-          values: [1892, 156, 89, 45],
-          colors: ['#1f2937', '#6b7280', '#9ca3af', '#d1d5db']
-        };
-    }
+  const { data: transactionStats, isLoading } = useTransactionStats(timeRange);
+
+  // Lấy data từ API, fallback nếu null
+  const transactionData = transactionStats || {
+    categories: ['Chờ xử lý', 'Đã xác nhận', 'Đang vận chuyển', 'Đã giao', 'Đã hủy', 'Đã hoàn tiền'],
+    values: [0, 0, 0, 0, 0, 0],
+    total: 0,
+    successRate: "0.0",
+    totalValue: 0
   };
 
-  const transactionData = getTransactionData(timeRange);
-  const total = transactionData.values.reduce((sum, val) => sum + val, 0);
+  const total = transactionData.total;
+  const totalValue = transactionData.totalValue;
+
+  // Chọn màu cho tối đa 6 category
+  const colors = ['#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#ef4444', '#9ca3af'];
 
   const data = {
     labels: transactionData.categories,
     datasets: [
       {
         data: transactionData.values,
-        backgroundColor: transactionData.colors,
+        backgroundColor: colors,
         borderColor: '#ffffff',
         borderWidth: 3,
         hoverBorderWidth: 4,
@@ -74,9 +54,7 @@ export const TransactionChart: React.FC<TransactionChartProps> = ({ title, descr
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       tooltip: {
         backgroundColor: '#1f2937',
         titleColor: '#ffffff',
@@ -85,9 +63,10 @@ export const TransactionChart: React.FC<TransactionChartProps> = ({ title, descr
         borderWidth: 1,
         cornerRadius: 8,
         callbacks: {
-          label: (context: any) => {
-            const percentage = ((context.parsed / total) * 100).toFixed(1);
-            return `${context.label}: ${context.parsed} (${percentage}%)`;
+          label: (context: import("chart.js").TooltipItem<'doughnut'>) => {
+            const value = context.parsed;
+            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+            return `${context.label}: ${value} (${percentage}%)`;
           },
         },
       },
@@ -95,50 +74,52 @@ export const TransactionChart: React.FC<TransactionChartProps> = ({ title, descr
     cutout: '60%',
   };
 
-  const successRate = ((transactionData.values[0] / total) * 100).toFixed(1);
+  const successRate = transactionData.successRate;
 
   return (
     <Card className="border border-gray-200 shadow-sm bg-white h-full">
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-3 text-gray-900">
-              <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
-                <FiActivity className="w-4 h-4 text-white" />
-              </div>
-              {title}
-            </CardTitle>
-            <p className="text-gray-600 text-sm mt-1">
-              {description}
-            </p>
+        <CardTitle className="text-lg flex items-center gap-3 text-gray-900">
+          <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
+            <FiActivity className="w-4 h-4 text-white" />
           </div>
-        </div>
+          {title}
+        </CardTitle>
+        <p className="text-gray-600 text-sm mt-1">{description}</p>
       </CardHeader>
-      
+
       <CardContent className="pt-2">
         {/* Chart */}
         <div className="relative h-48 mb-6">
-          <Doughnut data={data} options={options} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{successRate}%</div>
-              <div className="text-xs text-gray-600">Tỷ lệ thành công</div>
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg">
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin mb-2"></div>
+                <span className="text-sm text-gray-600">Đang tải dữ liệu...</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <Doughnut data={data} options={options} />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">{successRate}%</div>
+                  <div className="text-xs text-gray-600">Tỷ lệ thành công</div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Legend & Stats */}
         <div className="space-y-3">
-          {transactionData.categories.map((category, index) => {
+          {transactionData.categories.map((category: string, index: number) => {
             const value = transactionData.values[index];
-            const percentage = ((value / total) * 100).toFixed(1);
+            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
             return (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div 
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: transactionData.colors[index] }}
-                  />
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[index] }} />
                   <span className="text-sm font-medium text-gray-900">{category}</span>
                 </div>
                 <div className="text-right">
@@ -158,7 +139,7 @@ export const TransactionChart: React.FC<TransactionChartProps> = ({ title, descr
               <div className="text-xs text-gray-600">Tổng giao dịch</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-gray-900">₫{(total * 1.2).toLocaleString()}M</div>
+              <div className="text-lg font-bold text-gray-900">₫{totalValue.toLocaleString()}</div>
               <div className="text-xs text-gray-600">Tổng giá trị</div>
             </div>
           </div>

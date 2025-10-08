@@ -1,43 +1,71 @@
 import { FiUsers, FiShoppingBag, FiDollarSign, FiTrendingUp } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { adminServices, type MetricData } from "@/services/adminServices";
 
 interface PlatformMetricsProps {
-    timeRange: string;
+    timeRange?: string;
 }
 
-export const PlatformMetrics: React.FC<PlatformMetricsProps> = () => {
+export const PlatformMetrics: React.FC<PlatformMetricsProps> = ({ timeRange }) => {
+    const [metricsData, setMetricsData] = useState<MetricData | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    useEffect(() => {
+        const fetchMetrics = async () => {
+            try {
+                setLoading(true);
+                const data = await adminServices.getPlatformMetrics(
+                    timeRange ? { range: timeRange } : undefined
+                );
+                setMetricsData(data);
+            } catch (error) {
+                console.error("Failed to fetch metrics:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMetrics();
+    }, [timeRange]);
+
+    if (loading || !metricsData) {
+        return <div>Đang tải dữ liệu...</div>;
+    }
+
+    // Dùng optional chaining và default value để tránh undefined
     const metrics = [
         {
             title: "Tổng người dùng",
-            value: "12,543",
-            change: "+8.2%",
-            changeType: "increase",
+            value: (metricsData?.totalUsers ?? 0).toLocaleString(),
+            change: `${metricsData?.percentageChanges?.users ?? 0 >= 0 ? "+" : ""}${metricsData?.percentageChanges?.users ?? 0}%`,
+            changeType: (metricsData?.percentageChanges?.users ?? 0) >= 0 ? "increase" : "decrease",
             icon: FiUsers,
             description: "Người mua và người bán",
             color: "bg-blue-500"
         },
         {
             title: "Tin đăng hoạt động",
-            value: "3,247",
-            change: "+12.5%",
-            changeType: "increase",
+            value: (metricsData?.totalProducts ?? 0).toLocaleString(),
+            change: `${metricsData?.percentageChanges?.products ?? 0 >= 0 ? "+" : ""}${metricsData?.percentageChanges?.products ?? 0}%`,
+            changeType: (metricsData?.percentageChanges?.products ?? 0) >= 0 ? "increase" : "decrease",
             icon: FiShoppingBag,
             description: "Xe điện đang được bán",
             color: "bg-green-500"
         },
         {
-            title: "Doanh thu hoa hồng",
-            value: "₫847M",
-            change: "+23.1%",
-            changeType: "increase",
+            title: "Doanh thu",
+            value: `₫${((metricsData?.totalCommission ?? 0) / 1e6).toFixed(0)}M`,
+            change: `${metricsData?.percentageChanges?.commission ?? 0 >= 0 ? "+" : ""}${metricsData?.percentageChanges?.commission ?? 0}%`,
+            changeType: (metricsData?.percentageChanges?.commission ?? 0) >= 0 ? "increase" : "decrease",
             icon: FiDollarSign,
             description: "Phí giao dịch thu được",
             color: "bg-purple-500"
         },
         {
             title: "Giao dịch thành công",
-            value: "1,892",
-            change: "+15.3%",
-            changeType: "increase",
+            value: (metricsData?.totalOrders ?? 0).toLocaleString(),
+            change: `${metricsData?.percentageChanges?.orders ?? 0 >= 0 ? "+" : ""}${metricsData?.percentageChanges?.orders ?? 0}%`,
+            changeType: (metricsData?.percentageChanges?.orders ?? 0) >= 0 ? "increase" : "decrease",
             icon: FiTrendingUp,
             description: "Xe đã được bán thành công",
             color: "bg-orange-500"
@@ -53,8 +81,8 @@ export const PlatformMetrics: React.FC<PlatformMetricsProps> = () => {
                             <metric.icon className="w-6 h-6 text-white" />
                         </div>
                         <div className={`px-2 py-1 rounded-full text-xs font-medium ${metric.changeType === "increase"
-                                ? "bg-green-100 text-green-600"
-                                : "bg-red-100 text-red-600"
+                            ? "bg-green-100 text-green-600"
+                            : "bg-red-100 text-red-600"
                             }`}>
                             {metric.change}
                         </div>

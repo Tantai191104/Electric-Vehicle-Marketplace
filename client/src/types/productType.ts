@@ -2,6 +2,52 @@ export type Seller = {
   _id: string;
   name: string;
   email: string;
+  phone?: string;
+  avatar?: string | null;
+  address?: {
+    houseNumber: string;
+    provinceCode: string;
+    districtCode: string;
+    wardCode: string;
+    province: string;
+    district: string;
+    ward: string;
+  };
+};
+
+export type ContractTemplate = {
+  htmlContent: string;
+  sellerSignature: string;
+  pdfUrl: string;
+  createdAt: string;
+};
+
+export type Contract = {
+  contractTemplate: ContractTemplate;
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: "vehicle" | "battery";
+  brand: string;
+  model: string;
+  year: number;
+  condition: string;
+  images: string[];
+  length?: number;
+  width?: number;
+  height?: number;
+  weight?: number;
+  seller: Seller;
+  status: string;
+  isFeatured: boolean;
+  views: number;
+  likes: number;
+  createdAt: string;
+  updatedAt: string;
+  __v?: number;
+  approvedAt?: string;
+  approvedBy?: string;
 };
 
 export type Product = {
@@ -19,14 +65,18 @@ export type Product = {
   width?: number;
   height?: number;
   weight?: number;
-  specifications: Record<string, string>;
-  seller: Seller; 
+  specifications?: Record<string, string>;
+  seller: Seller;
   status: string;
   isFeatured: boolean;
   views: number;
   likes: number;
   createdAt: string;
   updatedAt: string;
+  __v?: number;
+  approvedAt?: string;
+  approvedBy?: string;
+  contractTemplate?: ContractTemplate; // Contract có thể có hoặc không
 };
 
 export interface VehicleSpecifications {
