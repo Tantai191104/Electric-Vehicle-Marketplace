@@ -1,65 +1,242 @@
-import User from "../models/User.js";
-import Product from "../models/Product.js";
-import Order from "../models/Order.js";
-import WalletTransaction from "../models/WalletTransaction.js";
+import User from '../models/User.js';
+import Product from '../models/Product.js';
+import Order from '../models/Order.js';
 
 export async function getAdminStats(req, res) {
   try {
+    const { range, startDate, endDate } = req.query;
+
+    // Xác định khoảng thời gian lọc hiện tại
+    let currentDateFilter = {};
+    let previousDateFilter = {};
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const duration = end.getTime() - start.getTime();
+
+      currentDateFilter = { $gte: start, $lte: end };
+      previousDateFilter = {
+        $gte: new Date(start.getTime() - duration),
+        $lte: start,
+      };
+    } else if (range) {
+      const now = new Date();
+      let fromDate, previousFromDate;
+
+      switch (range) {
+        case '7d':
+          fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          previousFromDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+          break;
+        case '30d':
+          fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          previousFromDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+          break;
+        case '3m':
+          fromDate = new Date(now.setMonth(now.getMonth() - 3));
+          previousFromDate = new Date(now.setMonth(now.getMonth() - 3));
+          break;
+        case '1y':
+          fromDate = new Date(now.setFullYear(now.getFullYear() - 1));
+          previousFromDate = new Date(now.setFullYear(now.getFullYear() - 1));
+          break;
+        default:
+          fromDate = null;
+          previousFromDate = null;
+      }
+
+      if (fromDate) {
+        currentDateFilter = { $gte: fromDate, $lte: new Date() };
+        previousDateFilter = { $gte: previousFromDate, $lte: fromDate };
+      }
+    }
+
     const [
+      // Current period stats
       totalUsers,
-      totalProducts,
+      totalActiveProducts, // Tổng số products hiện có
+      totalProductsCreated, // Số products được tạo trong khoảng thời gian
       totalOrders,
-      recentOrders,
-      recentUsers,
       totalRevenue,
       totalCommission,
-      pendingViolations
+      pendingViolations,
+
+      // Previous period stats for comparison
+      previousUsers,
+      previousProducts,
+      previousOrders,
+      previousRevenue,
+      previousCommission,
+
+      // Other data
+      recentOrders,
+      recentUsers,
     ] = await Promise.all([
+      // Current period
       User.countDocuments({ isActive: true }),
-      Product.countDocuments({ isActive: true }),
-      Order.countDocuments(),
-      Order.find()
+      Product.countDocuments({ status: "active" }), // Tổng số products active
+      Product.countDocuments({
+        status: "active",
+        ...(Object.keys(currentDateFilter).length > 0
+          ? { createdAt: currentDateFilter }
+          : {}),
+      }), // Products được tạo trong khoảng thời gian
+      Order.countDocuments({
+        status: { $in: ['delivered', 'confirmed'] },
+        ...(Object.keys(currentDateFilter).length > 0
+          ? { createdAt: currentDateFilter }
+          : {}),
+      }),
+      Order.aggregate([
+        {
+          $match: {
+            status: { $in: ['delivered', 'confirmed'] },
+            ...(Object.keys(currentDateFilter).length > 0
+              ? { createdAt: currentDateFilter }
+              : {}),
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$finalAmount' } } },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            status: { $in: ['delivered', 'confirmed'] },
+            ...(Object.keys(currentDateFilter).length > 0
+              ? { createdAt: currentDateFilter }
+              : {}),
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$commission' } } },
+      ]),
+      User.countDocuments({
+        isActive: true,
+        $or: [
+          { 'profile.violations': { $exists: true, $ne: [] } },
+          { 'profile.suspension': { $exists: true, $ne: null } },
+        ],
+      }),
+
+      // Previous period for comparison
+      Object.keys(previousDateFilter).length > 0
+        ? User.countDocuments({
+            isActive: true,
+            createdAt: previousDateFilter,
+          })
+        : Promise.resolve(0),
+      Object.keys(previousDateFilter).length > 0
+        ? Product.countDocuments({
+            status: "active",
+            createdAt: previousDateFilter,
+          })
+        : Promise.resolve(0),
+      Object.keys(previousDateFilter).length > 0
+        ? Order.countDocuments({
+            status: { $in: ['delivered', 'confirmed'] },
+            createdAt: previousDateFilter,
+          })
+        : Promise.resolve(0),
+      Object.keys(previousDateFilter).length > 0
+        ? Order.aggregate([
+            {
+              $match: {
+                status: { $in: ['delivered', 'confirmed'] },
+                createdAt: previousDateFilter,
+              },
+            },
+            { $group: { _id: null, total: { $sum: '$finalAmount' } } },
+          ])
+        : Promise.resolve([]),
+      Object.keys(previousDateFilter).length > 0
+        ? Order.aggregate([
+            {
+              $match: {
+                status: { $in: ['delivered', 'confirmed'] },
+                createdAt: previousDateFilter,
+              },
+            },
+            { $group: { _id: null, total: { $sum: '$commission' } } },
+          ])
+        : Promise.resolve([]),
+
+      // Recent data
+      Order.find({
+        status: { $in: ['delivered', 'confirmed'] },
+        ...(Object.keys(currentDateFilter).length > 0
+          ? { createdAt: currentDateFilter }
+          : {}),
+      })
         .populate('buyerId', 'name email')
         .populate('sellerId', 'name email')
         .populate('productId', 'title price')
         .sort({ createdAt: -1 })
         .limit(5),
-      User.find({ isActive: true })
+      User.find({
+        isActive: true,
+        ...(Object.keys(currentDateFilter).length > 0
+          ? { createdAt: currentDateFilter }
+          : {}),
+      })
         .select('name email role createdAt')
         .sort({ createdAt: -1 })
         .limit(5),
-      // Tổng doanh thu từ tất cả giao dịch
-      Order.aggregate([
-        { $match: { status: { $in: ['delivered', 'confirmed'] } } },
-        { $group: { _id: null, total: { $sum: '$finalAmount' } } }
-      ]),
-      // Tổng commission platform thu được
-      Order.aggregate([
-        { $match: { status: { $in: ['delivered', 'confirmed'] } } },
-        { $group: { _id: null, total: { $sum: '$commission' } } }
-      ]),
-      // Số lượng vi phạm đang chờ xử lý
-      User.countDocuments({ 
-        isActive: true, 
-        $or: [
-          { 'profile.violations': { $exists: true, $ne: [] } },
-          { 'profile.suspension': { $exists: true, $ne: null } }
-        ]
-      })
     ]);
+
+    // Calculate percentage changes
+    const calculatePercentageChange = (current, previous) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return ((current - previous) / previous) * 100;
+    };
+
+    const currentRevenueValue = totalRevenue[0]?.total || 0;
+    const currentCommissionValue = totalCommission[0]?.total || 0;
+    const previousRevenueValue = previousRevenue[0]?.total || 0;
+    const previousCommissionValue = previousCommission[0]?.total || 0;
 
     res.json({
       success: true,
       data: {
         totalUsers,
-        totalProducts,
+        totalProducts: totalActiveProducts, // Hiển thị tổng số products active
         totalOrders,
-        totalRevenue: totalRevenue[0]?.total || 0,
-        totalCommission: totalCommission[0]?.total || 0,
+        totalRevenue: currentRevenueValue,
+        totalCommission: currentCommissionValue,
         pendingViolations,
+
+        // Percentage changes
+        percentageChanges: {
+          users:
+            Math.round(
+              calculatePercentageChange(totalUsers, previousUsers) * 100
+            ) / 100,
+          products:
+            Math.round(
+              calculatePercentageChange(totalProductsCreated, previousProducts) * 100
+            ) / 100,
+          orders:
+            Math.round(
+              calculatePercentageChange(totalOrders, previousOrders) * 100
+            ) / 100,
+          revenue:
+            Math.round(
+              calculatePercentageChange(
+                currentRevenueValue,
+                previousRevenueValue
+              ) * 100
+            ) / 100,
+          commission:
+            Math.round(
+              calculatePercentageChange(
+                currentCommissionValue,
+                previousCommissionValue
+              ) * 100
+            ) / 100,
+        },
+
         recentOrders,
-        recentUsers
-      }
+        recentUsers,
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -68,39 +245,33 @@ export async function getAdminStats(req, res) {
 
 export async function getSystemStats(req, res) {
   try {
-    const [
-      usersByRole,
-      productsByCategory,
-      ordersByStatus,
-      revenueByMonth
-    ] = await Promise.all([
-      User.aggregate([
-        { $match: { isActive: true } },
-        { $group: { _id: '$role', count: { $sum: 1 } } }
-      ]),
-      Product.aggregate([
-        { $match: { isActive: true } },
-        { $group: { _id: '$category', count: { $sum: 1 } } }
-      ]),
-      Order.aggregate([
-        { $group: { _id: '$status', count: { $sum: 1 } } }
-      ]),
-      Order.aggregate([
-        { $match: { status: { $in: ['delivered', 'confirmed'] } } },
-        {
-          $group: {
-            _id: {
-              year: { $year: '$createdAt' },
-              month: { $month: '$createdAt' }
+    const [usersByRole, productsByCategory, ordersByStatus, revenueByMonth] =
+      await Promise.all([
+        User.aggregate([
+          { $match: { isActive: true } },
+          { $group: { _id: '$role', count: { $sum: 1 } } },
+        ]),
+        Product.aggregate([
+          { $match: { status: "active" } },
+          { $group: { _id: '$category', count: { $sum: 1 } } },
+        ]),
+        Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+        Order.aggregate([
+          { $match: { status: { $in: ['delivered', 'confirmed'] } } },
+          {
+            $group: {
+              _id: {
+                year: { $year: '$createdAt' },
+                month: { $month: '$createdAt' },
+              },
+              revenue: { $sum: '$finalAmount' },
+              count: { $sum: 1 },
             },
-            revenue: { $sum: '$finalAmount' },
-            count: { $sum: 1 }
-          }
-        },
-        { $sort: { '_id.year': 1, '_id.month': 1 } },
-        { $limit: 12 }
-      ])
-    ]);
+          },
+          { $sort: { '_id.year': 1, '_id.month': 1 } },
+          { $limit: 12 },
+        ]),
+      ]);
 
     res.json({
       success: true,
@@ -108,39 +279,161 @@ export async function getSystemStats(req, res) {
         usersByRole,
         productsByCategory,
         ordersByStatus,
-        revenueByMonth
-      }
+        revenueByMonth,
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 }
 
+export async function getOrdersSummary(req, res) {
+  try {
+    const { range, startDate, endDate } = req.query;
+
+    const now = new Date();
+    let fromDate;
+    let toDate = endDate ? new Date(endDate) : now;
+
+    // Xác định fromDate dựa trên range hoặc startDate
+    if (startDate) {
+      fromDate = new Date(startDate);
+    } else if (range) {
+      switch (range) {
+        case '7d':
+          fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case '30d':
+          fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case '90d':
+          fromDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        case '1y':
+          fromDate = new Date(
+            now.getFullYear() - 1,
+            now.getMonth(),
+            now.getDate()
+          );
+          break;
+        default:
+          fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      }
+    } else {
+      // Mặc định 30 ngày
+      fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    // Aggregate orders theo status - sử dụng đúng enum từ Order model
+    const statuses = [
+      'pending',
+      'confirmed',
+      'shipped',
+      'delivered',
+      'cancelled',
+      'refunded',
+    ];
+    const [orders, totalValueResult] = await Promise.all([
+      Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: fromDate, $lte: toDate },
+          },
+        },
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: fromDate, $lte: toDate },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalValue: { $sum: '$finalAmount' },
+            totalOrders: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+    // map ra tất cả status, nếu không có status nào vẫn giữ 0
+    const result = {};
+    statuses.forEach((status) => {
+      const found = orders.find((o) => o._id === status);
+      result[status] = found ? found.count : 0;
+    });
+
+    // tính tổng và tỷ lệ thành công (delivered = thành công)
+    const total = Object.values(result).reduce((sum, val) => sum + val, 0);
+    const successRate = total > 0 ? (result['delivered'] / total) * 100 : 0;
+    const totalValue = totalValueResult[0]?.totalValue || 0;
+
+    res.json({
+      success: true,
+      data: {
+        categories: [
+          'Chờ xử lý',
+          'Đã xác nhận',
+          'Đang vận chuyển',
+          'Đã giao',
+          'Đã hủy',
+          'Đã hoàn tiền',
+        ],
+        values: [
+          result['pending'],
+          result['confirmed'],
+          result['shipped'],
+          result['delivered'],
+          result['cancelled'],
+          result['refunded'],
+        ],
+        total,
+        totalValue: totalValue,
+        successRate: successRate.toFixed(1),
+        statusBreakdown: {
+          pending: result['pending'],
+          confirmed: result['confirmed'],
+          shipped: result['shipped'],
+          delivered: result['delivered'],
+          cancelled: result['cancelled'],
+          refunded: result['refunded'],
+        },
+      },
+    });
+  } catch (error) {
+    console.error('getOrdersSummary error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
 export async function getAllUsers(req, res) {
   try {
-    const { page = 1, limit = 20, search = '', role = '' } = req.query;
+    const { page = 1, limit = 20, search = '' } = req.query;
     const skip = (page - 1) * limit;
 
-    let query = { isActive: true };
-    
-    if (role) {
-      query.role = role;
-    }
+    let query = { isActive: true, role: 'user' };
 
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+        { email: { $regex: search, $options: 'i' } },
       ];
     }
 
     const [users, total] = await Promise.all([
       User.find(query)
-        .select('-password -wallet') 
+        .select('-password -wallet')
         .sort({ createdAt: -1 })
-        .skip(skip)
+        .skip(parseInt(skip))
         .limit(parseInt(limit)),
-      User.countDocuments(query)
+      User.countDocuments(query),
     ]);
 
     res.json({
@@ -150,11 +443,16 @@ export async function getAllUsers(req, res) {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('getAllUsers error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra khi lấy danh sách người dùng',
+      error: error.message,
+    });
   }
 }
 
@@ -162,14 +460,14 @@ export async function getUserById(req, res) {
   try {
     const { id } = req.params;
     const user = await User.findById(id).select('-password -wallet');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     res.json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -184,7 +482,7 @@ export async function updateUser(req, res) {
     // Admin chỉ có thể update một số field nhất định (ban/unban, role)
     const allowedFields = ['isActive', 'role'];
     const filteredData = {};
-    
+
     for (const field of allowedFields) {
       if (updateData[field] !== undefined) {
         filteredData[field] = updateData[field];
@@ -197,16 +495,16 @@ export async function updateUser(req, res) {
     delete updateData.wallet;
 
     if (Object.keys(filteredData).length === 0) {
-      return res.status(400).json({ 
-        error: 'Admin chỉ có thể cập nhật isActive (ban/unban) và role. User phải tự update profile qua /api/profile' 
+      return res.status(400).json({
+        error:
+          'Admin chỉ có thể cập nhật isActive (ban/unban) và role. User phải tự update profile qua /api/profile',
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      filteredData,
-      { new: true, runValidators: true }
-    ).select('-password -wallet');
+    const user = await User.findByIdAndUpdate(id, filteredData, {
+      new: true,
+      runValidators: true,
+    }).select('-password -wallet');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -214,8 +512,9 @@ export async function updateUser(req, res) {
 
     res.json({
       success: true,
-      message: 'User status updated successfully (Admin chỉ có thể ban/unban user)',
-      data: user
+      message:
+        'User status updated successfully (Admin chỉ có thể ban/unban user)',
+      data: user,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -225,7 +524,7 @@ export async function updateUser(req, res) {
 export async function deleteUser(req, res) {
   try {
     const { id } = req.params;
-    
+
     // Admin không xóa user hoàn toàn, chỉ ban user (set isActive = false)
     const user = await User.findByIdAndUpdate(
       id,
@@ -240,7 +539,7 @@ export async function deleteUser(req, res) {
     res.json({
       success: true,
       message: 'User banned successfully (Admin không xóa user, chỉ ban user)',
-      data: user
+      data: user,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -253,20 +552,26 @@ export async function getAllProducts(req, res) {
     const skip = (page - 1) * limit;
 
     let query = {};
-    
+
     if (status === 'active') {
-      query.isActive = true;
+      query.status = 'active';
     } else if (status === 'inactive') {
-      query.isActive = false;
+      query.status = 'inactive';
+    } else if (status === 'pending') {
+      query.status = 'pending';
+    } else if (status === 'sold') {
+      query.status = 'sold';
+    } else if (status === 'rejected') {
+      query.status = 'rejected';
     }
 
     const [products, total] = await Promise.all([
       Product.find(query)
-        .populate('sellerId', 'name email')
+        .populate('seller', 'name email')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
-      Product.countDocuments(query)
+      Product.countDocuments(query),
     ]);
 
     res.json({
@@ -276,8 +581,8 @@ export async function getAllProducts(req, res) {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -287,16 +592,18 @@ export async function getAllProducts(req, res) {
 export async function getProductById(req, res) {
   try {
     const { id } = req.params;
-    const product = await Product.findById(id)
-      .populate('sellerId', 'name email phone');
-    
+    const product = await Product.findById(id).populate(
+      'seller',
+      'name email phone'
+    );
+
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
 
     res.json({
       success: true,
-      data: product
+      data: product,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -308,11 +615,10 @@ export async function updateProduct(req, res) {
     const { id } = req.params;
     const updateData = req.body;
 
-    const product = await Product.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate('sellerId', 'name email');
+    const product = await Product.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate('seller', 'name email');
 
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
@@ -320,7 +626,7 @@ export async function updateProduct(req, res) {
 
     res.json({
       success: true,
-      data: product
+      data: product,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -330,12 +636,12 @@ export async function updateProduct(req, res) {
 export async function deleteProduct(req, res) {
   try {
     const { id } = req.params;
-    
+
     const product = await Product.findByIdAndUpdate(
       id,
-      { isActive: false },
+      { status: 'inactive' },
       { new: true }
-    ).populate('sellerId', 'name email');
+    ).populate('seller', 'name email');
 
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
@@ -344,7 +650,7 @@ export async function deleteProduct(req, res) {
     res.json({
       success: true,
       message: 'Product deactivated successfully',
-      data: product
+      data: product,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -357,7 +663,7 @@ export async function getAllOrders(req, res) {
     const skip = (page - 1) * limit;
 
     let query = {};
-    
+
     if (status) {
       query.status = status;
     }
@@ -370,7 +676,7 @@ export async function getAllOrders(req, res) {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
-      Order.countDocuments(query)
+      Order.countDocuments(query),
     ]);
 
     res.json({
@@ -380,8 +686,8 @@ export async function getAllOrders(req, res) {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -395,14 +701,14 @@ export async function getOrderById(req, res) {
       .populate('buyerId', 'name email phone')
       .populate('sellerId', 'name email phone')
       .populate('productId', 'title price images description');
-    
+
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
     res.json({
       success: true,
-      data: order
+      data: order,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -415,7 +721,7 @@ export async function updateOrderStatus(req, res) {
     const { status, notes } = req.body;
 
     const order = await Order.findById(id);
-    
+
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -429,7 +735,7 @@ export async function updateOrderStatus(req, res) {
       status,
       description: notes || `Status changed to ${status} by admin`,
       updatedBy: req.user.sub,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     await order.save();
@@ -441,7 +747,7 @@ export async function updateOrderStatus(req, res) {
 
     res.json({
       success: true,
-      data: updatedOrder
+      data: updatedOrder,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -471,7 +777,7 @@ export async function reportViolation(req, res) {
       action, // warning, suspension, ban
       reportedBy: req.user.sub,
       reportedAt: new Date(),
-      status: 'pending'
+      status: 'pending',
     };
 
     user.profile.violations.push(violation);
@@ -481,7 +787,7 @@ export async function reportViolation(req, res) {
       user.profile.suspension = {
         reason: description,
         suspendedAt: new Date(),
-        suspendedBy: req.user.sub
+        suspendedBy: req.user.sub,
       };
     } else if (action === 'ban') {
       user.isActive = false;
@@ -492,7 +798,7 @@ export async function reportViolation(req, res) {
     res.json({
       success: true,
       message: 'Violation reported successfully',
-      data: { violation, action }
+      data: { violation, action },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -507,7 +813,7 @@ export async function getViolations(req, res) {
 
     let matchQuery = {
       isActive: true,
-      'profile.violations': { $exists: true, $ne: [] }
+      'profile.violations': { $exists: true, $ne: [] },
     };
 
     if (status) {
@@ -533,8 +839,8 @@ export async function getViolations(req, res) {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -567,7 +873,7 @@ export async function handleViolation(req, res) {
       user.profile.suspension = {
         reason: violation.description,
         suspendedAt: new Date(),
-        suspendedBy: req.user.sub
+        suspendedBy: req.user.sub,
       };
     } else if (action === 'ban') {
       user.isActive = false;
@@ -578,7 +884,7 @@ export async function handleViolation(req, res) {
     res.json({
       success: true,
       message: 'Violation handled successfully',
-      data: { violation, action }
+      data: { violation, action },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -590,61 +896,99 @@ export async function getPlatformRevenue(req, res) {
   try {
     const { startDate, endDate, groupBy = 'month' } = req.query;
 
-    let matchQuery = {
-      status: { $in: ['delivered', 'confirmed'] }
-    };
-
+    // Build filter
+    const matchQuery = { status: { $in: ['delivered', 'confirmed'] } };
     if (startDate || endDate) {
       matchQuery.createdAt = {};
       if (startDate) matchQuery.createdAt.$gte = new Date(startDate);
       if (endDate) matchQuery.createdAt.$lte = new Date(endDate);
     }
 
+    // Aggregate timeline
     const revenueData = await Order.aggregate([
       { $match: matchQuery },
       {
         $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: groupBy === 'month' ? { $month: '$createdAt' } : null,
-            day: groupBy === 'day' ? { $dayOfMonth: '$createdAt' } : null
-          },
+          _id:
+            groupBy === 'day'
+              ? {
+                  year: { $year: '$createdAt' },
+                  month: { $month: '$createdAt' },
+                  day: { $dayOfMonth: '$createdAt' },
+                }
+              : groupBy === 'month'
+              ? {
+                  year: { $year: '$createdAt' },
+                  month: { $month: '$createdAt' },
+                }
+              : { year: { $year: '$createdAt' } }, // fallback yearly
           totalRevenue: { $sum: '$finalAmount' },
-          totalCommission: { $sum: '$commission' },
-          orderCount: { $sum: 1 },
-          avgOrderValue: { $avg: '$finalAmount' }
-        }
+          totalOrders: { $sum: 1 },
+        },
       },
-      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } },
     ]);
 
-    const summary = await Order.aggregate([
+    // Build labels and arrays for FE
+    const labels = [];
+    const revenue = [];
+    const orders = [];
+
+    revenueData.forEach((item) => {
+      const { _id } = item;
+      let label = '';
+      if (groupBy === 'day') label = `${_id.day}/${_id.month}/${_id.year}`;
+      else if (groupBy === 'month') label = `Tháng ${_id.month}/${_id.year}`;
+      else label = `${_id.year}`;
+      labels.push(label);
+      revenue.push(item.totalRevenue);
+      orders.push(item.totalOrders);
+    });
+
+    // Calculate growth vs previous period (mock simple for now)
+    let growth = '+0%';
+    if (revenue.length > 1) {
+      const last = revenue[revenue.length - 1];
+      const prev = revenue[revenue.length - 2];
+      growth = prev ? `${(((last - prev) / prev) * 100).toFixed(1)}%` : '+0%';
+    }
+
+    // Summary
+    const summaryAgg = await Order.aggregate([
       { $match: matchQuery },
       {
         $group: {
           _id: null,
           totalRevenue: { $sum: '$finalAmount' },
-          totalCommission: { $sum: '$commission' },
           totalOrders: { $sum: 1 },
-          avgOrderValue: { $avg: '$finalAmount' }
-        }
-      }
+          avgOrderValue: { $avg: '$finalAmount' },
+        },
+      },
     ]);
+
+    const summary = summaryAgg[0] || {
+      totalRevenue: 0,
+      totalOrders: 0,
+      avgOrderValue: 0,
+    };
 
     res.json({
       success: true,
       data: {
-        summary: summary[0] || {
-          totalRevenue: 0,
-          totalCommission: 0,
-          totalOrders: 0,
-          avgOrderValue: 0
+        labels,
+        revenue,
+        orders,
+        growth,
+        summary: {
+          totalRevenue: summary.totalRevenue,
+          totalOrders: summary.totalOrders,
+          avgOrderValue: summary.avgOrderValue,
         },
-        timeline: revenueData
-      }
+      },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 }
 
@@ -657,32 +1001,32 @@ export async function approveProduct(req, res) {
     // Tìm sản phẩm
     const product = await Product.findById(id);
     if (!product) {
-      return res.status(404).json({ error: "Sản phẩm không tồn tại" });
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
     }
 
     // Kiểm tra sản phẩm đang ở trạng thái pending
-    if (product.status !== "pending") {
-      return res.status(400).json({ 
-        error: "Sản phẩm này không cần xét duyệt" 
+    if (product.status !== 'pending') {
+      return res.status(400).json({
+        error: 'Sản phẩm này không cần xét duyệt',
       });
     }
 
     // Cập nhật status thành active
-    await Product.findByIdAndUpdate(id, { 
-      status: "active",
+    await Product.findByIdAndUpdate(id, {
+      status: 'active',
       approvedBy: adminId,
-      approvedAt: new Date()
+      approvedAt: new Date(),
     });
 
     res.json({
       success: true,
-      message: "Đã duyệt sản phẩm thành công",
+      message: 'Đã duyệt sản phẩm thành công',
       data: {
         productId: id,
-        status: "active",
+        status: 'active',
         approvedBy: adminId,
-        approvedAt: new Date()
-      }
+        approvedAt: new Date(),
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -699,34 +1043,34 @@ export async function rejectProduct(req, res) {
     // Tìm sản phẩm
     const product = await Product.findById(id);
     if (!product) {
-      return res.status(404).json({ error: "Sản phẩm không tồn tại" });
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
     }
 
     // Kiểm tra sản phẩm đang ở trạng thái pending
-    if (product.status !== "pending") {
-      return res.status(400).json({ 
-        error: "Sản phẩm này không cần xét duyệt" 
+    if (product.status !== 'pending') {
+      return res.status(400).json({
+        error: 'Sản phẩm này không cần xét duyệt',
       });
     }
 
     // Cập nhật status thành rejected
-    await Product.findByIdAndUpdate(id, { 
-      status: "rejected",
+    await Product.findByIdAndUpdate(id, {
+      status: 'rejected',
       rejectedBy: adminId,
       rejectedAt: new Date(),
-      rejectionReason: reason || "Không đáp ứng tiêu chuẩn chất lượng"
+      rejectionReason: reason || 'Không đáp ứng tiêu chuẩn chất lượng',
     });
 
     res.json({
       success: true,
-      message: "Đã từ chối sản phẩm",
+      message: 'Đã từ chối sản phẩm',
       data: {
         productId: id,
-        status: "rejected",
+        status: 'rejected',
         rejectedBy: adminId,
         rejectedAt: new Date(),
-        reason: reason || "Không đáp ứng tiêu chuẩn chất lượng"
-      }
+        reason: reason || 'Không đáp ứng tiêu chuẩn chất lượng',
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -740,12 +1084,12 @@ export async function getPendingProducts(req, res) {
     const skip = (page - 1) * limit;
 
     const [products, total] = await Promise.all([
-      Product.find({ status: "pending" })
-        .populate("seller", "name email")
+      Product.find({ status: 'pending' })
+        .populate('seller', 'name email')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
-      Product.countDocuments({ status: "pending" })
+      Product.countDocuments({ status: 'pending' }),
     ]);
 
     res.json({
@@ -755,8 +1099,8 @@ export async function getPendingProducts(req, res) {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

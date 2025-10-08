@@ -1,18 +1,24 @@
-/**
- * Node modules
- */
 import { Navigate, Outlet } from "react-router-dom";
-
-/**
- * Stores
- */
 import { useAuthStore } from "@/store/auth";
+import { toast } from "sonner";
 
-export const ProtectedRoute = () => {
-  const { isAuthenticated } = useAuthStore();
+interface ProtectedRouteProps {
+  role?: "admin" | "user";
+}
+
+export const ProtectedRoute = ({ role }: ProtectedRouteProps) => {
+  const { isAuthenticated, user } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    toast.error("Bạn cần đăng nhập để truy cập trang này.");
+    return <Navigate to="/auth/login" replace />;
   }
+
+
+  if (role && user?.role !== role) {
+    toast.error("Bạn không có quyền truy cập trang này.");
+    return <Navigate to="/auth/login" replace />;
+  }
+
   return <Outlet />;
 };

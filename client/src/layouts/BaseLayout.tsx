@@ -1,20 +1,16 @@
-import Header from "./components/base/Header";
-
-/**
- * Components
- */
-
+import { Outlet } from "react-router-dom";
 import React from "react";
+import Header from "./components/base/Header";
+import Footer from "./components/base/Footer";
 
-interface BaseLayoutProps {
-  children?: React.ReactNode;
-}
-
-const BaseLayout: React.FC<BaseLayoutProps> = ({ children }) => {
+const BaseLayout: React.FC = () => {
   return (
-    <div className="subpixel-antialiased">
+    <div className="subpixel-antialiased bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen flex flex-col">
       <Header />
-      <main>{children}</main>
+      <main className="min-h-screen">
+        <Outlet />
+      </main>
+      <Footer />
     </div>
   );
 };
