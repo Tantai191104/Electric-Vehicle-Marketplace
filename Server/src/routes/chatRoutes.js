@@ -7,7 +7,8 @@ import { startChat, getMyConversations, postMessage, getMessages, postMessageWit
 const router = express.Router();
 
 // Chỉ User (người bán/mua) mới được chat, Admin không tham gia giao dịch
-router.use(authenticate, requireUser);
+// Quan trọng: scope middleware vào đường dẫn /chat để không ảnh hưởng các route khác
+router.use('/chat', authenticate, requireUser);
 
 /**
  * @swagger
