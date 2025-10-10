@@ -81,25 +81,27 @@ export async function createVehicleDeposit(req, res) {
     buyer.wallet.totalSpent = (buyer.wallet.totalSpent || 0) + DEPOSIT_AMOUNT;
     await buyer.save();
 
-    // Log wallet transaction
-    await WalletTransaction.create({
-      userId: buyerId,
-      type: 'purchase',
-      amount: DEPOSIT_AMOUNT,
-      balanceBefore,
-      balanceAfter: buyer.wallet.balance,
-      description: `Đặt cọc xe ${product.title}`,
-      status: 'completed',
-      reference: `DEPOSIT-${product_id}`,
-      metadata: {
-        productId: product_id,
-        sellerId: seller_id,
-        depositAmount: DEPOSIT_AMOUNT,
-      },
-    });
+    let orderDoc;
+    try {
+      // Log wallet transaction
+      await WalletTransaction.create({
+        userId: buyerId,
+        type: 'purchase',
+        amount: DEPOSIT_AMOUNT,
+        balanceBefore,
+        balanceAfter: buyer.wallet.balance,
+        description: `Đặt cọc xe ${product.title}`,
+        status: 'completed',
+        reference: `DEPOSIT-${product_id}`,
+        metadata: {
+          productId: product_id,
+          sellerId: seller_id,
+          depositAmount: DEPOSIT_AMOUNT,
+        },
+      });
 
-    // Create order with deposit status
-    const orderDoc = await Order.create({
+      // Create order with deposit status
+      orderDoc = await Order.create({
       orderNumber: `DEPOSIT-${Date.now()}`,
       buyerId,
       sellerId: seller_id,
@@ -140,22 +142,52 @@ export async function createVehicleDeposit(req, res) {
       notes: `Vehicle deposit order - In-person meeting required. Deposit: ${DEPOSIT_AMOUNT} VND`,
     });
 
-    // Update product status to indicate deposit received (but not sold yet)
-    product.status = 'inactive'; // Temporarily inactive until admin confirms
-    await product.save();
+      // Update product status to indicate deposit received (but not sold yet)
+      product.status = 'deposit'; // Deposit status - waiting for admin confirmation
+      await product.save();
 
-    return res.status(201).json({
-      success: true,
-      message: 'Đặt cọc thành công. Admin sẽ liên hệ để xác nhận giao dịch.',
-      data: {
-        orderId: orderDoc._id,
-        orderNumber: orderDoc.orderNumber,
-        depositAmount: DEPOSIT_AMOUNT,
-        productTitle: product.title,
-        status: 'deposit',
-        note: 'Vui lòng chờ admin liên hệ để sắp xếp thời gian gặp mặt và hoàn tất giao dịch.',
-      },
-    });
+      return res.status(201).json({
+        success: true,
+        message: 'Đặt cọc thành công. Admin sẽ liên hệ để xác nhận giao dịch.',
+        data: {
+          orderId: orderDoc._id,
+          orderNumber: orderDoc.orderNumber,
+          depositAmount: DEPOSIT_AMOUNT,
+          productTitle: product.title,
+          status: 'deposit',
+          note: 'Vui lòng chờ admin liên hệ để sắp xếp thời gian gặp mặt và hoàn tất giao dịch.',
+        },
+      });
+    } catch (orderError) {
+      // Rollback wallet deduction if order/product update fails
+      console.error('Order creation failed, rolling back wallet deduction:', orderError);
+      
+      try {
+        buyer.wallet.balance = balanceBefore;
+        buyer.wallet.totalSpent = (buyer.wallet.totalSpent || 0) - DEPOSIT_AMOUNT;
+        await buyer.save();
+        
+        // Log rollback transaction
+        await WalletTransaction.create({
+          userId: buyerId,
+          type: 'refund',
+          amount: DEPOSIT_AMOUNT,
+          balanceBefore: buyer.wallet.balance - DEPOSIT_AMOUNT,
+          balanceAfter: balanceBefore,
+          description: `Hoàn tiền - Lỗi tạo đơn đặt cọc xe ${product.title}`,
+          status: 'completed',
+          reference: `ROLLBACK-DEPOSIT-${product_id}`,
+          metadata: {
+            productId: product_id,
+            error: orderError.message,
+          },
+        });
+      } catch (rollbackError) {
+        console.error('Rollback failed:', rollbackError);
+      }
+      
+      throw orderError;
+    }
   } catch (error) {
     console.error('Error creating vehicle deposit:', error);
     return res.status(500).json({
