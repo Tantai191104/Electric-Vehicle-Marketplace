@@ -27,8 +27,19 @@ export const authorize = (...allowedRoles) => {
       }
 
       if (!allowedRoles.includes(user.role)) {
+        // Helpful debug info to diagnose wrong role/token
+        if (process.env.NODE_ENV !== 'production') {
+          // eslint-disable-next-line no-console
+          console.warn('[authorize] Forbidden:', {
+            path: req.path,
+            method: req.method,
+            required: allowedRoles,
+            actual: user.role,
+            userId,
+          });
+        }
         return res.status(STATUS_CODE.FORBIDDEN).json({
-          message: `Access denied. Required roles: ${allowedRoles.join(", ")}`,
+          message: `Access denied. Required roles: ${allowedRoles.join(", ")}. Your role: ${user.role}`,
         });
       }
 
@@ -87,6 +98,18 @@ export const optionalAuth = async (req, res, next) => {
 };
 
 // Specific role requirements
-export const requireAdmin = authorize("admin"); // Chỉ platform admin
+export const requireAdmin = (req, res, next) => {
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.log('[requireAdmin] Checking admin access:', {
+      path: req.path,
+      method: req.method,
+      userRole: req.user?.role || req.userRole,
+      userId: req.user?.id || req.user?.sub,
+    });
+  }
+  return authorize("admin")(req, res, next);
+};
+
 export const requireUser = authorize("user"); // Chỉ người dùng marketplace (bán/mua)
 export const requireAuth = authorize("user", "admin"); // Cả user và admin

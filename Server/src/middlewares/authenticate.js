@@ -23,6 +23,18 @@ export const authenticate = (req, res, next) => {
     }
 
     req.user = { sub: decoded.userId || decoded.sub, id: decoded.userId || decoded.sub, role: decoded.role, email: decoded.email  , isAuthenticated: true  };
+    
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.log('[authenticate] User authenticated:', {
+        path: req.path,
+        method: req.method,
+        originalUrl: req.originalUrl,
+        role: req.user.role,
+        userId: req.user.id,
+      });
+    }
+    
     next();
   } catch (e) {
     return res.status(STATUS_CODE.UNAUTHORIZED).json({
