@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import WalletTransaction from "../models/WalletTransaction.js";
 import Order from "../models/Order.js";
+import Product from "../models/Product.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -154,6 +155,80 @@ export async function getWalletTransactionsService(userId, page = 1, limit = 20)
         pages: Math.ceil(total / limit)
       }
     };
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+// Wishlist services
+export async function getWishlistService(userId) {
+  try {
+    const user = await User.findById(userId).select("wishlist").populate({
+      path: "wishlist",
+      select: "title images price brand model year status category",
+    });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user.wishlist || [];
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function addToWishlistService(userId, productId) {
+  try {
+    const product = await Product.findById(productId).select("_id status seller");
+    if (!product) throw new Error("Product not found");
+    if (product.status === "sold" || product.status === "inactive" || product.status === "rejected") {
+      throw new Error("Product is not available");
+    }
+
+    const user = await User.findById(userId).select("wishlist");
+    if (!user) throw new Error("User not found");
+
+    const alreadyIn = user.wishlist?.some((id) => String(id) === String(productId));
+    if (alreadyIn) {
+      return user.wishlist; // idempotent
+    }
+
+    user.wishlist = [...(user.wishlist || []), product._id];
+    await user.save();
+    // increment likes (best-effort)
+    await Product.updateOne({ _id: product._id }, { $inc: { likes: 1 } });
+
+    const populated = await User.findById(userId).select("wishlist").populate({
+      path: "wishlist",
+      select: "title images price brand model year status category",
+    });
+    return populated?.wishlist || [];
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function removeFromWishlistService(userId, productId) {
+  try {
+    const user = await User.findById(userId).select("wishlist");
+    if (!user) throw new Error("User not found");
+
+    const before = (user.wishlist || []).map((id) => String(id));
+    const next = before.filter((id) => id !== String(productId));
+    if (next.length === before.length) {
+      return user.wishlist || []; // idempotent
+    }
+
+    user.wishlist = next;
+    await user.save();
+    // decrement likes (clamped at 0)
+    await Product.updateOne({ _id: productId }, { $inc: { likes: -1 } });
+
+    const populated = await User.findById(userId).select("wishlist").populate({
+      path: "wishlist",
+      select: "title images price brand model year status category",
+    });
+    return populated?.wishlist || [];
   } catch (error) {
     throw error;
   }
