@@ -45,7 +45,7 @@ const productSchema = new mongoose.Schema(
     },
     status: { 
       type: String, 
-      enum: ["pending", "active", "sold", "inactive", "rejected"], 
+      enum: ["pending", "active", "sold", "inactive", "rejected", "deposit"], 
       default: "pending" 
     },
     // Thông tin xét duyệt

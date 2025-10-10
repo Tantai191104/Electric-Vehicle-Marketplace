@@ -12,7 +12,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/users/register:
+ * /users/register:
  *   post:
  *     summary: Create a new user (Alternative registration endpoint)
  *     tags: [Users]
@@ -42,11 +42,11 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/register', createUser);
+router.post('/users/register', createUser);
 
 /**
  * @swagger
- * /api/users/login:
+ * /users/login:
  *   post:
  *     summary: Login user (Alternative login endpoint)
  *     tags: [Users]
@@ -105,11 +105,11 @@ router.post('/register', createUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/login', loginUser);
+router.post('/users/login', loginUser);
 
 /**
  * @swagger
- * /api/users/list:
+ * /users/list:
  *   get:
  *     summary: Get list of all users
  *     tags: [Users]
@@ -138,11 +138,11 @@ router.post('/login', loginUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/list', listUsers);
+router.get('/users/list', listUsers);
 
 /**
  * @swagger
- * /api/users/{id}:
+ * /users/{id}:
  *   get:
  *     summary: Get user by ID
  *     tags: [Users]
@@ -183,11 +183,11 @@ router.get('/list', listUsers);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:id', getUserById);
+router.get('/users/:id', getUserById);
 
 /**
  * @swagger
- * /api/users/{id}:
+ * /users/{id}:
  *   put:
  *     summary: Update user by ID
  *     tags: [Users]
@@ -261,11 +261,11 @@ router.get('/:id', getUserById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/:id', updateUser);
+router.put('/users/:id', updateUser);
 
 /**
  * @swagger
- * /api/users/{id}:
+ * /users/{id}:
  *   delete:
  *     summary: Delete user by ID
  *     tags: [Users]
@@ -310,6 +310,6 @@ router.put('/:id', updateUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete('/:id', deleteUser);
+router.delete('/users/:id', deleteUser);
 
 export default router;

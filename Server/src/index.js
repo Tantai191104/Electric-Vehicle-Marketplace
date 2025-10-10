@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { connectDB } from './config/db.js';
 import { specs, swaggerUi } from './config/swagger.js';
+import { verifyEmailConnection } from './config/email.js';
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +28,7 @@ import chatRoutes from './routes/chatRoutes.js';
 import zalopayRoutes from './routes/zalopayRoutes.js';
 import contractRoutes from './routes/contractRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import depositRoutes from './routes/depositRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 await connectDB(process.env.MONGO_URI);
@@ -94,15 +96,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/shipping', shippingRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/zalopay', zalopayRoutes);
-app.use('/api/contracts', contractRoutes);
-app.use('/api/admin', adminRoutes);
+// Admin routes must be first to prevent conflicts with dynamic routes
+app.use('/api', adminRoutes);
+app.use('/api', authRoutes);
+app.use('/api', userRoutes);
+app.use('/api', profileRoutes);
+app.use('/api', productRoutes);
+app.use('/api', shippingRoutes);
+app.use('/api', chatRoutes);
+app.use('/api', zalopayRoutes);
+app.use('/api', contractRoutes);
+app.use('/api', depositRoutes);
 app.use(
   '/api-docs',
   swaggerUi.serve,
