@@ -26,7 +26,7 @@ const upload = multer({ storage: multer.memoryStorage() });
  *       201:
  *         description: Contract initiated
  */
-router.post("/initiate", authenticate, requireUser, initiateContract);
+router.post("/contracts/initiate", authenticate, requireUser, initiateContract);
 
 // Sign contract by buyer (client-generated PDF URL or uploaded file)
 /**
@@ -60,7 +60,7 @@ router.post("/initiate", authenticate, requireUser, initiateContract);
  *       200:
  *         description: Contract finalized
  */
-router.post("/sign", authenticate, requireUser, upload.single('pdf'), signContract);
+router.post("/contracts/sign", authenticate, requireUser, upload.single('pdf'), signContract);
 
 // Template endpoint removed: client renders contract HTML
 
@@ -94,7 +94,7 @@ router.post("/sign", authenticate, requireUser, upload.single('pdf'), signContra
  *         description: Contract or PDF not found
  */
 // Public access to contract PDF (either public URL or time-limited signed URL)
-router.get("/:id/pdf", getContractPdf);
+router.get("/contracts/:id/pdf", getContractPdf);
 
 export default router;
 

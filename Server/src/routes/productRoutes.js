@@ -100,7 +100,7 @@ const router = express.Router();
  *                       type: integer
  */
 // Guest, User, Admin can view products (GET /products) - Guest chỉ xem danh sách
-router.get("/", optionalAuth, getProducts);
+router.get("/products/", optionalAuth, getProducts);
 
 /**
  * @swagger
@@ -167,7 +167,7 @@ router.get("/", optionalAuth, getProducts);
  *                     pages:
  *                       type: integer
  */
-router.get("/vehicles", optionalAuth, getVehicles);
+router.get("/products/vehicles", optionalAuth, getVehicles);
 
 /**
  * @swagger
@@ -234,7 +234,7 @@ router.get("/vehicles", optionalAuth, getVehicles);
  *                     pages:
  *                       type: integer
  */
-router.get("/batteries", optionalAuth, getBatteries);
+router.get("/products/batteries", optionalAuth, getBatteries);
 
 /**
  * @swagger
@@ -301,7 +301,7 @@ router.get("/batteries", optionalAuth, getBatteries);
  *                     pages:
  *                       type: integer
  */
-router.get("/motorcycles", optionalAuth, getMotorcycles);
+router.get("/products/motorcycles", optionalAuth, getMotorcycles);
 
 /**
  * @swagger
@@ -331,7 +331,7 @@ router.get("/motorcycles", optionalAuth, getMotorcycles);
  *       404:
  *         description: Product not found
  */
-router.get("/:id", optionalAuth, getProductById);
+router.get("/products/:id", optionalAuth, getProductById);
 
 // Routes below require authentication
 
@@ -473,7 +473,7 @@ router.get("/:id", optionalAuth, getProductById);
  *         description: Unauthorized
  */
 // Chỉ User (người bán) có thể tạo sản phẩm, Admin không bán hàng
-router.post("/", authenticate, requireProductManagement, productUpload.array('files', 10), createProduct);
+router.post("/products/", authenticate, requireProductManagement, productUpload.array('files', 10), createProduct);
 
 /**
  * @swagger
@@ -516,7 +516,7 @@ router.post("/", authenticate, requireProductManagement, productUpload.array('fi
  *         description: Unauthorized
  */
 // Chỉ User (người bán) có thể xem sản phẩm của mình
-router.get("/my/products", authenticate, requireProductManagement, getUserProducts);
+router.get("/products/my/products", authenticate, requireProductManagement, getUserProducts);
 
 /**
  * @swagger
@@ -561,7 +561,7 @@ router.get("/my/products", authenticate, requireProductManagement, getUserProduc
  *         description: Product not found
  */
 // User chỉ có thể update sản phẩm của mình, Admin có thể update bất kỳ sản phẩm nào
-router.put("/:id", authenticate, requireAuth, requireOwnership, updateProduct);
+router.put("/products/:id", authenticate, requireAuth, requireOwnership, updateProduct);
 
 /**
  * @swagger
@@ -598,7 +598,7 @@ router.put("/:id", authenticate, requireAuth, requireOwnership, updateProduct);
  *         description: Product not found
  */
 // User chỉ có thể delete sản phẩm của mình, Admin có thể delete bất kỳ sản phẩm nào
-router.delete("/:id", authenticate, requireAuth, requireOwnership, deleteProduct);
+router.delete("/products/:id", authenticate, requireAuth, requireOwnership, deleteProduct);
 
 /**
  * @swagger
@@ -640,7 +640,7 @@ router.delete("/:id", authenticate, requireAuth, requireOwnership, deleteProduct
  *         description: Sản phẩm không tồn tại
  */
 // Người bán tự đánh dấu sản phẩm đã bán (bán ở nơi khác)
-router.patch("/:id/mark-sold", authenticate, requireUser, markProductAsSold);
+router.patch("/products/:id/mark-sold", authenticate, requireUser, markProductAsSold);
 
 /**
  * @swagger
@@ -682,7 +682,7 @@ router.patch("/:id/mark-sold", authenticate, requireUser, markProductAsSold);
  *         description: Sản phẩm không tồn tại
  */
 // Người bán có thể đánh dấu sản phẩm chưa bán (nếu muốn bán lại)
-router.patch("/:id/mark-available", authenticate, requireUser, markProductAsAvailable);
+router.patch("/products/:id/mark-available", authenticate, requireUser, markProductAsAvailable);
 
 /**
  * @swagger
@@ -723,7 +723,7 @@ router.patch("/:id/mark-available", authenticate, requireUser, markProductAsAvai
  *       404:
  *         description: Product not found
  */
-router.put("/:id/contract-template", authenticate, requireUser, updateProductContractTemplate);
+router.put("/products/:id/contract-template", authenticate, requireUser, updateProductContractTemplate);
 
 /**
  * @swagger
@@ -744,6 +744,6 @@ router.put("/:id/contract-template", authenticate, requireUser, updateProductCon
  *       404:
  *         description: Product not found
  */
-router.get("/:id/contract-template", getProductContractTemplate);
+router.get("/products/:id/contract-template", getProductContractTemplate);
 
 export default router;

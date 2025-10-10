@@ -96,16 +96,16 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/shipping', shippingRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/zalopay', zalopayRoutes);
-app.use('/api/contracts', contractRoutes);
-app.use('/api/deposit', depositRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api', authRoutes);
+app.use('/api', userRoutes);
+app.use('/api', profileRoutes);
+app.use('/api', productRoutes);
+app.use('/api', shippingRoutes);
+app.use('/api', chatRoutes);
+app.use('/api', zalopayRoutes);
+app.use('/api', contractRoutes);
+app.use('/api', depositRoutes);
+app.use('/api', adminRoutes);
 app.use(
   '/api-docs',
   swaggerUi.serve,
