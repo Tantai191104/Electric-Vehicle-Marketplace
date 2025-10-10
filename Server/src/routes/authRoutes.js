@@ -4,7 +4,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/auth/register:
+ * /auth/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Authentication]
@@ -40,11 +40,11 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/register", register);
+router.post("/auth/register", register);
 
 /**
  * @swagger
- * /api/auth/login:
+ * /auth/login:
  *   post:
  *     summary: Login user
  *     tags: [Authentication]
@@ -86,11 +86,11 @@ router.post("/register", register);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/login", login);
+router.post("/auth/login", login);
 
 /**
  * @swagger
- * /api/auth/logout:
+ * /auth/logout:
  *   post:
  *     summary: Logout user
  *     tags: [Authentication]
@@ -114,11 +114,11 @@ router.post("/login", login);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/logout", logout);
+router.post("/auth/logout", logout);
 
 /**
  * @swagger
- * /api/auth/refresh-token:
+ * /auth/refresh-token:
  *   post:
  *     summary: Refresh access token
  *     tags: [Authentication]
@@ -150,6 +150,6 @@ router.post("/logout", logout);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/refresh-token", refreshToken);
+router.post("/auth/refresh-token", refreshToken);
 
 export default router;

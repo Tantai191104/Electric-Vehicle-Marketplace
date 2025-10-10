@@ -91,7 +91,7 @@ router.use(authenticate);
  *       401:
  *         description: Unauthorized
  */
-router.post("/fee", calcShippingFee);
+router.post("/shipping/fee", calcShippingFee);
 
 /**
  * @swagger
@@ -275,7 +275,7 @@ router.post("/fee", calcShippingFee);
  *         description: GHN order creation response
  */
 // User không được mua sản phẩm của chính mình
-router.post("/order", requirePurchasePermission, preventSelfPurchase, createShippingOrder);
+router.post("/shipping/order", requirePurchasePermission, preventSelfPurchase, createShippingOrder);
 
 /**
  * @swagger
@@ -299,7 +299,7 @@ router.post("/order", requirePurchasePermission, preventSelfPurchase, createShip
  *       200:
  *         description: GHN order detail
  */
-router.post("/order/detail", requirePurchasePermission, getShippingOrderDetail);
+router.post("/shipping/order/detail", requirePurchasePermission, getShippingOrderDetail);
 
 /**
  * @swagger
@@ -331,7 +331,7 @@ router.post("/order/detail", requirePurchasePermission, getShippingOrderDetail);
  *       200:
  *         description: Cancel result and local refund summary
  */
-router.post("/order/cancel", requirePurchasePermission, cancelShippingOrder);
+router.post("/shipping/order/cancel", requirePurchasePermission, cancelShippingOrder);
 
 /**
  * @swagger
@@ -363,7 +363,7 @@ router.post("/order/cancel", requirePurchasePermission, cancelShippingOrder);
  *       200:
  *         description: Return switch result
  */
-router.post("/order/return", requirePurchasePermission, returnShippingOrder);
+router.post("/shipping/order/return", requirePurchasePermission, returnShippingOrder);
 
 /**
  * @swagger
@@ -377,7 +377,7 @@ router.post("/order/return", requirePurchasePermission, returnShippingOrder);
  *       200:
  *         description: Sync and refund results
  */
-router.post("/returns/sync", requirePurchasePermission, syncReturnsAndRefunds);
+router.post("/shipping/returns/sync", requirePurchasePermission, syncReturnsAndRefunds);
 
 export default router;
 

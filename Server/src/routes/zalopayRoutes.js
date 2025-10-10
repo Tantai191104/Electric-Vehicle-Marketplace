@@ -86,7 +86,7 @@ const router = express.Router();
  *         description: Lỗi server
  */
 // Chỉ User mới được nạp tiền để mua hàng, Admin không nạp tiền
-router.post("/create-order", authenticate, requireUser, async (req, res) => {
+router.post("/zalopay/create-order", authenticate, requireUser, async (req, res) => {
   try {
     const result = createTopupOrderValidation.safeParse(req.body);
     if (!result.success) {
@@ -149,7 +149,7 @@ router.post("/create-order", authenticate, requireUser, async (req, res) => {
  *       500:
  *         description: Lỗi server
  */
-router.post("/callback", async (req, res) => {
+router.post("/zalopay/callback", async (req, res) => {
   try {
     const result = zaloPayCallbackValidation.safeParse(req.body);
     if (!result.success) {
@@ -222,7 +222,7 @@ router.post("/callback", async (req, res) => {
  *         description: Lỗi server
  */
 // Chỉ User mới được kiểm tra trạng thái nạp tiền
-router.get("/order/:orderId/status", authenticate, requireUser, queryOrderStatus);
+router.get("/zalopay/order/:orderId/status", authenticate, requireUser, queryOrderStatus);
 
 /**
  * @swagger
@@ -305,7 +305,7 @@ router.get("/order/:orderId/status", authenticate, requireUser, queryOrderStatus
  *         description: Lỗi server
  */
 // Chỉ User mới được xem lịch sử nạp tiền
-router.get("/history", authenticate, requireUser, async (req, res) => {
+router.get("/zalopay/history", authenticate, requireUser, async (req, res) => {
   try {
     const result = getTopupHistoryValidation.safeParse(req.query);
     if (!result.success) {

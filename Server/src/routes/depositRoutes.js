@@ -18,7 +18,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/deposit/vehicle:
+ * /deposit/vehicle:
  *   post:
  *     summary: Create vehicle deposit order (500k VND)
  *     description: For vehicle category only - buyer pays 500k deposit, no shipping involved
@@ -61,11 +61,11 @@ const router = express.Router();
  *       404:
  *         description: Product not found
  */
-router.post('/vehicle', authenticate, createVehicleDeposit);
+router.post('/deposit/vehicle', authenticate, createVehicleDeposit);
 
 /**
  * @swagger
- * /api/deposit/{orderId}/confirm:
+ * /deposit/{orderId}/confirm:
  *   patch:
  *     summary: Admin confirms deposit transaction completed
  *     description: After staff verifies both parties completed the transaction
@@ -96,11 +96,11 @@ router.post('/vehicle', authenticate, createVehicleDeposit);
  *       404:
  *         description: Order not found
  */
-router.patch('/:orderId/confirm', authenticate, requireAdmin, confirmDepositTransaction);
+router.patch('/deposit/:orderId/confirm', authenticate, requireAdmin, confirmDepositTransaction);
 
 /**
  * @swagger
- * /api/deposit/{orderId}/cancel:
+ * /deposit/{orderId}/cancel:
  *   patch:
  *     summary: Cancel deposit and refund buyer
  *     description: Used if transaction falls through
@@ -131,7 +131,7 @@ router.patch('/:orderId/confirm', authenticate, requireAdmin, confirmDepositTran
  *       404:
  *         description: Order not found
  */
-router.patch('/:orderId/cancel', authenticate, requireAdmin, cancelDeposit);
+router.patch('/deposit/:orderId/cancel', authenticate, requireAdmin, cancelDeposit);
 
 export default router;
 

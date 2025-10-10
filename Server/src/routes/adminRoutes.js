@@ -189,7 +189,7 @@ router.use(authenticate, requireAdmin);
  *       500:
  *         description: Internal server error
  */
-router.get('/stats', getAdminStats);
+router.get('/admin/stats', getAdminStats);
 
 /**
  * @swagger
@@ -285,7 +285,7 @@ router.get('/stats', getAdminStats);
  *       500:
  *         description: Internal server error
  */
-router.get('/system-stats', getSystemStats);
+router.get('/admin/system-stats', getSystemStats);
 
 /**
  * @swagger
@@ -429,7 +429,7 @@ router.get('/system-stats', getSystemStats);
  *                   type: string
  *                   example: "Internal server error"
  */
-router.get('/orders/summary', getOrdersSummary);
+router.get('/admin/orders/summary', getOrdersSummary);
 
 // User management routes removed - use /api/users/* instead
 
@@ -465,7 +465,7 @@ router.get('/orders/summary', getOrdersSummary);
  *       200:
  *         description: Danh sách sản phẩm chờ duyệt
  */
-router.get('/products/pending', getPendingProducts);
+router.get('/admin/products/pending', getPendingProducts);
 
 /**
  * @swagger
@@ -490,7 +490,7 @@ router.get('/products/pending', getPendingProducts);
  *       400:
  *         description: Sản phẩm không cần xét duyệt
  */
-router.patch('/products/:id/approve', approveProduct);
+router.patch('/admin/products/:id/approve', approveProduct);
 
 /**
  * @swagger
@@ -525,7 +525,7 @@ router.patch('/products/:id/approve', approveProduct);
  *       400:
  *         description: Sản phẩm không cần xét duyệt
  */
-router.patch('/products/:id/reject', rejectProduct);
+router.patch('/admin/products/:id/reject', rejectProduct);
 
 // Admin không cần xem tất cả sản phẩm, chỉ quản lý khi có vi phạm
 
@@ -561,7 +561,7 @@ router.patch('/products/:id/reject', rejectProduct);
  *       200:
  *         description: Product status updated (Admin chỉ quản lý vi phạm)
  */
-router.put('/products/:id', updateProduct);
+router.put('/admin/products/:id', updateProduct);
 
 /**
  * @swagger
@@ -582,7 +582,7 @@ router.put('/products/:id', updateProduct);
  *       200:
  *         description: Product deleted (Admin chỉ xóa sản phẩm vi phạm)
  */
-router.delete('/products/:id', deleteProduct);
+router.delete('/admin/products/:id', deleteProduct);
 
 /**
  * @swagger
@@ -615,7 +615,7 @@ router.delete('/products/:id', deleteProduct);
  *       200:
  *         description: List of orders
  */
-router.get('/orders', getAllOrders);
+router.get('/admin/orders', getAllOrders);
 
 /**
  * @swagger
@@ -636,7 +636,7 @@ router.get('/orders', getAllOrders);
  *       200:
  *         description: Order details
  */
-router.get('/orders/:id', getOrderById);
+router.get('/admin/orders/:id', getOrderById);
 
 // Order status update route removed - use /api/profile/orders/:orderId/status instead
 
@@ -677,7 +677,7 @@ router.get('/orders/:id', getOrderById);
  *       200:
  *         description: List of violations
  */
-router.get('/violations', getViolations);
+router.get('/admin/violations', getViolations);
 
 /**
  * @swagger
@@ -721,7 +721,7 @@ router.get('/violations', getViolations);
  *       200:
  *         description: Violation reported successfully
  */
-router.post('/users/:userId/violations', reportViolation);
+router.post('/admin/users/:userId/violations', reportViolation);
 
 /**
  * @swagger
@@ -760,7 +760,7 @@ router.post('/users/:userId/violations', reportViolation);
  *       200:
  *         description: Violation handled successfully
  */
-router.put('/users/:userId/violations/:violationId', handleViolation);
+router.put('/admin/users/:userId/violations/:violationId', handleViolation);
 
 /**
  * @swagger
@@ -830,6 +830,6 @@ router.put('/users/:userId/violations/:violationId', handleViolation);
  *                           avgOrderValue:
  *                             type: number
  */
-router.get('/revenue', getPlatformRevenue);
+router.get('/admin/revenue', getPlatformRevenue);
 
 export default router;
