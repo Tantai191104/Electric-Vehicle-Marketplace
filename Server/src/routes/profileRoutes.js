@@ -15,12 +15,11 @@ import {
   updateUserAddress
 } from "../controllers/profileController.js";
 import { authenticate } from "../middlewares/authenticate.js";
-import { requireAuth } from "../middlewares/authorize.js";
 
 const router = express.Router();
 
 // User và Admin đều có thể quản lý profile riêng của mình
-router.use(authenticate, requireAuth);
+router.use(authenticate);
 /**
  * @swagger
  * /profile/locations/provinces:
@@ -112,7 +111,7 @@ router.put("/profile/locations", updateUserAddress);
  *       200:
  *         description: Profile details
  */
-router.get("/profile", getUserProfile);
+router.get("/profile/profile", getUserProfile);
 /**
  * @swagger
  * /profile/profile:
@@ -139,7 +138,7 @@ router.get("/profile", getUserProfile);
  *       200:
  *         description: Updated
  */
-router.put("/profile", updateUserProfile);
+router.put("/profile/profile", updateUserProfile);
 /**
  * @swagger
  * /profile/preferences:
