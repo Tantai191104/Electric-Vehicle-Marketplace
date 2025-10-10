@@ -26,10 +26,10 @@ const options = {
       },
     },
     servers: [
-      // Relative URL allows Swagger UI to use current origin (works locally and on Render)
+      // Set base path to /api so documented paths match mounted routes
       {
-        url: process.env.API_BASE_URL || '/',
-        description: 'Current origin',
+        url: process.env.API_BASE_URL || '/api',
+        description: 'API base',
       },
     ],
     components: {

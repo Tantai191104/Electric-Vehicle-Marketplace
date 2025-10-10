@@ -63,6 +63,12 @@ const router = express.Router();
  *           type: string
  *         description: Filter by brand
  *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, sold]
+ *         description: Filter by product status (only active or sold)
+ *       - in: query
  *         name: search
  *         schema:
  *           type: string
