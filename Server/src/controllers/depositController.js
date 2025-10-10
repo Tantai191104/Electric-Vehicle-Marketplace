@@ -84,7 +84,7 @@ export async function createVehicleDeposit(req, res) {
     // Log wallet transaction
     await WalletTransaction.create({
       userId: buyerId,
-      type: 'payment',
+      type: 'purchase',
       amount: DEPOSIT_AMOUNT,
       balanceBefore,
       balanceAfter: buyer.wallet.balance,
