@@ -69,6 +69,19 @@ orderSchema.pre('save', async function(next) {
     const count = await mongoose.model('Order').countDocuments();
     this.orderNumber = `EV${Date.now()}${String(count + 1).padStart(4, '0')}`;
   }
+  
+  // Validate shippingAddress only for shipping orders (not in-person)
+  if (this.shipping?.method && this.shipping.method !== 'in-person') {
+    const requiredFields = ['fullName', 'phone', 'address', 'city', 'province'];
+    const missingFields = requiredFields.filter(field => !this.shippingAddress?.[field]);
+    
+    if (missingFields.length > 0) {
+      const err = new Error(`Shipping address incomplete: missing ${missingFields.join(', ')}`);
+      err.name = 'ValidationError';
+      return next(err);
+    }
+  }
+  
   next();
 });
 
