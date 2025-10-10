@@ -96,6 +96,8 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Admin routes must be first to prevent conflicts with dynamic routes
+app.use('/api', adminRoutes);
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', profileRoutes);
@@ -105,7 +107,6 @@ app.use('/api', chatRoutes);
 app.use('/api', zalopayRoutes);
 app.use('/api', contractRoutes);
 app.use('/api', depositRoutes);
-app.use('/api', adminRoutes);
 app.use(
   '/api-docs',
   swaggerUi.serve,
