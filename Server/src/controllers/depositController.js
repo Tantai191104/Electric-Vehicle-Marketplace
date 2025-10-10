@@ -120,8 +120,8 @@ export async function createVehicleDeposit(req, res) {
         fullName: buyer_name,
         phone: buyer_phone,
         address: buyer_address,
-        city: '',
-        province: '',
+        city: null,
+        province: null,
         zipCode: null,
       },
       payment: {
