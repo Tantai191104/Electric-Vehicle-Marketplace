@@ -560,7 +560,7 @@ router.put("/orders/:orderId/status", updateOrderStatus);
  *       200:
  *         description: Wishlist products
  */
-router.get("/wishlist", getWishlist);
+router.get("/profile/wishlist", getWishlist);
 
 /**
  * @swagger
@@ -579,7 +579,7 @@ router.get("/wishlist", getWishlist);
  *       200:
  *         description: Updated wishlist
  */
-router.post("/wishlist/:productId", addToWishlist);
+router.post("/profile/wishlist/:productId", addToWishlist);
 
 /**
  * @swagger
@@ -598,6 +598,6 @@ router.post("/wishlist/:productId", addToWishlist);
  *       200:
  *         description: Updated wishlist
  */
-router.delete("/wishlist/:productId", removeFromWishlist);
+router.delete("/profile/wishlist/:productId", removeFromWishlist);
 
 export default router;
