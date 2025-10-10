@@ -29,6 +29,13 @@ import {
   updateAddressValidation
 } from "../validations/profile.validation.js";
 
+// Wishlist services
+import {
+  getWishlistService,
+  addToWishlistService,
+  removeFromWishlistService,
+} from "../services/profileService.js";
+
 export async function getUserProfile(req, res) {
   try {
     const userId = req.user.sub;
@@ -234,6 +241,41 @@ export async function uploadAvatar(req, res) {
     
     const updatedUser = await updateUserProfileService(userId, { avatar: defaultAvatar });
     res.json(updatedUser);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
+// Wishlist controllers
+export async function getWishlist(req, res) {
+  try {
+    const userId = req.user.sub;
+    const list = await getWishlistService(userId);
+    res.json(list);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
+export async function addToWishlist(req, res) {
+  try {
+    const userId = req.user.sub;
+    const { productId } = req.params;
+    if (!productId) return res.status(400).json({ error: "productId is required" });
+    const list = await addToWishlistService(userId, productId);
+    res.json(list);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
+export async function removeFromWishlist(req, res) {
+  try {
+    const userId = req.user.sub;
+    const { productId } = req.params;
+    if (!productId) return res.status(400).json({ error: "productId is required" });
+    const list = await removeFromWishlistService(userId, productId);
+    res.json(list);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

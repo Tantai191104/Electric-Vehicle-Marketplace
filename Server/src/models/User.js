@@ -117,6 +117,9 @@ const userSchema = new mongoose.Schema(
       currency: { type: String, default: 'VND' },
     },
 
+    // Danh sách sản phẩm yêu thích (wishlist)
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+
     isEmailVerified: { type: Boolean, default: false },
     isPhoneVerified: { type: Boolean, default: false },
   },

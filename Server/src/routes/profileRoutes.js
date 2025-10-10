@@ -12,7 +12,10 @@ import {
   getProvinces,
   getDistricts,
   getWards,
-  updateUserAddress
+  updateUserAddress,
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist
 } from "../controllers/profileController.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { requireAuth } from "../middlewares/authorize.js";
@@ -544,5 +547,57 @@ router.get("/orders/:orderId", getOrderDetails);
  *         description: Updated
  */
 router.put("/orders/:orderId/status", updateOrderStatus);
+
+/**
+ * @swagger
+ * /profile/wishlist:
+ *   get:
+ *     summary: Get current user's wishlist
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Wishlist products
+ */
+router.get("/wishlist", getWishlist);
+
+/**
+ * @swagger
+ * /profile/wishlist/{productId}:
+ *   post:
+ *     summary: Add product to wishlist
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated wishlist
+ */
+router.post("/wishlist/:productId", addToWishlist);
+
+/**
+ * @swagger
+ * /profile/wishlist/{productId}:
+ *   delete:
+ *     summary: Remove product from wishlist
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated wishlist
+ */
+router.delete("/wishlist/:productId", removeFromWishlist);
 
 export default router;
