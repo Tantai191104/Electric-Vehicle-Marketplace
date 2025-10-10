@@ -100,7 +100,7 @@ const router = express.Router();
  *                       type: integer
  */
 // Guest, User, Admin can view products (GET /products) - Guest chỉ xem danh sách
-router.get("/products/", optionalAuth, getProducts);
+router.get("/products", optionalAuth, getProducts);
 
 /**
  * @swagger
@@ -473,7 +473,7 @@ router.get("/products/:id", optionalAuth, getProductById);
  *         description: Unauthorized
  */
 // Chỉ User (người bán) có thể tạo sản phẩm, Admin không bán hàng
-router.post("/products/", authenticate, requireProductManagement, productUpload.array('files', 10), createProduct);
+router.post("/products", authenticate, requireProductManagement, productUpload.array('files', 10), createProduct);
 
 /**
  * @swagger

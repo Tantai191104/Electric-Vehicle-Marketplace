@@ -59,7 +59,7 @@ router.post("/chat/start", startChat);
  *       200:
  *         description: List of conversations
  */
-router.get("/chat/", getMyConversations);
+router.get("/chat", getMyConversations);
 
 /**
  * @swagger
