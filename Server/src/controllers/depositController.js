@@ -102,45 +102,45 @@ export async function createVehicleDeposit(req, res) {
 
       // Create order with deposit status
       orderDoc = await Order.create({
-      orderNumber: `DEPOSIT-${Date.now()}`,
-      buyerId,
-      sellerId: seller_id,
-      productId: product_id,
-      quantity: 1,
-      unitPrice: product.price,
-      totalAmount: product.price,
-      shippingFee: 0, // No shipping for vehicles
-      commission: 0,
-      finalAmount: DEPOSIT_AMOUNT, // Only deposit paid at this stage
-      status: 'deposit',
-      shipping: {
-        method: 'in-person',
-        trackingNumber: null,
-        carrier: null,
-      },
-      shippingAddress: {
-        fullName: buyer_name,
-        phone: buyer_phone,
-        address: buyer_address,
-        city: null,
-        province: null,
-        zipCode: null,
-      },
-      payment: {
-        method: 'wallet',
-        status: 'paid',
-        transactionId: `DEPOSIT-${Date.now()}`,
-        paidAt: new Date(),
-      },
-      timeline: [
-        {
-          status: 'deposit',
-          description: `Đã đặt cọc ${DEPOSIT_AMOUNT} VND - Chờ admin xác nhận giao dịch`,
-          updatedBy: buyerId,
+        orderNumber: `DEPOSIT-${Date.now()}`,
+        buyerId,
+        sellerId: seller_id,
+        productId: product_id,
+        quantity: 1,
+        unitPrice: product.price,
+        totalAmount: product.price,
+        shippingFee: 0, // No shipping for vehicles
+        commission: 0,
+        finalAmount: DEPOSIT_AMOUNT, // Only deposit paid at this stage
+        status: 'deposit',
+        shipping: {
+          method: 'in-person',
+          trackingNumber: null,
+          carrier: null,
         },
-      ],
-      notes: `Vehicle deposit order - In-person meeting required. Deposit: ${DEPOSIT_AMOUNT} VND`,
-    });
+        shippingAddress: {
+          fullName: buyer_name,
+          phone: buyer_phone,
+          address: buyer_address,
+          city: null,
+          province: null,
+          zipCode: null,
+        },
+        payment: {
+          method: 'wallet',
+          status: 'paid',
+          transactionId: `DEPOSIT-${Date.now()}`,
+          paidAt: new Date(),
+        },
+        timeline: [
+          {
+            status: 'deposit',
+            description: `Đã đặt cọc ${DEPOSIT_AMOUNT} VND - Chờ admin xác nhận giao dịch`,
+            updatedBy: buyerId,
+          },
+        ],
+        notes: `Vehicle deposit order - In-person meeting required. Deposit: ${DEPOSIT_AMOUNT} VND`,
+      });
 
       // Update product status to indicate deposit received (but not sold yet)
       product.status = 'deposit'; // Deposit status - waiting for admin confirmation
@@ -160,13 +160,17 @@ export async function createVehicleDeposit(req, res) {
       });
     } catch (orderError) {
       // Rollback wallet deduction if order/product update fails
-      console.error('Order creation failed, rolling back wallet deduction:', orderError);
-      
+      console.error(
+        'Order creation failed, rolling back wallet deduction:',
+        orderError
+      );
+
       try {
         buyer.wallet.balance = balanceBefore;
-        buyer.wallet.totalSpent = (buyer.wallet.totalSpent || 0) - DEPOSIT_AMOUNT;
+        buyer.wallet.totalSpent =
+          (buyer.wallet.totalSpent || 0) - DEPOSIT_AMOUNT;
         await buyer.save();
-        
+
         // Log rollback transaction
         await WalletTransaction.create({
           userId: buyerId,
@@ -185,7 +189,7 @@ export async function createVehicleDeposit(req, res) {
       } catch (rollbackError) {
         console.error('Rollback failed:', rollbackError);
       }
-      
+
       throw orderError;
     }
   } catch (error) {
@@ -307,7 +311,9 @@ export async function cancelDeposit(req, res) {
     order.status = 'cancelled';
     order.timeline.push({
       status: 'cancelled',
-      description: `Deposit cancelled and refunded - ${reason || 'Transaction cancelled'}`,
+      description: `Deposit cancelled and refunded - ${
+        reason || 'Transaction cancelled'
+      }`,
       updatedBy: adminId,
     });
     await order.save();
@@ -337,3 +343,46 @@ export async function cancelDeposit(req, res) {
   }
 }
 
+// Admin: Lấy tất cả deposit orders (paginated)
+export async function getAllDeposits(req, res) {
+  try {
+    const { page = 1, limit = 20, search = '' } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Build base query: only orders in 'deposit' status
+    const query = { status: 'deposit' };
+
+    if (search) {
+      // allow search by orderNumber, buyer name/email, seller name/email, product title
+      const regex = new RegExp(search, 'i');
+      // We'll perform a lightweight approach: match orderNumber or use $or on populated fields via aggregation
+      // Simpler: match orderNumber here and rely on client to pass exact orderNumber if needed.
+      query.orderNumber = { $regex: regex };
+    }
+
+    const [orders, total] = await Promise.all([
+      Order.find(query)
+        .populate('productId', 'title price category brand model year')
+        .populate('buyerId', 'name email phone')
+        .populate('sellerId', 'name email phone')
+        .sort({ createdAt: -1 })
+        .skip(parseInt(skip))
+        .limit(parseInt(limit)),
+      Order.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      data: orders,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('getAllDeposits error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}

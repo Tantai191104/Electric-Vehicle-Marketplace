@@ -14,15 +14,10 @@ interface OrderTableHeaderProps {
     setGlobalFilter: (value: string) => void;
     statusFilter: string;
     setStatusFilter: (value: string) => void;
-    paymentStatusFilter: string;
-    setPaymentStatusFilter: (value: string) => void;
+    shippingMethodFilter: string;
+    setShippingMethodFilter: (value: string) => void;
     onRefresh: () => void;
     isLoading: boolean;
-    totalOrders: number;
-    pendingCount: number;
-    confirmedCount: number;
-    shippingCount: number;
-    deliveredCount: number;
 }
 
 export default function OrderTableHeader({
@@ -30,8 +25,8 @@ export default function OrderTableHeader({
     setGlobalFilter,
     statusFilter,
     setStatusFilter,
-    paymentStatusFilter,
-    setPaymentStatusFilter,
+    shippingMethodFilter,
+    setShippingMethodFilter,
     onRefresh,
     isLoading,
 }: OrderTableHeaderProps) {
@@ -59,28 +54,38 @@ export default function OrderTableHeader({
                 </Button>
             </div>
 
-
-
             {/* Filters */}
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
                     {/* Search */}
-                    <div className="lg:col-span-2">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                            <Input
-                                placeholder="Tìm kiếm theo mã đơn hàng, tên sản phẩm, người mua..."
-                                value={globalFilter}
-                                onChange={(e) => setGlobalFilter(e.target.value)}
-                                className="pl-10"
-                            />
-                        </div>
+                    <div className="relative flex-1 min-w-[220px]">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Input
+                            placeholder="Tìm kiếm mã đơn, sản phẩm, người mua..."
+                            value={globalFilter}
+                            onChange={(e) => setGlobalFilter(e.target.value)}
+                            className="pl-10 text-sm"
+                        />
                     </div>
 
-                    {/* Status Filter */}
-                    <div>
+                    {/* Shipping Method */}
+                    <div className="w-48 flex-shrink-0">
+                        <Select value={shippingMethodFilter} onValueChange={setShippingMethodFilter}>
+                            <SelectTrigger className="w-full text-sm">
+                                <SelectValue placeholder="Phương thức vận chuyển" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Tất cả phương thức</SelectItem>
+                                <SelectItem value="in-person">Nhận tại bãi xe</SelectItem>
+                                <SelectItem value="ghn">GHN</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Status */}
+                    <div className="w-44 flex-shrink-0">
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full text-sm">
                                 <SelectValue placeholder="Trạng thái đơn hàng" />
                             </SelectTrigger>
                             <SelectContent>
@@ -91,22 +96,6 @@ export default function OrderTableHeader({
                                 <SelectItem value="delivered">Đã giao</SelectItem>
                                 <SelectItem value="cancelled">Đã hủy</SelectItem>
                                 <SelectItem value="refunded">Đã hoàn tiền</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Payment Status Filter */}
-                    <div>
-                        <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Trạng thái thanh toán" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Tất cả thanh toán</SelectItem>
-                                <SelectItem value="pending">Chờ thanh toán</SelectItem>
-                                <SelectItem value="paid">Đã thanh toán</SelectItem>
-                                <SelectItem value="refunded">Đã hoàn tiền</SelectItem>
-                                <SelectItem value="failed">Thất bại</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
