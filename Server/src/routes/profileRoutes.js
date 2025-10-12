@@ -12,15 +12,17 @@ import {
   getProvinces,
   getDistricts,
   getWards,
-  updateUserAddress
+  updateUserAddress,
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist
 } from "../controllers/profileController.js";
 import { authenticate } from "../middlewares/authenticate.js";
-import { requireAuth } from "../middlewares/authorize.js";
 
 const router = express.Router();
 
 // User và Admin đều có thể quản lý profile riêng của mình
-router.use(authenticate, requireAuth);
+router.use(authenticate);
 /**
  * @swagger
  * /profile/locations/provinces:
@@ -33,7 +35,7 @@ router.use(authenticate, requireAuth);
  *       200:
  *         description: Provinces
  */
-router.get("/locations/provinces", getProvinces);
+router.get("/profile/locations/provinces", getProvinces);
 
 /**
  * @swagger
@@ -52,7 +54,7 @@ router.get("/locations/provinces", getProvinces);
  *       200:
  *         description: Districts
  */
-router.get("/locations/districts", getDistricts);
+router.get("/profile/locations/districts", getDistricts);
 
 /**
  * @swagger
@@ -71,7 +73,7 @@ router.get("/locations/districts", getDistricts);
  *       200:
  *         description: Wards
  */
-router.get("/locations/wards", getWards);
+router.get("/profile/locations/wards", getWards);
 
 /**
  * @swagger
@@ -91,7 +93,7 @@ router.get("/locations/wards", getWards);
  *       200:
  *         description: Updated
  */
-router.put("/locations", updateUserAddress);
+router.put("/profile/locations", updateUserAddress);
 
 /**
  * @swagger
@@ -112,7 +114,7 @@ router.put("/locations", updateUserAddress);
  *       200:
  *         description: Profile details
  */
-router.get("/profile", getUserProfile);
+router.get("/profile/profile", getUserProfile);
 /**
  * @swagger
  * /profile/profile:
@@ -139,7 +141,7 @@ router.get("/profile", getUserProfile);
  *       200:
  *         description: Updated
  */
-router.put("/profile", updateUserProfile);
+router.put("/profile/profile", updateUserProfile);
 /**
  * @swagger
  * /profile/preferences:
@@ -158,7 +160,7 @@ router.put("/profile", updateUserProfile);
  *       200:
  *         description: Updated
  */
-router.put("/preferences", updateUserPreferences);
+router.put("/profile/preferences", updateUserPreferences);
 /**
  * @swagger
  * /profile/avatar:
@@ -171,7 +173,7 @@ router.put("/preferences", updateUserPreferences);
  *       200:
  *         description: Uploaded
  */
-router.post("/avatar", uploadAvatar);
+router.post("/profile/avatar", uploadAvatar);
 
 /**
  * @swagger
@@ -185,7 +187,7 @@ router.post("/avatar", uploadAvatar);
  *       200:
  *         description: Balance
  */
-router.get("/wallet", getWalletBalance);
+router.get("/profile/wallet", getWalletBalance);
 /**
  * @swagger
  * /profile/wallet/transactions:
@@ -198,7 +200,7 @@ router.get("/wallet", getWalletBalance);
  *       200:
  *         description: Transactions
  */
-router.get("/wallet/transactions", getWalletTransactions);
+router.get("/profile/wallet/transactions", getWalletTransactions);
 
 
 /**
@@ -324,7 +326,7 @@ router.get("/wallet/transactions", getWalletTransactions);
  *       400:
  *         description: Validation error
  */
-router.get("/orders", getUserOrders);
+router.get("/profile/orders", getUserOrders);
 /**
  * @swagger
  * /profile/orders/{orderId}:
@@ -518,7 +520,7 @@ router.get("/orders", getUserOrders);
  *       404:
  *         description: Order not found or access denied
  */
-router.get("/orders/:orderId", getOrderDetails);
+router.get("/profile/orders/:orderId", getOrderDetails);
 /**
  * @swagger
  * /profile/orders/{orderId}/status:
@@ -543,6 +545,58 @@ router.get("/orders/:orderId", getOrderDetails);
  *       200:
  *         description: Updated
  */
-router.put("/orders/:orderId/status", updateOrderStatus);
+router.put("/profile/orders/:orderId/status", updateOrderStatus);
+
+/**
+ * @swagger
+ * /profile/wishlist:
+ *   get:
+ *     summary: Get current user's wishlist
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Wishlist products
+ */
+router.get("/profile/wishlist", getWishlist);
+
+/**
+ * @swagger
+ * /profile/wishlist/{productId}:
+ *   post:
+ *     summary: Add product to wishlist
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated wishlist
+ */
+router.post("/profile/wishlist/:productId", addToWishlist);
+
+/**
+ * @swagger
+ * /profile/wishlist/{productId}:
+ *   delete:
+ *     summary: Remove product from wishlist
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated wishlist
+ */
+router.delete("/profile/wishlist/:productId", removeFromWishlist);
 
 export default router;

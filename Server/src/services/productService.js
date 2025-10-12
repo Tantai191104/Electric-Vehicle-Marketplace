@@ -52,7 +52,10 @@ export async function listProductsService(filters, page = 1, limit = 10) {
     if (filters.brand) query.brand = filters.brand;
     if (filters.model) query.model = filters.model;
     if (filters.seller) query.seller = filters.seller;
-    if (filters.status) query.status = filters.status; // Override nếu có filter status cụ thể
+    // Chỉ cho phép filter công khai theo active hoặc sold
+    if (filters.status && ["active", "sold"].includes(filters.status)) {
+      query.status = filters.status;
+    }
     if (filters.condition) query.condition = filters.condition;
     if (filters.isFeatured !== undefined) query.isFeatured = filters.isFeatured;
 

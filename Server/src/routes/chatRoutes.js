@@ -7,7 +7,8 @@ import { startChat, getMyConversations, postMessage, getMessages, postMessageWit
 const router = express.Router();
 
 // Chỉ User (người bán/mua) mới được chat, Admin không tham gia giao dịch
-router.use(authenticate, requireUser);
+// Quan trọng: scope middleware vào đường dẫn /chat để không ảnh hưởng các route khác
+router.use('/chat', authenticate, requireUser);
 
 /**
  * @swagger
@@ -38,7 +39,7 @@ router.use(authenticate, requireUser);
  *       201:
  *         description: Conversation
  */
-router.post("/start", startChat);
+router.post("/chat/start", startChat);
 
 /**
  * @swagger
@@ -59,7 +60,7 @@ router.post("/start", startChat);
  *       200:
  *         description: List of conversations
  */
-router.get("/", getMyConversations);
+router.get("/chat", getMyConversations);
 
 /**
  * @swagger
@@ -83,7 +84,7 @@ router.get("/", getMyConversations);
  *       201:
  *         description: Message
  */
-router.post("/messages", postMessage);
+router.post("/chat/messages", postMessage);
 
 /**
  * @swagger
@@ -111,7 +112,7 @@ router.post("/messages", postMessage);
  *       201:
  *         description: Message with files
  */
-router.post("/messages/files", (req, res, next) => {
+router.post("/chat/messages/files", (req, res, next) => {
   console.log('=== MULTER MIDDLEWARE DEBUG ===');
   console.log('Content-Type:', req.headers['content-type']);
   console.log('Content-Length:', req.headers['content-length']);
@@ -160,7 +161,7 @@ router.post("/messages/files", (req, res, next) => {
  *       500:
  *         description: Server error
  */
-router.post("/:conversationId/read", markAsRead);
+router.post("/chat/:conversationId/read", markAsRead);
 
 /**
  * @swagger
@@ -185,7 +186,7 @@ router.post("/:conversationId/read", markAsRead);
  *       200:
  *         description: Messages
  */
-router.get("/:conversationId/messages", getMessages);
+router.get("/chat/:conversationId/messages", getMessages);
 
 export default router;
 
