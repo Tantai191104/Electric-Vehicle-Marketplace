@@ -1,25 +1,346 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
-import { connectDB } from "./config/db.js";
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
+import { connectDB } from './config/db.js';
+import { specs, swaggerUi } from './config/swagger.js';
+import { verifyEmailConnection } from './config/email.js';
 
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import { errorHandler } from "./middlewares/errorHandler.js";
-
+// Load environment variables
 dotenv.config();
+
+// Fallback JWT_SECRET if not set
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️  JWT_SECRET not found in environment variables');
+  console.warn('⚠️  Using fallback JWT_SECRET (NOT SECURE FOR PRODUCTION)');
+  process.env.JWT_SECRET = 'fallback-jwt-secret-for-development-only';
+}
+
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
+import productRoutes from './routes/productRoutes.js';
+import shippingRoutes from './routes/shippingRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
+import zalopayRoutes from './routes/zalopayRoutes.js';
+import contractRoutes from './routes/contractRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import depositRoutes from './routes/depositRoutes.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+
 await connectDB(process.env.MONGO_URI);
+
+// Verify email connection (non-fatal)
+if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  await verifyEmailConnection();
+} else {
+  console.warn('⚠️  Email credentials not configured. Email notifications will be disabled.');
+  console.warn('⚠️  Add EMAIL_USER and EMAIL_PASSWORD to .env to enable email notifications.');
+}
 
 const app = express();
 app.use(cors({ origin: true, credentials: true })); // nếu FE khác domain
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+// Swagger Documentation
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'EV Server API Documentation',
+  })
+);
+
+// Redirect root to Swagger UI (useful for Render/hosting)
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
+});
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: Server is running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "OK"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2024-01-15T10:30:00.000Z"
+ *                 uptime:
+ *                   type: number
+ *                   description: Server uptime in seconds
+ *                   example: 3600.123
+ */
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
+// Admin routes must be first to prevent conflicts with dynamic routes
+app.use('/api', adminRoutes);
+app.use('/api', authRoutes);
+app.use('/api', userRoutes);
+app.use('/api', profileRoutes);
+app.use('/api', productRoutes);
+app.use('/api', shippingRoutes);
+app.use('/api', chatRoutes);
+app.use('/api', zalopayRoutes);
+app.use('/api', contractRoutes);
+app.use('/api', depositRoutes);
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'EV Marketplace API',
+  })
+);
 
 app.use(errorHandler);
 
+// Create HTTP server
+const server = createServer(app);
+
+// Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+  allowEIO3: true,
+});
+
+// Expose io to routes/controllers
+app.set('io', io);
+
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  const jwtSecret = process.env.JWT_SECRET || 'dev-secret';
+
+  console.log('=== SOCKET AUTH ATTEMPT ===');
+  console.log('Socket ID:', socket.id);
+  console.log('Token present:', token ? 'Yes' : 'No');
+  console.log('JWT_SECRET available:', !!jwtSecret);
+  console.log('JWT_SECRET value:', jwtSecret);
+  console.log('==========================');
+
+  if (!token) {
+    console.log('No token provided - rejecting connection');
+    return next(new Error('Authentication error'));
+  }
+
+  try {
+    const decoded = jwt.verify(token, jwtSecret);
+    console.log('=== SOCKET AUTH SUCCESS ===');
+    console.log('User ID:', decoded.userId);
+    console.log('Socket ID:', socket.id);
+    console.log('============================');
+    socket.userId = decoded.userId;
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    console.log('=== SOCKET AUTH FAILED ===');
+    console.log('Error:', err.message);
+    console.log('Token content:', token.substring(0, 50) + '...');
+    console.log('JWT_SECRET used:', jwtSecret);
+    console.log('===========================');
+    next(new Error('Authentication error'));
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('=== SOCKET CONNECTION ESTABLISHED ===');
+  console.log('User ID:', socket.userId);
+  console.log('Socket ID:', socket.id);
+  console.log('=====================================');
+
+  // Join user to their personal room
+  socket.join(`user_${socket.userId}`);
+  console.log(
+    `User ${socket.userId} joined personal room: user_${socket.userId}`
+  );
+
+  // Handle sending messages
+  socket.on('send_message', async (data) => {
+    try {
+      console.log('Received send_message:', data);
+      const { conversationId, text, tempId, files = [] } = data;
+
+      if (!conversationId || (!text && files.length === 0)) {
+        socket.emit('error', { message: 'Missing conversationId or content' });
+        return;
+      }
+
+      // Import sendMessage function
+      const { sendMessage } = await import('./services/chatService.js');
+
+      // Save message to database
+      const savedMessage = await sendMessage(
+        conversationId,
+        socket.userId,
+        text || '',
+        files
+      );
+
+      const message = {
+        _id: savedMessage._id,
+        text: savedMessage.text,
+        senderId: savedMessage.senderId,
+        conversationId: savedMessage.conversationId,
+        createdAt: savedMessage.createdAt,
+        files: savedMessage.files || [],
+        type: savedMessage.type,
+        tempId, // Include tempId for frontend confirmation
+      };
+
+      console.log('=== SERVER: BROADCASTING MESSAGE ===');
+      console.log(`Conversation ID: ${conversationId}`);
+      console.log(`Room: conversation_${conversationId}`);
+      console.log(`Sender: ${socket.userId}`);
+      console.log(`Message: ${message.text}`);
+      console.log(`====================================`);
+
+      // Debug: Check who is in the conversation room
+      const room = io.sockets.adapter.rooms.get(
+        `conversation_${conversationId}`
+      );
+      if (room) {
+        console.log(
+          `Users in conversation_${conversationId}:`,
+          Array.from(room)
+        );
+      } else {
+        console.log(`No users in conversation_${conversationId}`);
+      }
+
+      // Broadcast to all users in the conversation
+      socket.to(`conversation_${conversationId}`).emit('new_message', {
+        conversationId,
+        message,
+      });
+
+      // Confirm to sender
+      socket.emit('message_sent', {
+        conversationId,
+        message,
+      });
+
+      // Update conversation list for all participants
+      io.to(`conversation_${conversationId}`).emit('conversation_updated', {
+        conversationId,
+        lastMessage: message,
+        unreadCount: 1,
+      });
+
+      // Emit to the recipient's personal room for real-time updates
+      const { default: Conversation } = await import(
+        './models/Conversation.js'
+      );
+      const conversation = await Conversation.findById(conversationId);
+      if (conversation) {
+        const recipientId =
+          conversation.buyerId.toString() === socket.userId
+            ? conversation.sellerId
+            : conversation.buyerId;
+        io.to(`user_${recipientId}`).emit('conversation_updated', {
+          conversationId,
+          lastMessage: message,
+          unreadCount: 1,
+        });
+      }
+    } catch (error) {
+      console.error('Error handling send_message:', error);
+      socket.emit('error', { message: 'Failed to send message' });
+    }
+  });
+
+  // Handle joining conversation
+  socket.on('join_conversation', (conversationId) => {
+    console.log(`=== SERVER: JOIN CONVERSATION ===`);
+    console.log(`User ID: ${socket.userId}`);
+    console.log(`Conversation ID: ${conversationId}`);
+    console.log(`Socket ID: ${socket.id}`);
+
+    // Đảm bảo conversationId là string
+    let roomId =
+      typeof conversationId === 'object'
+        ? conversationId.conversationId || String(conversationId)
+        : String(conversationId);
+
+    const roomName = `conversation_${roomId}`;
+    console.log(`Room: ${roomName}`);
+    console.log(`===============================`);
+
+    socket.join(roomName);
+    console.log(`User ${socket.userId} joined conversation ${roomId}`);
+
+    // Debug: List all rooms this socket is in
+    const rooms = Array.from(socket.rooms);
+    console.log(`User ${socket.userId} is now in rooms:`, rooms);
+
+    // Debug: Check if room exists
+    const room = io.sockets.adapter.rooms.get(roomName);
+    if (room) {
+      console.log(
+        `Room ${roomName} now has ${room.size} users:`,
+        Array.from(room)
+      );
+    } else {
+      console.log(`ERROR: Room ${roomName} not found after join`);
+    }
+  });
+
+  // Handle leaving conversation
+  socket.on('leave_conversation', (conversationId) => {
+    console.log(`User ${socket.userId} leaving conversation ${conversationId}`);
+    socket.leave(`conversation_${conversationId}`);
+    console.log(`User ${socket.userId} left conversation ${conversationId}`);
+  });
+
+  // Handle WebSocket errors
+  socket.on('error', (error) => {
+    console.log('=== SOCKET ERROR ===');
+    console.log('User ID:', socket.userId);
+    console.log('Socket ID:', socket.id);
+    console.log('Error:', error);
+    console.log('===================');
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('=== SOCKET DISCONNECTED ===');
+    console.log('User ID:', socket.userId);
+    console.log('Socket ID:', socket.id);
+    console.log('Reason:', reason);
+    console.log('===========================');
+  });
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server on ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`🚀 Server on ${PORT}`);
+  console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+});

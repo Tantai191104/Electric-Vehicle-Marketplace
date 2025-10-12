@@ -1,0 +1,4346 @@
+[
+  {
+    "DistrictID": 2264,
+    "ProvinceID": 269,
+    "DistrictName": "Huyện Si Ma Cai",
+    "Code": 2264
+  },
+  {
+    "DistrictID": 2171,
+    "ProvinceID": 269,
+    "DistrictName": "Huyện Mường Khương",
+    "Code": 2171
+  },
+  {
+    "DistrictID": 2073,
+    "ProvinceID": 269,
+    "DistrictName": "Huyện Bảo Thắng",
+    "Code": 2073
+  },
+  {
+    "DistrictID": 2043,
+    "ProvinceID": 269,
+    "DistrictName": "Huyện Văn Bàn",
+    "Code": 2043
+  },
+  {
+    "DistrictID": 2005,
+    "ProvinceID": 269,
+    "DistrictName": "Thị xã Sa Pa",
+    "Code": 2005
+  },
+  {
+    "DistrictID": 1892,
+    "ProvinceID": 269,
+    "DistrictName": "Huyện Bắc Hà",
+    "Code": 1892
+  },
+  {
+    "DistrictID": 1891,
+    "ProvinceID": 269,
+    "DistrictName": "Huyện Bảo Yên",
+    "Code": 1891
+  },
+  {
+    "DistrictID": 1744,
+    "ProvinceID": 269,
+    "DistrictName": "Huyện Bát Xát",
+    "Code": 1744
+  },
+  {
+    "DistrictID": 1682,
+    "ProvinceID": 269,
+    "DistrictName": "Thành phố Lào Cai",
+    "Code": 1682
+  },
+  {
+    "DistrictID": 3451,
+    "ProvinceID": 268,
+    "DistrictName": "Quận Đặc Biệt",
+    "Code": 3451
+  },
+  {
+    "DistrictID": 2194,
+    "ProvinceID": 268,
+    "DistrictName": "Huyện Phù Cừ",
+    "Code": 2194
+  },
+  {
+    "DistrictID": 2046,
+    "ProvinceID": 268,
+    "DistrictName": "Huyện Văn Lâm",
+    "Code": 2046
+  },
+  {
+    "DistrictID": 2045,
+    "ProvinceID": 268,
+    "DistrictName": "Huyện Văn Giang",
+    "Code": 2045
+  },
+  {
+    "DistrictID": 2018,
+    "ProvinceID": 268,
+    "DistrictName": "Huyện Tiên Lữ",
+    "Code": 2018
+  },
+  {
+    "DistrictID": 1828,
+    "ProvinceID": 268,
+    "DistrictName": "Huyện Yên Mỹ",
+    "Code": 1828
+  },
+  {
+    "DistrictID": 1827,
+    "ProvinceID": 268,
+    "DistrictName": "Thị xã Mỹ Hào",
+    "Code": 1827
+  },
+  {
+    "DistrictID": 1826,
+    "ProvinceID": 268,
+    "DistrictName": "Huyện Khoái Châu",
+    "Code": 1826
+  },
+  {
+    "DistrictID": 1825,
+    "ProvinceID": 268,
+    "DistrictName": "Huyện Ân Thi",
+    "Code": 1825
+  },
+  {
+    "DistrictID": 1717,
+    "ProvinceID": 268,
+    "DistrictName": "Huyện Kim Động",
+    "Code": 1717
+  },
+  {
+    "DistrictID": 1680,
+    "ProvinceID": 268,
+    "DistrictName": "Thành phố Hưng Yên",
+    "Code": 1680
+  },
+  {
+    "DistrictID": 2270,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Yên Thủy",
+    "Code": 2270
+  },
+  {
+    "DistrictID": 2163,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Mai Châu",
+    "Code": 2163
+  },
+  {
+    "DistrictID": 2157,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Lạc Thủy",
+    "Code": 2157
+  },
+  {
+    "DistrictID": 2156,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Lạc Sơn",
+    "Code": 2156
+  },
+  {
+    "DistrictID": 2146,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Kim Bôi",
+    "Code": 2146
+  },
+  {
+    "DistrictID": 2087,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Cao Phong",
+    "Code": 2087
+  },
+  {
+    "DistrictID": 2014,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Tân Lạc",
+    "Code": 2014
+  },
+  {
+    "DistrictID": 1968,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Lương Sơn",
+    "Code": 1968
+  },
+  {
+    "DistrictID": 1955,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Kỳ Sơn",
+    "Code": 1955
+  },
+  {
+    "DistrictID": 1916,
+    "ProvinceID": 267,
+    "DistrictName": "Huyện Đà Bắc",
+    "Code": 1916
+  },
+  {
+    "DistrictID": 1678,
+    "ProvinceID": 267,
+    "DistrictName": "Thành phố Hòa Bình",
+    "Code": 1678
+  },
+  {
+    "DistrictID": 3266,
+    "ProvinceID": 266,
+    "DistrictName": "huyện Sốp Cộp",
+    "Code": 3266
+  },
+  {
+    "DistrictID": 3230,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Mường La",
+    "Code": 3230
+  },
+  {
+    "DistrictID": 2267,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Yên Châu",
+    "Code": 2267
+  },
+  {
+    "DistrictID": 2255,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Vân Hồ",
+    "Code": 2255
+  },
+  {
+    "DistrictID": 2204,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Quỳnh Nhai",
+    "Code": 2204
+  },
+  {
+    "DistrictID": 2079,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Bắc Yên",
+    "Code": 2079
+  },
+  {
+    "DistrictID": 2032,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Thuận Châu",
+    "Code": 2032
+  },
+  {
+    "DistrictID": 2007,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Sông Mã",
+    "Code": 2007
+  },
+  {
+    "DistrictID": 1996,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Phù Yên",
+    "Code": 1996
+  },
+  {
+    "DistrictID": 1976,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Mộc Châu",
+    "Code": 1976
+  },
+  {
+    "DistrictID": 1971,
+    "ProvinceID": 266,
+    "DistrictName": "Huyện Mai Sơn",
+    "Code": 1971
+  },
+  {
+    "DistrictID": 1677,
+    "ProvinceID": 266,
+    "DistrictName": "Thành phố Sơn La",
+    "Code": 1677
+  },
+  {
+    "DistrictID": 2179,
+    "ProvinceID": 265,
+    "DistrictName": "Huyện Nậm Pồ",
+    "Code": 2179
+  },
+  {
+    "DistrictID": 2170,
+    "ProvinceID": 265,
+    "DistrictName": "Huyện Mường Ảng",
+    "Code": 2170
+  },
+  {
+    "DistrictID": 2123,
+    "ProvinceID": 265,
+    "DistrictName": "Huyện Điện Biên Đông",
+    "Code": 2123
+  },
+  {
+    "DistrictID": 2060,
+    "ProvinceID": 265,
+    "DistrictName": "Thị xã Mường Lay",
+    "Code": 2060
+  },
+  {
+    "DistrictID": 2022,
+    "ProvinceID": 265,
+    "DistrictName": "Huyện Tuần Giáo",
+    "Code": 2022
+  },
+  {
+    "DistrictID": 2021,
+    "ProvinceID": 265,
+    "DistrictName": "Huyện Tủa Chùa",
+    "Code": 2021
+  },
+  {
+    "DistrictID": 1979,
+    "ProvinceID": 265,
+    "DistrictName": "Huyện Mường Nhé",
+    "Code": 1979
+  },
+  {
+    "DistrictID": 1978,
+    "ProvinceID": 265,
+    "DistrictName": "Huyện Mường Chà",
+    "Code": 1978
+  },
+  {
+    "DistrictID": 1923,
+    "ProvinceID": 265,
+    "DistrictName": "Huyện Điện Biên",
+    "Code": 1923
+  },
+  {
+    "DistrictID": 1676,
+    "ProvinceID": 265,
+    "DistrictName": "Thành phố Điện Biên Phủ",
+    "Code": 1676
+  },
+  {
+    "DistrictID": 2025,
+    "ProvinceID": 264,
+    "DistrictName": "Huyện Than Uyên",
+    "Code": 2025
+  },
+  {
+    "DistrictID": 2017,
+    "ProvinceID": 264,
+    "DistrictName": "Huyện Tân Uyên",
+    "Code": 2017
+  },
+  {
+    "DistrictID": 2010,
+    "ProvinceID": 264,
+    "DistrictName": "Huyện Tam Đường",
+    "Code": 2010
+  },
+  {
+    "DistrictID": 2006,
+    "ProvinceID": 264,
+    "DistrictName": "Huyện Sìn Hồ",
+    "Code": 2006
+  },
+  {
+    "DistrictID": 1989,
+    "ProvinceID": 264,
+    "DistrictName": "Huyện Phong Thổ",
+    "Code": 1989
+  },
+  {
+    "DistrictID": 1984,
+    "ProvinceID": 264,
+    "DistrictName": "Huyện Nậm Nhùn",
+    "Code": 1984
+  },
+  {
+    "DistrictID": 1980,
+    "ProvinceID": 264,
+    "DistrictName": "Huyện Mường Tè",
+    "Code": 1980
+  },
+  {
+    "DistrictID": 1675,
+    "ProvinceID": 264,
+    "DistrictName": "Thành phố Lai Châu",
+    "Code": 1675
+  },
+  {
+    "DistrictID": 2266,
+    "ProvinceID": 263,
+    "DistrictName": "Huyện Yên Bình",
+    "Code": 2266
+  },
+  {
+    "DistrictID": 2248,
+    "ProvinceID": 263,
+    "DistrictName": "Huyện Trạm Tấu",
+    "Code": 2248
+  },
+  {
+    "DistrictID": 2063,
+    "ProvinceID": 263,
+    "DistrictName": "Thị xã Nghĩa Lộ",
+    "Code": 2063
+  },
+  {
+    "DistrictID": 2047,
+    "ProvinceID": 263,
+    "DistrictName": "Huyện Văn Yên",
+    "Code": 2047
+  },
+  {
+    "DistrictID": 2044,
+    "ProvinceID": 263,
+    "DistrictName": "Huyện Văn Chấn",
+    "Code": 2044
+  },
+  {
+    "DistrictID": 2039,
+    "ProvinceID": 263,
+    "DistrictName": "Huyện Trấn Yên",
+    "Code": 2039
+  },
+  {
+    "DistrictID": 1977,
+    "ProvinceID": 263,
+    "DistrictName": "Huyện Mù Cang Chải",
+    "Code": 1977
+  },
+  {
+    "DistrictID": 1967,
+    "ProvinceID": 263,
+    "DistrictName": "Huyện Lục Yên",
+    "Code": 1967
+  },
+  {
+    "DistrictID": 1674,
+    "ProvinceID": 263,
+    "DistrictName": "Thành phố Yên Bái",
+    "Code": 1674
+  },
+  {
+    "DistrictID": 3771,
+    "ProvinceID": 262,
+    "DistrictName": "Quận mới 1",
+    "Code": 3771
+  },
+  {
+    "DistrictID": 3770,
+    "ProvinceID": 262,
+    "DistrictName": "Quận mới",
+    "Code": 3770
+  },
+  {
+    "DistrictID": 3312,
+    "ProvinceID": 262,
+    "DistrictName": "Huyện Vân Canh",
+    "Code": 3312
+  },
+  {
+    "DistrictID": 3279,
+    "ProvinceID": 262,
+    "DistrictName": "Huyện Tây Sơn",
+    "Code": 3279
+  },
+  {
+    "DistrictID": 3254,
+    "ProvinceID": 262,
+    "DistrictName": "Huyện Phù Mỹ",
+    "Code": 3254
+  },
+  {
+    "DistrictID": 2258,
+    "ProvinceID": 262,
+    "DistrictName": "Huyện Vĩnh Thạnh",
+    "Code": 2258
+  },
+  {
+    "DistrictID": 2140,
+    "ProvinceID": 262,
+    "DistrictName": "Huyện Hoài Ân",
+    "Code": 2140
+  },
+  {
+    "DistrictID": 2023,
+    "ProvinceID": 262,
+    "DistrictName": "Huyện Tuy Phước",
+    "Code": 2023
+  },
+  {
+    "DistrictID": 1886,
+    "ProvinceID": 262,
+    "DistrictName": "Huyện An Lão",
+    "Code": 1886
+  },
+  {
+    "DistrictID": 1771,
+    "ProvinceID": 262,
+    "DistrictName": "Thị xã Hoài Nhơn",
+    "Code": 1771
+  },
+  {
+    "DistrictID": 1770,
+    "ProvinceID": 262,
+    "DistrictName": "Huyện Phù Cát",
+    "Code": 1770
+  },
+  {
+    "DistrictID": 1769,
+    "ProvinceID": 262,
+    "DistrictName": "Thị xã An Nhơn",
+    "Code": 1769
+  },
+  {
+    "DistrictID": 1662,
+    "ProvinceID": 262,
+    "DistrictName": "Thành phố Quy Nhơn",
+    "Code": 1662
+  },
+  {
+    "DistrictID": 3302,
+    "ProvinceID": 261,
+    "DistrictName": "Huyện Thuận Nam",
+    "Code": 3302
+  },
+  {
+    "DistrictID": 3301,
+    "ProvinceID": 261,
+    "DistrictName": "Huyện Thuận Bắc",
+    "Code": 3301
+  },
+  {
+    "DistrictID": 3129,
+    "ProvinceID": 261,
+    "DistrictName": "Huyện Bác Ái",
+    "Code": 3129
+  },
+  {
+    "DistrictID": 1986,
+    "ProvinceID": 261,
+    "DistrictName": "Huyện Ninh Phước",
+    "Code": 1986
+  },
+  {
+    "DistrictID": 1985,
+    "ProvinceID": 261,
+    "DistrictName": "Huyện Ninh Hải",
+    "Code": 1985
+  },
+  {
+    "DistrictID": 1855,
+    "ProvinceID": 261,
+    "DistrictName": "Huyện Ninh Sơn",
+    "Code": 1855
+  },
+  {
+    "DistrictID": 1665,
+    "ProvinceID": 261,
+    "DistrictName": "Thành phố Phan Rang – Tháp Chàm",
+    "Code": 1665
+  },
+  {
+    "DistrictID": 3284,
+    "ProvinceID": 260,
+    "DistrictName": "Huyện Tuy An",
+    "Code": 3284
+  },
+  {
+    "DistrictID": 3278,
+    "ProvinceID": 260,
+    "DistrictName": "Huyện Tây Hòa",
+    "Code": 3278
+  },
+  {
+    "DistrictID": 3186,
+    "ProvinceID": 260,
+    "DistrictName": "Huyện Đồng Xuân",
+    "Code": 3186
+  },
+  {
+    "DistrictID": 3184,
+    "ProvinceID": 260,
+    "DistrictName": "Thị xã Đông Hòa",
+    "Code": 3184
+  },
+  {
+    "DistrictID": 2211,
+    "ProvinceID": 260,
+    "DistrictName": "Huyện Sơn Hòa",
+    "Code": 2211
+  },
+  {
+    "DistrictID": 2206,
+    "ProvinceID": 260,
+    "DistrictName": "Huyện Sông Hinh",
+    "Code": 2206
+  },
+  {
+    "DistrictID": 1993,
+    "ProvinceID": 260,
+    "DistrictName": "Huyện Phú Hòa",
+    "Code": 1993
+  },
+  {
+    "DistrictID": 1856,
+    "ProvinceID": 260,
+    "DistrictName": "Thị Xã Sông Cầu",
+    "Code": 1856
+  },
+  {
+    "DistrictID": 1663,
+    "ProvinceID": 260,
+    "DistrictName": "Thành phố Tuy Hòa",
+    "Code": 1663
+  },
+  {
+    "DistrictID": 3446,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Ia H Drai",
+    "Code": 3446
+  },
+  {
+    "DistrictID": 2225,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Tu Mơ Rông",
+    "Code": 2225
+  },
+  {
+    "DistrictID": 2205,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Sa Thầy",
+    "Code": 2205
+  },
+  {
+    "DistrictID": 2187,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Ngọc Hồi",
+    "Code": 2187
+  },
+  {
+    "DistrictID": 2148,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Kon Rẫy",
+    "Code": 2148
+  },
+  {
+    "DistrictID": 2121,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Đắk Tô",
+    "Code": 2121
+  },
+  {
+    "DistrictID": 1921,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Đắk Glei",
+    "Code": 1921
+  },
+  {
+    "DistrictID": 1835,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Đắk Hà",
+    "Code": 1835
+  },
+  {
+    "DistrictID": 1834,
+    "ProvinceID": 259,
+    "DistrictName": "Huyện Kon Plông",
+    "Code": 1834
+  },
+  {
+    "DistrictID": 1660,
+    "ProvinceID": 259,
+    "DistrictName": "Thành phố Kon Tum",
+    "Code": 1660
+  },
+  {
+    "DistrictID": 3196,
+    "ProvinceID": 258,
+    "DistrictName": "Huyện Hàm Tân",
+    "Code": 3196
+  },
+  {
+    "DistrictID": 2116,
+    "ProvinceID": 258,
+    "DistrictName": "Huyện đảo Phú Quý",
+    "Code": 2116
+  },
+  {
+    "DistrictID": 2012,
+    "ProvinceID": 258,
+    "DistrictName": "Huyện Tánh Linh",
+    "Code": 2012
+  },
+  {
+    "DistrictID": 1781,
+    "ProvinceID": 258,
+    "DistrictName": "Huyện Tuy Phong",
+    "Code": 1781
+  },
+  {
+    "DistrictID": 1780,
+    "ProvinceID": 258,
+    "DistrictName": "Huyện Bắc Bình",
+    "Code": 1780
+  },
+  {
+    "DistrictID": 1779,
+    "ProvinceID": 258,
+    "DistrictName": "Huyện Đức Linh",
+    "Code": 1779
+  },
+  {
+    "DistrictID": 1778,
+    "ProvinceID": 258,
+    "DistrictName": "Thị xã La Gi",
+    "Code": 1778
+  },
+  {
+    "DistrictID": 1777,
+    "ProvinceID": 258,
+    "DistrictName": "Huyện Hàm Thuận Bắc",
+    "Code": 1777
+  },
+  {
+    "DistrictID": 1776,
+    "ProvinceID": 258,
+    "DistrictName": "Huyện Hàm Thuận Nam",
+    "Code": 1776
+  },
+  {
+    "DistrictID": 1666,
+    "ProvinceID": 258,
+    "DistrictName": "Thành phố Phan Thiết",
+    "Code": 1666
+  },
+  {
+    "DistrictID": 2050,
+    "ProvinceID": 253,
+    "DistrictName": "Huyện Vĩnh Lợi",
+    "Code": 2050
+  },
+  {
+    "DistrictID": 1998,
+    "ProvinceID": 253,
+    "DistrictName": "Huyện Phước Long",
+    "Code": 1998
+  },
+  {
+    "DistrictID": 1946,
+    "ProvinceID": 253,
+    "DistrictName": "Huyện Hồng Dân",
+    "Code": 1946
+  },
+  {
+    "DistrictID": 1935,
+    "ProvinceID": 253,
+    "DistrictName": "Thị Xã Giá Rai",
+    "Code": 1935
+  },
+  {
+    "DistrictID": 1926,
+    "ProvinceID": 253,
+    "DistrictName": "Huyện Đông Hải",
+    "Code": 1926
+  },
+  {
+    "DistrictID": 1723,
+    "ProvinceID": 253,
+    "DistrictName": "Huyện Hòa Bình",
+    "Code": 1723
+  },
+  {
+    "DistrictID": 1655,
+    "ProvinceID": 253,
+    "DistrictName": "Thành phố Bạc Liêu",
+    "Code": 1655
+  },
+  {
+    "DistrictID": 2186,
+    "ProvinceID": 252,
+    "DistrictName": "Huyện Ngọc Hiển",
+    "Code": 2186
+  },
+  {
+    "DistrictID": 2042,
+    "ProvinceID": 252,
+    "DistrictName": "Huyện U Minh",
+    "Code": 2042
+  },
+  {
+    "DistrictID": 2038,
+    "ProvinceID": 252,
+    "DistrictName": "Huyện Trần Văn Thời",
+    "Code": 2038
+  },
+  {
+    "DistrictID": 1922,
+    "ProvinceID": 252,
+    "DistrictName": "Huyện Đầm Dơi",
+    "Code": 1922
+  },
+  {
+    "DistrictID": 1901,
+    "ProvinceID": 252,
+    "DistrictName": "Huyện Cái Nước",
+    "Code": 1901
+  },
+  {
+    "DistrictID": 1883,
+    "ProvinceID": 252,
+    "DistrictName": "Huyện Phú Tân",
+    "Code": 1883
+  },
+  {
+    "DistrictID": 1783,
+    "ProvinceID": 252,
+    "DistrictName": "Huyện Năm Căn",
+    "Code": 1783
+  },
+  {
+    "DistrictID": 1782,
+    "ProvinceID": 252,
+    "DistrictName": "Huyện Thới Bình",
+    "Code": 1782
+  },
+  {
+    "DistrictID": 1654,
+    "ProvinceID": 252,
+    "DistrictName": "Thành phố Cà Mau",
+    "Code": 1654
+  },
+  {
+    "DistrictID": 3445,
+    "ProvinceID": 250,
+    "DistrictName": "Huyện Long Mỹ",
+    "Code": 3445
+  },
+  {
+    "DistrictID": 3218,
+    "ProvinceID": 250,
+    "DistrictName": "Thị xã Long Mỹ",
+    "Code": 3218
+  },
+  {
+    "DistrictID": 2096,
+    "ProvinceID": 250,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 2096
+  },
+  {
+    "DistrictID": 2048,
+    "ProvinceID": 250,
+    "DistrictName": "Huyện Vị Thuỷ",
+    "Code": 2048
+  },
+  {
+    "DistrictID": 1912,
+    "ProvinceID": 250,
+    "DistrictName": "Huyện Châu Thành A",
+    "Code": 1912
+  },
+  {
+    "DistrictID": 1824,
+    "ProvinceID": 250,
+    "DistrictName": "Huyện Phụng Hiệp",
+    "Code": 1824
+  },
+  {
+    "DistrictID": 1823,
+    "ProvinceID": 250,
+    "DistrictName": "Thành phố Ngã Bảy",
+    "Code": 1823
+  },
+  {
+    "DistrictID": 1653,
+    "ProvinceID": 250,
+    "DistrictName": "Thành phố Vị Thanh",
+    "Code": 1653
+  },
+  {
+    "DistrictID": 1969,
+    "ProvinceID": 249,
+    "DistrictName": "Huyện Lương Tài",
+    "Code": 1969
+  },
+  {
+    "DistrictID": 1768,
+    "ProvinceID": 249,
+    "DistrictName": "Huyện Yên Phong",
+    "Code": 1768
+  },
+  {
+    "DistrictID": 1767,
+    "ProvinceID": 249,
+    "DistrictName": "Thị xã Thuận Thành",
+    "Code": 1767
+  },
+  {
+    "DistrictID": 1766,
+    "ProvinceID": 249,
+    "DistrictName": "Huyện Gia Bình",
+    "Code": 1766
+  },
+  {
+    "DistrictID": 1730,
+    "ProvinceID": 249,
+    "DistrictName": "Thị xã Từ Sơn",
+    "Code": 1730
+  },
+  {
+    "DistrictID": 1729,
+    "ProvinceID": 249,
+    "DistrictName": "Huyện Tiên Du",
+    "Code": 1729
+  },
+  {
+    "DistrictID": 1728,
+    "ProvinceID": 249,
+    "DistrictName": "Huyện Quế Võ",
+    "Code": 1728
+  },
+  {
+    "DistrictID": 1644,
+    "ProvinceID": 249,
+    "DistrictName": "Thành phố Bắc Ninh",
+    "Code": 1644
+  },
+  {
+    "DistrictID": 3766,
+    "ProvinceID": 248,
+    "DistrictName": "Thị xã Chũ",
+    "Code": 3766
+  },
+  {
+    "DistrictID": 1966,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Lục Ngạn",
+    "Code": 1966
+  },
+  {
+    "DistrictID": 1965,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Lục Nam",
+    "Code": 1965
+  },
+  {
+    "DistrictID": 1765,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Yên Thế",
+    "Code": 1765
+  },
+  {
+    "DistrictID": 1764,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Yên Dũng",
+    "Code": 1764
+  },
+  {
+    "DistrictID": 1763,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Việt Yên",
+    "Code": 1763
+  },
+  {
+    "DistrictID": 1762,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Tân Yên",
+    "Code": 1762
+  },
+  {
+    "DistrictID": 1761,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Sơn Động",
+    "Code": 1761
+  },
+  {
+    "DistrictID": 1760,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Lạng Giang",
+    "Code": 1760
+  },
+  {
+    "DistrictID": 1759,
+    "ProvinceID": 248,
+    "DistrictName": "Huyện Hiệp Hòa",
+    "Code": 1759
+  },
+  {
+    "DistrictID": 1643,
+    "ProvinceID": 248,
+    "DistrictName": "Thành phố Bắc Giang",
+    "Code": 1643
+  },
+  {
+    "DistrictID": 3311,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Văn Quan",
+    "Code": 3311
+  },
+  {
+    "DistrictID": 3310,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Văn Lãng",
+    "Code": 3310
+  },
+  {
+    "DistrictID": 3182,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Đình Lập",
+    "Code": 3182
+  },
+  {
+    "DistrictID": 3156,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Chi Lăng",
+    "Code": 3156
+  },
+  {
+    "DistrictID": 3138,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Bình Gia",
+    "Code": 3138
+  },
+  {
+    "DistrictID": 3134,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Bắc Sơn",
+    "Code": 3134
+  },
+  {
+    "DistrictID": 2036,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Tràng Định",
+    "Code": 2036
+  },
+  {
+    "DistrictID": 1963,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Lộc Bình",
+    "Code": 1963
+  },
+  {
+    "DistrictID": 1948,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Hữu Lũng",
+    "Code": 1948
+  },
+  {
+    "DistrictID": 1904,
+    "ProvinceID": 247,
+    "DistrictName": "Huyện Cao Lộc",
+    "Code": 1904
+  },
+  {
+    "DistrictID": 1642,
+    "ProvinceID": 247,
+    "DistrictName": "Thành phố Lạng Sơn",
+    "Code": 1642
+  },
+  {
+    "DistrictID": 3694,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Quảng Hòa",
+    "Code": 3694
+  },
+  {
+    "DistrictID": 3305,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Trà Lĩnh",
+    "Code": 3305
+  },
+  {
+    "DistrictID": 3299,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Thông Nông",
+    "Code": 3299
+  },
+  {
+    "DistrictID": 3289,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Thạch An",
+    "Code": 3289
+  },
+  {
+    "DistrictID": 3259,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Quảng Uyên",
+    "Code": 3259
+  },
+  {
+    "DistrictID": 3246,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Nguyên Bình",
+    "Code": 3246
+  },
+  {
+    "DistrictID": 3194,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Hạ Lang",
+    "Code": 3194
+  },
+  {
+    "DistrictID": 3130,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Bảo Lạc",
+    "Code": 3130
+  },
+  {
+    "DistrictID": 2041,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Trùng Khánh",
+    "Code": 2041
+  },
+  {
+    "DistrictID": 1997,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Phục Hòa",
+    "Code": 1997
+  },
+  {
+    "DistrictID": 1943,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Hòa An",
+    "Code": 1943
+  },
+  {
+    "DistrictID": 1939,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Hà Quảng",
+    "Code": 1939
+  },
+  {
+    "DistrictID": 1890,
+    "ProvinceID": 246,
+    "DistrictName": "Huyện Bảo Lâm",
+    "Code": 1890
+  },
+  {
+    "DistrictID": 1641,
+    "ProvinceID": 246,
+    "DistrictName": "Thành phố Cao Bằng",
+    "Code": 1641
+  },
+  {
+    "DistrictID": 3249,
+    "ProvinceID": 245,
+    "DistrictName": "Huyện Pác Nặm",
+    "Code": 3249
+  },
+  {
+    "DistrictID": 3242,
+    "ProvinceID": 245,
+    "DistrictName": "Huyện Ngân Sơn",
+    "Code": 3242
+  },
+  {
+    "DistrictID": 3232,
+    "ProvinceID": 245,
+    "DistrictName": "Huyện Na Rì",
+    "Code": 3232
+  },
+  {
+    "DistrictID": 1914,
+    "ProvinceID": 245,
+    "DistrictName": "Huyện Chợ Mới",
+    "Code": 1914
+  },
+  {
+    "DistrictID": 1913,
+    "ProvinceID": 245,
+    "DistrictName": "Huyện Chợ Đồn",
+    "Code": 1913
+  },
+  {
+    "DistrictID": 1889,
+    "ProvinceID": 245,
+    "DistrictName": "Huyện Bạch Thông",
+    "Code": 1889
+  },
+  {
+    "DistrictID": 1887,
+    "ProvinceID": 245,
+    "DistrictName": "Huyện Ba Bể",
+    "Code": 1887
+  },
+  {
+    "DistrictID": 1640,
+    "ProvinceID": 245,
+    "DistrictName": "Thành phố Bắc Kạn",
+    "Code": 1640
+  },
+  {
+    "DistrictID": 2195,
+    "ProvinceID": 244,
+    "DistrictName": "Huyện Phú Lương",
+    "Code": 2195
+  },
+  {
+    "DistrictID": 2051,
+    "ProvinceID": 244,
+    "DistrictName": "Huyện Võ Nhai",
+    "Code": 2051
+  },
+  {
+    "DistrictID": 1991,
+    "ProvinceID": 244,
+    "DistrictName": "Huyện Phú Bình",
+    "Code": 1991
+  },
+  {
+    "DistrictID": 1990,
+    "ProvinceID": 244,
+    "DistrictName": "Thị xã Phổ Yên",
+    "Code": 1990
+  },
+  {
+    "DistrictID": 1924,
+    "ProvinceID": 244,
+    "DistrictName": "Huyện Định Hóa",
+    "Code": 1924
+  },
+  {
+    "DistrictID": 1918,
+    "ProvinceID": 244,
+    "DistrictName": "Huyện Đại Từ",
+    "Code": 1918
+  },
+  {
+    "DistrictID": 1731,
+    "ProvinceID": 244,
+    "DistrictName": "Huyện Đồng Hỷ",
+    "Code": 1731
+  },
+  {
+    "DistrictID": 1684,
+    "ProvinceID": 244,
+    "DistrictName": "Thành Phố Sông Công",
+    "Code": 1684
+  },
+  {
+    "DistrictID": 1639,
+    "ProvinceID": 244,
+    "DistrictName": "Thành phố Thái Nguyên",
+    "Code": 1639
+  },
+  {
+    "DistrictID": 2239,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Thăng Bình",
+    "Code": 2239
+  },
+  {
+    "DistrictID": 2224,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Tiên Phước",
+    "Code": 2224
+  },
+  {
+    "DistrictID": 2219,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Tây Giang",
+    "Code": 2219
+  },
+  {
+    "DistrictID": 2198,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Phước Sơn",
+    "Code": 2198
+  },
+  {
+    "DistrictID": 2182,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Nông Sơn",
+    "Code": 2182
+  },
+  {
+    "DistrictID": 2178,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Nam Trà My",
+    "Code": 2178
+  },
+  {
+    "DistrictID": 2177,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Nam Giang",
+    "Code": 2177
+  },
+  {
+    "DistrictID": 2139,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Hiệp Đức",
+    "Code": 2139
+  },
+  {
+    "DistrictID": 2125,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Đông Giang",
+    "Code": 2125
+  },
+  {
+    "DistrictID": 2078,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Bắc Trà My",
+    "Code": 2078
+  },
+  {
+    "DistrictID": 2003,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Quế Sơn",
+    "Code": 2003
+  },
+  {
+    "DistrictID": 1995,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Phú Ninh",
+    "Code": 1995
+  },
+  {
+    "DistrictID": 1987,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Núi Thành",
+    "Code": 1987
+  },
+  {
+    "DistrictID": 1917,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Đại Lộc",
+    "Code": 1917
+  },
+  {
+    "DistrictID": 1736,
+    "ProvinceID": 243,
+    "DistrictName": "Thị xã Điện Bàn",
+    "Code": 1736
+  },
+  {
+    "DistrictID": 1735,
+    "ProvinceID": 243,
+    "DistrictName": "Huyện Duy Xuyên",
+    "Code": 1735
+  },
+  {
+    "DistrictID": 1632,
+    "ProvinceID": 243,
+    "DistrictName": "Thành phố Hội An",
+    "Code": 1632
+  },
+  {
+    "DistrictID": 1631,
+    "ProvinceID": 243,
+    "DistrictName": "Thành phố Tam Kỳ",
+    "Code": 1631
+  },
+  {
+    "DistrictID": 3304,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Trà Bồng",
+    "Code": 3304
+  },
+  {
+    "DistrictID": 3270,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Sơn Tây",
+    "Code": 3270
+  },
+  {
+    "DistrictID": 3226,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Mộ Đức",
+    "Code": 3226
+  },
+  {
+    "DistrictID": 3127,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Ba Tơ",
+    "Code": 3127
+  },
+  {
+    "DistrictID": 2222,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Tây Trà",
+    "Code": 2222
+  },
+  {
+    "DistrictID": 2210,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Sơn Hà",
+    "Code": 2210
+  },
+  {
+    "DistrictID": 2167,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Minh Long",
+    "Code": 2167
+  },
+  {
+    "DistrictID": 2114,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện đảo Lý Sơn",
+    "Code": 2114
+  },
+  {
+    "DistrictID": 1988,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Nghĩa Hành",
+    "Code": 1988
+  },
+  {
+    "DistrictID": 1930,
+    "ProvinceID": 242,
+    "DistrictName": "Thị xã Đức Phổ",
+    "Code": 1930
+  },
+  {
+    "DistrictID": 1898,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Bình Sơn",
+    "Code": 1898
+  },
+  {
+    "DistrictID": 1738,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Tư Nghĩa",
+    "Code": 1738
+  },
+  {
+    "DistrictID": 1737,
+    "ProvinceID": 242,
+    "DistrictName": "Huyện Sơn Tịnh",
+    "Code": 1737
+  },
+  {
+    "DistrictID": 1630,
+    "ProvinceID": 242,
+    "DistrictName": "Thành phố Quảng Ngãi",
+    "Code": 1630
+  },
+  {
+    "DistrictID": 3152,
+    "ProvinceID": 241,
+    "DistrictName": "Huyện Cư Jút",
+    "Code": 3152
+  },
+  {
+    "DistrictID": 2227,
+    "ProvinceID": 241,
+    "DistrictName": "Huyện Tuy Đức",
+    "Code": 2227
+  },
+  {
+    "DistrictID": 2151,
+    "ProvinceID": 241,
+    "DistrictName": "Huyện Krông Nô",
+    "Code": 2151
+  },
+  {
+    "DistrictID": 2120,
+    "ProvinceID": 241,
+    "DistrictName": "Huyện Đắk Song",
+    "Code": 2120
+  },
+  {
+    "DistrictID": 1792,
+    "ProvinceID": 241,
+    "DistrictName": "Huyện Đắk Mil",
+    "Code": 1792
+  },
+  {
+    "DistrictID": 1791,
+    "ProvinceID": 241,
+    "DistrictName": "Huyện Đắk Glong",
+    "Code": 1791
+  },
+  {
+    "DistrictID": 1790,
+    "ProvinceID": 241,
+    "DistrictName": "Huyện Đắk R lấp",
+    "Code": 1790
+  },
+  {
+    "DistrictID": 1627,
+    "ProvinceID": 241,
+    "DistrictName": "Thành phố Gia Nghĩa",
+    "Code": 1627
+  },
+  {
+    "DistrictID": 2035,
+    "ProvinceID": 240,
+    "DistrictName": "Thị xã Trảng Bàng",
+    "Code": 2035
+  },
+  {
+    "DistrictID": 1866,
+    "ProvinceID": 240,
+    "DistrictName": "Huyện Gò Dầu",
+    "Code": 1866
+  },
+  {
+    "DistrictID": 1865,
+    "ProvinceID": 240,
+    "DistrictName": "Huyện Bến Cầu",
+    "Code": 1865
+  },
+  {
+    "DistrictID": 1864,
+    "ProvinceID": 240,
+    "DistrictName": "Huyện Dương Minh Châu",
+    "Code": 1864
+  },
+  {
+    "DistrictID": 1863,
+    "ProvinceID": 240,
+    "DistrictName": "Huyện Tân Châu",
+    "Code": 1863
+  },
+  {
+    "DistrictID": 1862,
+    "ProvinceID": 240,
+    "DistrictName": "Huyện Tân Biên",
+    "Code": 1862
+  },
+  {
+    "DistrictID": 1721,
+    "ProvinceID": 240,
+    "DistrictName": "Thị xã Hòa Thành",
+    "Code": 1721
+  },
+  {
+    "DistrictID": 1720,
+    "ProvinceID": 240,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 1720
+  },
+  {
+    "DistrictID": 1626,
+    "ProvinceID": 240,
+    "DistrictName": "Thành phố Tây Ninh",
+    "Code": 1626
+  },
+  {
+    "DistrictID": 3444,
+    "ProvinceID": 239,
+    "DistrictName": "Huyện Phú Riềng",
+    "Code": 3444
+  },
+  {
+    "DistrictID": 3141,
+    "ProvinceID": 239,
+    "DistrictName": "Huyện Bù Gia Mập",
+    "Code": 3141
+  },
+  {
+    "DistrictID": 3140,
+    "ProvinceID": 239,
+    "DistrictName": "Huyện Bù Đốp",
+    "Code": 3140
+  },
+  {
+    "DistrictID": 1964,
+    "ProvinceID": 239,
+    "DistrictName": "Huyện Lộc Ninh",
+    "Code": 1964
+  },
+  {
+    "DistrictID": 1899,
+    "ProvinceID": 239,
+    "DistrictName": "Huyện Bù Đăng",
+    "Code": 1899
+  },
+  {
+    "DistrictID": 1775,
+    "ProvinceID": 239,
+    "DistrictName": "Thị xã Phước Long",
+    "Code": 1775
+  },
+  {
+    "DistrictID": 1774,
+    "ProvinceID": 239,
+    "DistrictName": "Thị xã Bình Long",
+    "Code": 1774
+  },
+  {
+    "DistrictID": 1773,
+    "ProvinceID": 239,
+    "DistrictName": "Huyện Hớn Quản",
+    "Code": 1773
+  },
+  {
+    "DistrictID": 1772,
+    "ProvinceID": 239,
+    "DistrictName": "Huyện Chơn Thành",
+    "Code": 1772
+  },
+  {
+    "DistrictID": 1722,
+    "ProvinceID": 239,
+    "DistrictName": "Huyện Đồng Phú",
+    "Code": 1722
+  },
+  {
+    "DistrictID": 1625,
+    "ProvinceID": 239,
+    "DistrictName": "Thành phố Đồng Xoài",
+    "Code": 1625
+  },
+  {
+    "DistrictID": 2137,
+    "ProvinceID": 238,
+    "DistrictName": "Huyện Hải Lăng",
+    "Code": 2137
+  },
+  {
+    "DistrictID": 2110,
+    "ProvinceID": 238,
+    "DistrictName": "Huyện đảo Cồn Cỏ",
+    "Code": 2110
+  },
+  {
+    "DistrictID": 2105,
+    "ProvinceID": 238,
+    "DistrictName": "Huyện Đa Krông",
+    "Code": 2105
+  },
+  {
+    "DistrictID": 2040,
+    "ProvinceID": 238,
+    "DistrictName": "Huyện Triệu Phong",
+    "Code": 2040
+  },
+  {
+    "DistrictID": 1936,
+    "ProvinceID": 238,
+    "DistrictName": "Huyện Gio Linh",
+    "Code": 1936
+  },
+  {
+    "DistrictID": 1903,
+    "ProvinceID": 238,
+    "DistrictName": "Huyện Cam Lộ",
+    "Code": 1903
+  },
+  {
+    "DistrictID": 1861,
+    "ProvinceID": 238,
+    "DistrictName": "Huyện Vĩnh Linh",
+    "Code": 1861
+  },
+  {
+    "DistrictID": 1860,
+    "ProvinceID": 238,
+    "DistrictName": "Huyện Hướng Hóa",
+    "Code": 1860
+  },
+  {
+    "DistrictID": 1621,
+    "ProvinceID": 238,
+    "DistrictName": "Thị xã Quảng Trị",
+    "Code": 1621
+  },
+  {
+    "DistrictID": 1620,
+    "ProvinceID": 238,
+    "DistrictName": "Thành phố Đông Hà",
+    "Code": 1620
+  },
+  {
+    "DistrictID": 3286,
+    "ProvinceID": 237,
+    "DistrictName": "Huyện Tuyên Hóa",
+    "Code": 3286
+  },
+  {
+    "DistrictID": 3258,
+    "ProvinceID": 237,
+    "DistrictName": "Huyện Quảng Trạch",
+    "Code": 3258
+  },
+  {
+    "DistrictID": 3224,
+    "ProvinceID": 237,
+    "DistrictName": "Huyện Minh Hóa",
+    "Code": 3224
+  },
+  {
+    "DistrictID": 2002,
+    "ProvinceID": 237,
+    "DistrictName": "Huyện Quảng Ninh",
+    "Code": 2002
+  },
+  {
+    "DistrictID": 1859,
+    "ProvinceID": 237,
+    "DistrictName": "Thị xã Ba Đồn",
+    "Code": 1859
+  },
+  {
+    "DistrictID": 1858,
+    "ProvinceID": 237,
+    "DistrictName": "Huyện Bố Trạch",
+    "Code": 1858
+  },
+  {
+    "DistrictID": 1857,
+    "ProvinceID": 237,
+    "DistrictName": "Huyện Lệ Thủy",
+    "Code": 1857
+  },
+  {
+    "DistrictID": 1619,
+    "ProvinceID": 237,
+    "DistrictName": "Thành phố Đồng Hới",
+    "Code": 1619
+  },
+  {
+    "DistrictID": 3441,
+    "ProvinceID": 236,
+    "DistrictName": "Thị xã Kỳ Anh",
+    "Code": 3441
+  },
+  {
+    "DistrictID": 3320,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Vũ Quang",
+    "Code": 3320
+  },
+  {
+    "DistrictID": 3220,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Lộc Hà",
+    "Code": 3220
+  },
+  {
+    "DistrictID": 3201,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Hương Sơn",
+    "Code": 3201
+  },
+  {
+    "DistrictID": 3188,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Đức Thọ",
+    "Code": 3188
+  },
+  {
+    "DistrictID": 3143,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Can Lộc",
+    "Code": 3143
+  },
+  {
+    "DistrictID": 2024,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Thạch Hà",
+    "Code": 2024
+  },
+  {
+    "DistrictID": 1815,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Cẩm Xuyên",
+    "Code": 1815
+  },
+  {
+    "DistrictID": 1814,
+    "ProvinceID": 236,
+    "DistrictName": "Thị xã Hồng Lĩnh",
+    "Code": 1814
+  },
+  {
+    "DistrictID": 1813,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Nghi Xuân",
+    "Code": 1813
+  },
+  {
+    "DistrictID": 1812,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Hương Khê",
+    "Code": 1812
+  },
+  {
+    "DistrictID": 1811,
+    "ProvinceID": 236,
+    "DistrictName": "Huyện Kỳ Anh",
+    "Code": 1811
+  },
+  {
+    "DistrictID": 1618,
+    "ProvinceID": 236,
+    "DistrictName": "Thành phố Hà Tĩnh",
+    "Code": 1618
+  },
+  {
+    "DistrictID": 3291,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Thanh Chương",
+    "Code": 3291
+  },
+  {
+    "DistrictID": 3288,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Tương Dương",
+    "Code": 3288
+  },
+  {
+    "DistrictID": 3261,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Quỳ Châu",
+    "Code": 3261
+  },
+  {
+    "DistrictID": 3260,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Quế Phong",
+    "Code": 3260
+  },
+  {
+    "DistrictID": 3233,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Nam Đàn",
+    "Code": 3233
+  },
+  {
+    "DistrictID": 3211,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Kỳ Sơn",
+    "Code": 3211
+  },
+  {
+    "DistrictID": 1947,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Hưng Nguyên",
+    "Code": 1947
+  },
+  {
+    "DistrictID": 1854,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Nghi Lộc",
+    "Code": 1854
+  },
+  {
+    "DistrictID": 1853,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Con Cuông",
+    "Code": 1853
+  },
+  {
+    "DistrictID": 1852,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Quỳ Hợp",
+    "Code": 1852
+  },
+  {
+    "DistrictID": 1851,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Nghĩa Đàn",
+    "Code": 1851
+  },
+  {
+    "DistrictID": 1850,
+    "ProvinceID": 235,
+    "DistrictName": "Thị xã Thái Hòa",
+    "Code": 1850
+  },
+  {
+    "DistrictID": 1849,
+    "ProvinceID": 235,
+    "DistrictName": "Thị xã Hoàng Mai",
+    "Code": 1849
+  },
+  {
+    "DistrictID": 1848,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Quỳnh Lưu",
+    "Code": 1848
+  },
+  {
+    "DistrictID": 1847,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Diễn Châu",
+    "Code": 1847
+  },
+  {
+    "DistrictID": 1846,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Yên Thành",
+    "Code": 1846
+  },
+  {
+    "DistrictID": 1845,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Tân Kỳ",
+    "Code": 1845
+  },
+  {
+    "DistrictID": 1844,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Anh Sơn",
+    "Code": 1844
+  },
+  {
+    "DistrictID": 1843,
+    "ProvinceID": 235,
+    "DistrictName": "Huyện Đô Lương",
+    "Code": 1843
+  },
+  {
+    "DistrictID": 1842,
+    "ProvinceID": 235,
+    "DistrictName": "Thị xã Cửa Lò",
+    "Code": 1842
+  },
+  {
+    "DistrictID": 1617,
+    "ProvinceID": 235,
+    "DistrictName": "Thành phố Vinh",
+    "Code": 1617
+  },
+  {
+    "DistrictID": 3298,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Thiệu Hóa",
+    "Code": 3298
+  },
+  {
+    "DistrictID": 3241,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Nga Sơn",
+    "Code": 3241
+  },
+  {
+    "DistrictID": 3216,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Lang Chánh",
+    "Code": 3216
+  },
+  {
+    "DistrictID": 3147,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Cẩm Thủy",
+    "Code": 3147
+  },
+  {
+    "DistrictID": 2249,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Triệu Sơn",
+    "Code": 2249
+  },
+  {
+    "DistrictID": 2190,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Như Thanh",
+    "Code": 2190
+  },
+  {
+    "DistrictID": 2181,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Nông Cống",
+    "Code": 2181
+  },
+  {
+    "DistrictID": 2070,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Bá Thước",
+    "Code": 2070
+  },
+  {
+    "DistrictID": 2000,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Quan Sơn",
+    "Code": 2000
+  },
+  {
+    "DistrictID": 1942,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Hậu Lộc",
+    "Code": 1942
+  },
+  {
+    "DistrictID": 1927,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Đông Sơn",
+    "Code": 1927
+  },
+  {
+    "DistrictID": 1881,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Vĩnh Lộc",
+    "Code": 1881
+  },
+  {
+    "DistrictID": 1880,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Thạch Thành",
+    "Code": 1880
+  },
+  {
+    "DistrictID": 1879,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Quan Hóa",
+    "Code": 1879
+  },
+  {
+    "DistrictID": 1878,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Mường Lát",
+    "Code": 1878
+  },
+  {
+    "DistrictID": 1877,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Hà Trung",
+    "Code": 1877
+  },
+  {
+    "DistrictID": 1876,
+    "ProvinceID": 234,
+    "DistrictName": "Thị xã Bỉm Sơn",
+    "Code": 1876
+  },
+  {
+    "DistrictID": 1875,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Yên Định",
+    "Code": 1875
+  },
+  {
+    "DistrictID": 1874,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Ngọc Lặc",
+    "Code": 1874
+  },
+  {
+    "DistrictID": 1873,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Thọ Xuân",
+    "Code": 1873
+  },
+  {
+    "DistrictID": 1872,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Thường Xuân",
+    "Code": 1872
+  },
+  {
+    "DistrictID": 1871,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Như Xuân",
+    "Code": 1871
+  },
+  {
+    "DistrictID": 1870,
+    "ProvinceID": 234,
+    "DistrictName": "Thị Xã Nghi Sơn",
+    "Code": 1870
+  },
+  {
+    "DistrictID": 1748,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Hoằng Hóa",
+    "Code": 1748
+  },
+  {
+    "DistrictID": 1747,
+    "ProvinceID": 234,
+    "DistrictName": "Huyện Quảng Xương",
+    "Code": 1747
+  },
+  {
+    "DistrictID": 1712,
+    "ProvinceID": 234,
+    "DistrictName": "Thành phố Sầm Sơn",
+    "Code": 1712
+  },
+  {
+    "DistrictID": 1616,
+    "ProvinceID": 234,
+    "DistrictName": "Thành phố Thanh Hóa",
+    "Code": 1616
+  },
+  {
+    "DistrictID": 3327,
+    "ProvinceID": 233,
+    "DistrictName": "Huyện Yên Mô",
+    "Code": 3327
+  },
+  {
+    "DistrictID": 3247,
+    "ProvinceID": 233,
+    "DistrictName": "Huyện Nho Quan",
+    "Code": 3247
+  },
+  {
+    "DistrictID": 3205,
+    "ProvinceID": 233,
+    "DistrictName": "Huyện Kim Sơn",
+    "Code": 3205
+  },
+  {
+    "DistrictID": 3191,
+    "ProvinceID": 233,
+    "DistrictName": "Huyện Gia Viễn",
+    "Code": 3191
+  },
+  {
+    "DistrictID": 1944,
+    "ProvinceID": 233,
+    "DistrictName": "Huyện Hoa Lư",
+    "Code": 1944
+  },
+  {
+    "DistrictID": 1714,
+    "ProvinceID": 233,
+    "DistrictName": "Huyện Yên Khánh",
+    "Code": 1714
+  },
+  {
+    "DistrictID": 1713,
+    "ProvinceID": 233,
+    "DistrictName": "Thành phố Tam Điệp",
+    "Code": 1713
+  },
+  {
+    "DistrictID": 1615,
+    "ProvinceID": 233,
+    "DistrictName": "Thành phố Ninh Bình",
+    "Code": 1615
+  },
+  {
+    "DistrictID": 2027,
+    "ProvinceID": 232,
+    "DistrictName": "Huyện Thanh Liêm",
+    "Code": 2027
+  },
+  {
+    "DistrictID": 1970,
+    "ProvinceID": 232,
+    "DistrictName": "Huyện Lý Nhân",
+    "Code": 1970
+  },
+  {
+    "DistrictID": 1952,
+    "ProvinceID": 232,
+    "DistrictName": "Huyện Kim Bảng",
+    "Code": 1952
+  },
+  {
+    "DistrictID": 1897,
+    "ProvinceID": 232,
+    "DistrictName": "Huyện Bình Lục",
+    "Code": 1897
+  },
+  {
+    "DistrictID": 1802,
+    "ProvinceID": 232,
+    "DistrictName": "Thị xã Duy Tiên",
+    "Code": 1802
+  },
+  {
+    "DistrictID": 1614,
+    "ProvinceID": 232,
+    "DistrictName": "Thành phố Phủ Lý",
+    "Code": 1614
+  },
+  {
+    "DistrictID": 3323,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Xuân Trường",
+    "Code": 3323
+  },
+  {
+    "DistrictID": 3319,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Vụ Bản",
+    "Code": 3319
+  },
+  {
+    "DistrictID": 3308,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Trực Ninh",
+    "Code": 3308
+  },
+  {
+    "DistrictID": 3243,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Nghĩa Hưng",
+    "Code": 3243
+  },
+  {
+    "DistrictID": 3193,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Giao Thủy",
+    "Code": 3193
+  },
+  {
+    "DistrictID": 1983,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Nam Trực",
+    "Code": 1983
+  },
+  {
+    "DistrictID": 1981,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Mỹ Lộc",
+    "Code": 1981
+  },
+  {
+    "DistrictID": 1841,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Ý Yên",
+    "Code": 1841
+  },
+  {
+    "DistrictID": 1840,
+    "ProvinceID": 231,
+    "DistrictName": "Huyện Hải Hậu",
+    "Code": 1840
+  },
+  {
+    "DistrictID": 1613,
+    "ProvinceID": 231,
+    "DistrictName": "Thành phố Nam Định",
+    "Code": 1613
+  },
+  {
+    "DistrictID": 3199,
+    "ProvinceID": 230,
+    "DistrictName": "Huyện Hoành Bồ",
+    "Code": 3199
+  },
+  {
+    "DistrictID": 3185,
+    "ProvinceID": 230,
+    "DistrictName": "Thị xã Đông Triều",
+    "Code": 3185
+  },
+  {
+    "DistrictID": 3180,
+    "ProvinceID": 230,
+    "DistrictName": "Huyện Đầm Hà",
+    "Code": 3180
+  },
+  {
+    "DistrictID": 3126,
+    "ProvinceID": 230,
+    "DistrictName": "Huyện Ba Chẽ",
+    "Code": 3126
+  },
+  {
+    "DistrictID": 2109,
+    "ProvinceID": 230,
+    "DistrictName": "Huyện đảo Cô Tô",
+    "Code": 2109
+  },
+  {
+    "DistrictID": 2066,
+    "ProvinceID": 230,
+    "DistrictName": "Thị xã Quảng Yên",
+    "Code": 2066
+  },
+  {
+    "DistrictID": 2019,
+    "ProvinceID": 230,
+    "DistrictName": "Huyện Tiên Yên",
+    "Code": 2019
+  },
+  {
+    "DistrictID": 1940,
+    "ProvinceID": 230,
+    "DistrictName": "Huyện Hải Hà",
+    "Code": 1940
+  },
+  {
+    "DistrictID": 1920,
+    "ProvinceID": 230,
+    "DistrictName": "Huyện đảo Vân Đồn",
+    "Code": 1920
+  },
+  {
+    "DistrictID": 1896,
+    "ProvinceID": 230,
+    "DistrictName": "Huyện Bình Liêu",
+    "Code": 1896
+  },
+  {
+    "DistrictID": 1686,
+    "ProvinceID": 230,
+    "DistrictName": "Thành phố Uông Bí",
+    "Code": 1686
+  },
+  {
+    "DistrictID": 1683,
+    "ProvinceID": 230,
+    "DistrictName": "Thành phố Cẩm Phả",
+    "Code": 1683
+  },
+  {
+    "DistrictID": 1604,
+    "ProvinceID": 230,
+    "DistrictName": "Thành phố Hạ Long",
+    "Code": 1604
+  },
+  {
+    "DistrictID": 1603,
+    "ProvinceID": 230,
+    "DistrictName": "Thành phố Móng Cái",
+    "Code": 1603
+  },
+  {
+    "DistrictID": 3290,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Thanh Ba",
+    "Code": 3290
+  },
+  {
+    "DistrictID": 3272,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Tam Nông",
+    "Code": 3272
+  },
+  {
+    "DistrictID": 2268,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Yên Lập",
+    "Code": 2268
+  },
+  {
+    "DistrictID": 2237,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Thanh Thủy",
+    "Code": 2237
+  },
+  {
+    "DistrictID": 2064,
+    "ProvinceID": 229,
+    "DistrictName": "Thị xã Phú Thọ",
+    "Code": 2064
+  },
+  {
+    "DistrictID": 2029,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Thanh Sơn",
+    "Code": 2029
+  },
+  {
+    "DistrictID": 2015,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Tân Sơn",
+    "Code": 2015
+  },
+  {
+    "DistrictID": 1994,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Phù Ninh",
+    "Code": 1994
+  },
+  {
+    "DistrictID": 1959,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Lâm Thao",
+    "Code": 1959
+  },
+  {
+    "DistrictID": 1938,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Hạ Hòa",
+    "Code": 1938
+  },
+  {
+    "DistrictID": 1925,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Đoan Hùng",
+    "Code": 1925
+  },
+  {
+    "DistrictID": 1905,
+    "ProvinceID": 229,
+    "DistrictName": "Huyện Cẩm Khê",
+    "Code": 1905
+  },
+  {
+    "DistrictID": 1602,
+    "ProvinceID": 229,
+    "DistrictName": "Thành phố Việt Trì",
+    "Code": 1602
+  },
+  {
+    "DistrictID": 3267,
+    "ProvinceID": 228,
+    "DistrictName": "Huyện Sơn Dương",
+    "Code": 3267
+  },
+  {
+    "DistrictID": 3157,
+    "ProvinceID": 228,
+    "DistrictName": "Huyện Chiêm Hóa",
+    "Code": 3157
+  },
+  {
+    "DistrictID": 1982,
+    "ProvinceID": 228,
+    "DistrictName": "Huyện Na Hang",
+    "Code": 1982
+  },
+  {
+    "DistrictID": 1957,
+    "ProvinceID": 228,
+    "DistrictName": "Huyện Lâm Bình",
+    "Code": 1957
+  },
+  {
+    "DistrictID": 1941,
+    "ProvinceID": 228,
+    "DistrictName": "Huyện Hàm Yên",
+    "Code": 1941
+  },
+  {
+    "DistrictID": 1745,
+    "ProvinceID": 228,
+    "DistrictName": "Huyện Yên Sơn",
+    "Code": 1745
+  },
+  {
+    "DistrictID": 1601,
+    "ProvinceID": 228,
+    "DistrictName": "Thành phố Tuyên Quang",
+    "Code": 1601
+  },
+  {
+    "DistrictID": 2256,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Vị Xuyên",
+    "Code": 2256
+  },
+  {
+    "DistrictID": 2075,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Bắc Mê",
+    "Code": 2075
+  },
+  {
+    "DistrictID": 2053,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Yên Minh",
+    "Code": 2053
+  },
+  {
+    "DistrictID": 2052,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Xín Mần",
+    "Code": 2052
+  },
+  {
+    "DistrictID": 2001,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Quang Bình",
+    "Code": 2001
+  },
+  {
+    "DistrictID": 1999,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Quản Bạ",
+    "Code": 1999
+  },
+  {
+    "DistrictID": 1973,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Mèo Vạc",
+    "Code": 1973
+  },
+  {
+    "DistrictID": 1945,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Hoàng Su Phì",
+    "Code": 1945
+  },
+  {
+    "DistrictID": 1928,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Đồng Văn",
+    "Code": 1928
+  },
+  {
+    "DistrictID": 1893,
+    "ProvinceID": 227,
+    "DistrictName": "Huyện Bắc Quang",
+    "Code": 1893
+  },
+  {
+    "DistrictID": 1600,
+    "ProvinceID": 227,
+    "DistrictName": "Thành phố Hà Giang",
+    "Code": 1600
+  },
+  {
+    "DistrictID": 3281,
+    "ProvinceID": 226,
+    "DistrictName": "Huyện Tiền Hải",
+    "Code": 3281
+  },
+  {
+    "DistrictID": 1951,
+    "ProvinceID": 226,
+    "DistrictName": "Huyện Kiến Xương",
+    "Code": 1951
+  },
+  {
+    "DistrictID": 1869,
+    "ProvinceID": 226,
+    "DistrictName": "Huyện Thái Thụy",
+    "Code": 1869
+  },
+  {
+    "DistrictID": 1868,
+    "ProvinceID": 226,
+    "DistrictName": "Huyện Quỳnh Phụ",
+    "Code": 1868
+  },
+  {
+    "DistrictID": 1867,
+    "ProvinceID": 226,
+    "DistrictName": "Huyện Hưng Hà",
+    "Code": 1867
+  },
+  {
+    "DistrictID": 1716,
+    "ProvinceID": 226,
+    "DistrictName": "Huyện Vũ Thư",
+    "Code": 1716
+  },
+  {
+    "DistrictID": 1715,
+    "ProvinceID": 226,
+    "DistrictName": "Huyện Đông Hưng",
+    "Code": 1715
+  },
+  {
+    "DistrictID": 1599,
+    "ProvinceID": 226,
+    "DistrictName": "Thành phố Thái Bình",
+    "Code": 1599
+  },
+  {
+    "DistrictID": 3294,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Thanh Miện",
+    "Code": 3294
+  },
+  {
+    "DistrictID": 3292,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Thanh Hà",
+    "Code": 3292
+  },
+  {
+    "DistrictID": 3287,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Tứ Kỳ",
+    "Code": 3287
+  },
+  {
+    "DistrictID": 3238,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Ninh Giang",
+    "Code": 3238
+  },
+  {
+    "DistrictID": 2056,
+    "ProvinceID": 225,
+    "DistrictName": "Thành phố Chí Linh",
+    "Code": 2056
+  },
+  {
+    "DistrictID": 1953,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Kim Thành",
+    "Code": 1953
+  },
+  {
+    "DistrictID": 1934,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Gia Lộc",
+    "Code": 1934
+  },
+  {
+    "DistrictID": 1818,
+    "ProvinceID": 225,
+    "DistrictName": "Thị xã Kinh Môn",
+    "Code": 1818
+  },
+  {
+    "DistrictID": 1817,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Cẩm Giàng",
+    "Code": 1817
+  },
+  {
+    "DistrictID": 1816,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Bình Giang",
+    "Code": 1816
+  },
+  {
+    "DistrictID": 1727,
+    "ProvinceID": 225,
+    "DistrictName": "Huyện Nam Sách",
+    "Code": 1727
+  },
+  {
+    "DistrictID": 1598,
+    "ProvinceID": 225,
+    "DistrictName": "Thành phố Hải Dương",
+    "Code": 1598
+  },
+  {
+    "DistrictID": 3203,
+    "ProvinceID": 224,
+    "DistrictName": "Huyện Kiến Thụy",
+    "Code": 3203
+  },
+  {
+    "DistrictID": 2108,
+    "ProvinceID": 224,
+    "DistrictName": "Huyện đảo Cát Hải",
+    "Code": 2108
+  },
+  {
+    "DistrictID": 2107,
+    "ProvinceID": 224,
+    "DistrictName": "Huyện đảo Bạch Long Vĩ",
+    "Code": 2107
+  },
+  {
+    "DistrictID": 1822,
+    "ProvinceID": 224,
+    "DistrictName": "Huyện Vĩnh Bảo",
+    "Code": 1822
+  },
+  {
+    "DistrictID": 1821,
+    "ProvinceID": 224,
+    "DistrictName": "Huyện Tiên Lãng",
+    "Code": 1821
+  },
+  {
+    "DistrictID": 1820,
+    "ProvinceID": 224,
+    "DistrictName": "Huyện An Lão",
+    "Code": 1820
+  },
+  {
+    "DistrictID": 1819,
+    "ProvinceID": 224,
+    "DistrictName": "Huyện An Dương",
+    "Code": 1819
+  },
+  {
+    "DistrictID": 1726,
+    "ProvinceID": 224,
+    "DistrictName": "Huyện Thủy Nguyên",
+    "Code": 1726
+  },
+  {
+    "DistrictID": 1707,
+    "ProvinceID": 224,
+    "DistrictName": "Quận Đồ Sơn",
+    "Code": 1707
+  },
+  {
+    "DistrictID": 1706,
+    "ProvinceID": 224,
+    "DistrictName": "Quận Dương Kinh",
+    "Code": 1706
+  },
+  {
+    "DistrictID": 1591,
+    "ProvinceID": 224,
+    "DistrictName": "Quận Hải An",
+    "Code": 1591
+  },
+  {
+    "DistrictID": 1590,
+    "ProvinceID": 224,
+    "DistrictName": "Quận Kiến An",
+    "Code": 1590
+  },
+  {
+    "DistrictID": 1589,
+    "ProvinceID": 224,
+    "DistrictName": "Quận Hồng Bàng",
+    "Code": 1589
+  },
+  {
+    "DistrictID": 1588,
+    "ProvinceID": 224,
+    "DistrictName": "Quận Lê Chân",
+    "Code": 1588
+  },
+  {
+    "DistrictID": 1587,
+    "ProvinceID": 224,
+    "DistrictName": "Quận Ngô Quyền",
+    "Code": 1587
+  },
+  {
+    "DistrictID": 3768,
+    "ProvinceID": 223,
+    "DistrictName": "Quận Thuận Hóa",
+    "Code": 3768
+  },
+  {
+    "DistrictID": 3767,
+    "ProvinceID": 223,
+    "DistrictName": "Quận Phú Xuân",
+    "Code": 3767
+  },
+  {
+    "DistrictID": 3257,
+    "ProvinceID": 223,
+    "DistrictName": "Huyện Quảng Điền",
+    "Code": 3257
+  },
+  {
+    "DistrictID": 3234,
+    "ProvinceID": 223,
+    "DistrictName": "Huyện Nam Đông",
+    "Code": 3234
+  },
+  {
+    "DistrictID": 2193,
+    "ProvinceID": 223,
+    "DistrictName": "Huyện Phong Điền",
+    "Code": 2193
+  },
+  {
+    "DistrictID": 1885,
+    "ProvinceID": 223,
+    "DistrictName": "Huyện A Lưới",
+    "Code": 1885
+  },
+  {
+    "DistrictID": 1882,
+    "ProvinceID": 223,
+    "DistrictName": "Huyện Phú Lộc",
+    "Code": 1882
+  },
+  {
+    "DistrictID": 1749,
+    "ProvinceID": 223,
+    "DistrictName": "Huyện Phú Vang",
+    "Code": 1749
+  },
+  {
+    "DistrictID": 1698,
+    "ProvinceID": 223,
+    "DistrictName": "Thị xã Hương Thủy",
+    "Code": 1698
+  },
+  {
+    "DistrictID": 1697,
+    "ProvinceID": 223,
+    "DistrictName": "Thị xã Hương Trà",
+    "Code": 1697
+  },
+  {
+    "DistrictID": 1585,
+    "ProvinceID": 223,
+    "DistrictName": "Thành phố Huế",
+    "Code": 1585
+  },
+  {
+    "DistrictID": 3271,
+    "ProvinceID": 221,
+    "DistrictName": "Huyện Tam Đảo",
+    "Code": 3271
+  },
+  {
+    "DistrictID": 3265,
+    "ProvinceID": 221,
+    "DistrictName": "Huyện Sông Lô",
+    "Code": 3265
+  },
+  {
+    "DistrictID": 2065,
+    "ProvinceID": 221,
+    "DistrictName": "Thành phố Phúc Yên",
+    "Code": 2065
+  },
+  {
+    "DistrictID": 2009,
+    "ProvinceID": 221,
+    "DistrictName": "Huyện Tam Dương",
+    "Code": 2009
+  },
+  {
+    "DistrictID": 1960,
+    "ProvinceID": 221,
+    "DistrictName": "Huyện Lập Thạch",
+    "Code": 1960
+  },
+  {
+    "DistrictID": 1734,
+    "ProvinceID": 221,
+    "DistrictName": "Huyện Yên Lạc",
+    "Code": 1734
+  },
+  {
+    "DistrictID": 1733,
+    "ProvinceID": 221,
+    "DistrictName": "Huyện Vĩnh Tường",
+    "Code": 1733
+  },
+  {
+    "DistrictID": 1732,
+    "ProvinceID": 221,
+    "DistrictName": "Huyện Bình Xuyên",
+    "Code": 1732
+  },
+  {
+    "DistrictID": 1578,
+    "ProvinceID": 221,
+    "DistrictName": "Thành phố Vĩnh Yên",
+    "Code": 1578
+  },
+  {
+    "DistrictID": 3317,
+    "ProvinceID": 220,
+    "DistrictName": "Huyện Vĩnh Thạnh",
+    "Code": 3317
+  },
+  {
+    "DistrictID": 3300,
+    "ProvinceID": 220,
+    "DistrictName": "Huyện Thới Lai",
+    "Code": 3300
+  },
+  {
+    "DistrictID": 3250,
+    "ProvinceID": 220,
+    "DistrictName": "Huyện Phong Điền",
+    "Code": 3250
+  },
+  {
+    "DistrictID": 3150,
+    "ProvinceID": 220,
+    "DistrictName": "Huyện Cờ Đỏ",
+    "Code": 3150
+  },
+  {
+    "DistrictID": 1576,
+    "ProvinceID": 220,
+    "DistrictName": "Quận Thốt Nốt",
+    "Code": 1576
+  },
+  {
+    "DistrictID": 1575,
+    "ProvinceID": 220,
+    "DistrictName": "Quận Ô Môn",
+    "Code": 1575
+  },
+  {
+    "DistrictID": 1574,
+    "ProvinceID": 220,
+    "DistrictName": "Quận Cái Răng",
+    "Code": 1574
+  },
+  {
+    "DistrictID": 1573,
+    "ProvinceID": 220,
+    "DistrictName": "Quận Bình Thủy",
+    "Code": 1573
+  },
+  {
+    "DistrictID": 1572,
+    "ProvinceID": 220,
+    "DistrictName": "Quận Ninh Kiều",
+    "Code": 1572
+  },
+  {
+    "DistrictID": 3125,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện An Minh",
+    "Code": 3125
+  },
+  {
+    "DistrictID": 2260,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện Vĩnh Thuận",
+    "Code": 2260
+  },
+  {
+    "DistrictID": 2251,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện U Minh Thượng",
+    "Code": 2251
+  },
+  {
+    "DistrictID": 2134,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện Giang Thành",
+    "Code": 2134
+  },
+  {
+    "DistrictID": 2132,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện Gò Quao",
+    "Code": 2132
+  },
+  {
+    "DistrictID": 2115,
+    "ProvinceID": 219,
+    "DistrictName": "Thành phố Phú Quốc",
+    "Code": 2115
+  },
+  {
+    "DistrictID": 2113,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện đảo Kiên Hải",
+    "Code": 2113
+  },
+  {
+    "DistrictID": 2058,
+    "ProvinceID": 219,
+    "DistrictName": "Thành phố Hà Tiên",
+    "Code": 2058
+  },
+  {
+    "DistrictID": 1950,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện Kiên Lương",
+    "Code": 1950
+  },
+  {
+    "DistrictID": 1833,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện An Biên",
+    "Code": 1833
+  },
+  {
+    "DistrictID": 1832,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện Giồng Riềng",
+    "Code": 1832
+  },
+  {
+    "DistrictID": 1831,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện Tân Hiệp",
+    "Code": 1831
+  },
+  {
+    "DistrictID": 1830,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện Hòn Đất",
+    "Code": 1830
+  },
+  {
+    "DistrictID": 1719,
+    "ProvinceID": 219,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 1719
+  },
+  {
+    "DistrictID": 1570,
+    "ProvinceID": 219,
+    "DistrictName": "Thành phố Rạch Giá",
+    "Code": 1570
+  },
+  {
+    "DistrictID": 2272,
+    "ProvinceID": 218,
+    "DistrictName": "Thị xã Vĩnh Châu",
+    "Code": 2272
+  },
+  {
+    "DistrictID": 2238,
+    "ProvinceID": 218,
+    "DistrictName": "Huyện Thạnh Trị",
+    "Code": 2238
+  },
+  {
+    "DistrictID": 2173,
+    "ProvinceID": 218,
+    "DistrictName": "Huyện Mỹ Tú",
+    "Code": 2173
+  },
+  {
+    "DistrictID": 2161,
+    "ProvinceID": 218,
+    "DistrictName": "Huyện Long Phú",
+    "Code": 2161
+  },
+  {
+    "DistrictID": 2093,
+    "ProvinceID": 218,
+    "DistrictName": "Huyện Cù Lao Dung",
+    "Code": 2093
+  },
+  {
+    "DistrictID": 2062,
+    "ProvinceID": 218,
+    "DistrictName": "Thị xã Ngã Năm",
+    "Code": 2062
+  },
+  {
+    "DistrictID": 2037,
+    "ProvinceID": 218,
+    "DistrictName": "Huyện Trần Đề",
+    "Code": 2037
+  },
+  {
+    "DistrictID": 1949,
+    "ProvinceID": 218,
+    "DistrictName": "Huyện Kế Sách",
+    "Code": 1949
+  },
+  {
+    "DistrictID": 1910,
+    "ProvinceID": 218,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 1910
+  },
+  {
+    "DistrictID": 1743,
+    "ProvinceID": 218,
+    "DistrictName": "Huyện Mỹ Xuyên",
+    "Code": 1743
+  },
+  {
+    "DistrictID": 1568,
+    "ProvinceID": 218,
+    "DistrictName": "Thành phố Sóc Trăng",
+    "Code": 1568
+  },
+  {
+    "DistrictID": 1758,
+    "ProvinceID": 217,
+    "DistrictName": "Huyện Châu Phú",
+    "Code": 1758
+  },
+  {
+    "DistrictID": 1757,
+    "ProvinceID": 217,
+    "DistrictName": "Huyện Chợ Mới",
+    "Code": 1757
+  },
+  {
+    "DistrictID": 1756,
+    "ProvinceID": 217,
+    "DistrictName": "Huyện Phú Tân",
+    "Code": 1756
+  },
+  {
+    "DistrictID": 1755,
+    "ProvinceID": 217,
+    "DistrictName": "Thị Xã Tân Châu",
+    "Code": 1755
+  },
+  {
+    "DistrictID": 1754,
+    "ProvinceID": 217,
+    "DistrictName": "Huyện An Phú",
+    "Code": 1754
+  },
+  {
+    "DistrictID": 1753,
+    "ProvinceID": 217,
+    "DistrictName": "Thành phố Châu Đốc",
+    "Code": 1753
+  },
+  {
+    "DistrictID": 1752,
+    "ProvinceID": 217,
+    "DistrictName": "Huyện Tịnh Biên",
+    "Code": 1752
+  },
+  {
+    "DistrictID": 1751,
+    "ProvinceID": 217,
+    "DistrictName": "Huyện Tri Tôn",
+    "Code": 1751
+  },
+  {
+    "DistrictID": 1750,
+    "ProvinceID": 217,
+    "DistrictName": "Huyện Thoại Sơn",
+    "Code": 1750
+  },
+  {
+    "DistrictID": 1718,
+    "ProvinceID": 217,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 1718
+  },
+  {
+    "DistrictID": 1566,
+    "ProvinceID": 217,
+    "DistrictName": "Thành phố Long Xuyên",
+    "Code": 1566
+  },
+  {
+    "DistrictID": 3696,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Hồng Ngự",
+    "Code": 3696
+  },
+  {
+    "DistrictID": 3200,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Hồng Ngự",
+    "Code": 3200
+  },
+  {
+    "DistrictID": 3155,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 3155
+  },
+  {
+    "DistrictID": 2059,
+    "ProvinceID": 216,
+    "DistrictName": "Thành Phố Hồng Ngự",
+    "Code": 2059
+  },
+  {
+    "DistrictID": 2030,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Tháp Mười",
+    "Code": 2030
+  },
+  {
+    "DistrictID": 2026,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Thanh Bình",
+    "Code": 2026
+  },
+  {
+    "DistrictID": 2013,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Tân Hồng",
+    "Code": 2013
+  },
+  {
+    "DistrictID": 2011,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Tam Nông",
+    "Code": 2011
+  },
+  {
+    "DistrictID": 1961,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Lấp Vò",
+    "Code": 1961
+  },
+  {
+    "DistrictID": 1725,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Lai Vung",
+    "Code": 1725
+  },
+  {
+    "DistrictID": 1724,
+    "ProvinceID": 216,
+    "DistrictName": "Huyện Cao Lãnh",
+    "Code": 1724
+  },
+  {
+    "DistrictID": 1668,
+    "ProvinceID": 216,
+    "DistrictName": "Thành phố Sa Đéc",
+    "Code": 1668
+  },
+  {
+    "DistrictID": 1564,
+    "ProvinceID": 216,
+    "DistrictName": "Thành phố Cao Lãnh",
+    "Code": 1564
+  },
+  {
+    "DistrictID": 2263,
+    "ProvinceID": 215,
+    "DistrictName": "Huyện Vũng Liêm",
+    "Code": 2263
+  },
+  {
+    "DistrictID": 2164,
+    "ProvinceID": 215,
+    "DistrictName": "Huyện Mang Thít",
+    "Code": 2164
+  },
+  {
+    "DistrictID": 2081,
+    "ProvinceID": 215,
+    "DistrictName": "Huyện Bình Tân",
+    "Code": 2081
+  },
+  {
+    "DistrictID": 2054,
+    "ProvinceID": 215,
+    "DistrictName": "Thị xã Bình Minh",
+    "Code": 2054
+  },
+  {
+    "DistrictID": 2034,
+    "ProvinceID": 215,
+    "DistrictName": "Huyện Trà Ôn",
+    "Code": 2034
+  },
+  {
+    "DistrictID": 2008,
+    "ProvinceID": 215,
+    "DistrictName": "Huyện Tam Bình",
+    "Code": 2008
+  },
+  {
+    "DistrictID": 1962,
+    "ProvinceID": 215,
+    "DistrictName": "Huyện Long Hồ",
+    "Code": 1962
+  },
+  {
+    "DistrictID": 1562,
+    "ProvinceID": 215,
+    "DistrictName": "Thành phố Vĩnh Long",
+    "Code": 1562
+  },
+  {
+    "DistrictID": 3443,
+    "ProvinceID": 214,
+    "DistrictName": "Thị xã Duyên Hải",
+    "Code": 3443
+  },
+  {
+    "DistrictID": 2103,
+    "ProvinceID": 214,
+    "DistrictName": "Huyện Duyên Hải",
+    "Code": 2103
+  },
+  {
+    "DistrictID": 2091,
+    "ProvinceID": 214,
+    "DistrictName": "Huyện Cầu Kè",
+    "Code": 2091
+  },
+  {
+    "DistrictID": 2086,
+    "ProvinceID": 214,
+    "DistrictName": "Huyện Càng Long",
+    "Code": 2086
+  },
+  {
+    "DistrictID": 2033,
+    "ProvinceID": 214,
+    "DistrictName": "Huyện Trà Cú",
+    "Code": 2033
+  },
+  {
+    "DistrictID": 2020,
+    "ProvinceID": 214,
+    "DistrictName": "Huyện Tiểu Cần",
+    "Code": 2020
+  },
+  {
+    "DistrictID": 1911,
+    "ProvinceID": 214,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 1911
+  },
+  {
+    "DistrictID": 1908,
+    "ProvinceID": 214,
+    "DistrictName": "Huyện Cầu Ngang",
+    "Code": 1908
+  },
+  {
+    "DistrictID": 1560,
+    "ProvinceID": 214,
+    "DistrictName": "Thành phố Trà Vinh",
+    "Code": 1560
+  },
+  {
+    "DistrictID": 3158,
+    "ProvinceID": 213,
+    "DistrictName": "Huyện Chợ Lách",
+    "Code": 3158
+  },
+  {
+    "DistrictID": 2028,
+    "ProvinceID": 213,
+    "DistrictName": "Huyện Thạnh Phú",
+    "Code": 2028
+  },
+  {
+    "DistrictID": 1975,
+    "ProvinceID": 213,
+    "DistrictName": "Huyện Mỏ Cày Nam",
+    "Code": 1975
+  },
+  {
+    "DistrictID": 1974,
+    "ProvinceID": 213,
+    "DistrictName": "Huyện Mỏ Cày Bắc",
+    "Code": 1974
+  },
+  {
+    "DistrictID": 1937,
+    "ProvinceID": 213,
+    "DistrictName": "Huyện Giồng Trôm",
+    "Code": 1937
+  },
+  {
+    "DistrictID": 1895,
+    "ProvinceID": 213,
+    "DistrictName": "Huyện Bình Đại",
+    "Code": 1895
+  },
+  {
+    "DistrictID": 1888,
+    "ProvinceID": 213,
+    "DistrictName": "Huyện Ba Tri",
+    "Code": 1888
+  },
+  {
+    "DistrictID": 1742,
+    "ProvinceID": 213,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 1742
+  },
+  {
+    "DistrictID": 1558,
+    "ProvinceID": 213,
+    "DistrictName": "Thành phố Bến Tre",
+    "Code": 1558
+  },
+  {
+    "DistrictID": 3275,
+    "ProvinceID": 212,
+    "DistrictName": "Huyện Tân Phước",
+    "Code": 3275
+  },
+  {
+    "DistrictID": 2216,
+    "ProvinceID": 212,
+    "DistrictName": "Huyện Tân Phú Đông",
+    "Code": 2216
+  },
+  {
+    "DistrictID": 2084,
+    "ProvinceID": 212,
+    "DistrictName": "Huyện Cai Lậy",
+    "Code": 2084
+  },
+  {
+    "DistrictID": 2057,
+    "ProvinceID": 212,
+    "DistrictName": "Thị xã Gò Công",
+    "Code": 2057
+  },
+  {
+    "DistrictID": 2055,
+    "ProvinceID": 212,
+    "DistrictName": "Thị Xã Cai Lậy",
+    "Code": 2055
+  },
+  {
+    "DistrictID": 1933,
+    "ProvinceID": 212,
+    "DistrictName": "Huyện Gò Công Tây",
+    "Code": 1933
+  },
+  {
+    "DistrictID": 1932,
+    "ProvinceID": 212,
+    "DistrictName": "Huyện Gò Công Đông",
+    "Code": 1932
+  },
+  {
+    "DistrictID": 1900,
+    "ProvinceID": 212,
+    "DistrictName": "Huyện Cái Bè",
+    "Code": 1900
+  },
+  {
+    "DistrictID": 1741,
+    "ProvinceID": 212,
+    "DistrictName": "Huyện Chợ Gạo",
+    "Code": 1741
+  },
+  {
+    "DistrictID": 1740,
+    "ProvinceID": 212,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 1740
+  },
+  {
+    "DistrictID": 1556,
+    "ProvinceID": 212,
+    "DistrictName": "Thành phố Mỹ Tho",
+    "Code": 1556
+  },
+  {
+    "DistrictID": 3329,
+    "ProvinceID": 211,
+    "DistrictName": "Thị xã Kiến Tường",
+    "Code": 3329
+  },
+  {
+    "DistrictID": 3315,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Vĩnh Hưng",
+    "Code": 3315
+  },
+  {
+    "DistrictID": 3293,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Thạnh Hóa",
+    "Code": 3293
+  },
+  {
+    "DistrictID": 3276,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Tân Thạnh",
+    "Code": 3276
+  },
+  {
+    "DistrictID": 3273,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Tân Hưng",
+    "Code": 3273
+  },
+  {
+    "DistrictID": 3227,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Mộc Hóa",
+    "Code": 3227
+  },
+  {
+    "DistrictID": 2129,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Đức Huệ",
+    "Code": 2129
+  },
+  {
+    "DistrictID": 2031,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Thủ Thừa",
+    "Code": 2031
+  },
+  {
+    "DistrictID": 2016,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Tân Trụ",
+    "Code": 2016
+  },
+  {
+    "DistrictID": 1929,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Đức Hòa",
+    "Code": 1929
+  },
+  {
+    "DistrictID": 1909,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Châu Thành",
+    "Code": 1909
+  },
+  {
+    "DistrictID": 1907,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Cần Giuộc",
+    "Code": 1907
+  },
+  {
+    "DistrictID": 1906,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Cần Đước",
+    "Code": 1906
+  },
+  {
+    "DistrictID": 1894,
+    "ProvinceID": 211,
+    "DistrictName": "Huyện Bến Lức",
+    "Code": 1894
+  },
+  {
+    "DistrictID": 1554,
+    "ProvinceID": 211,
+    "DistrictName": "Thành phố Tân An",
+    "Code": 1554
+  },
+  {
+    "DistrictID": 3418,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện M Đrắk",
+    "Code": 3418
+  },
+  {
+    "DistrictID": 3217,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Lắk",
+    "Code": 3217
+  },
+  {
+    "DistrictID": 3153,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Cư Kuin",
+    "Code": 3153
+  },
+  {
+    "DistrictID": 2150,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Krông Búk",
+    "Code": 2150
+  },
+  {
+    "DistrictID": 2131,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Ea Súp",
+    "Code": 2131
+  },
+  {
+    "DistrictID": 1954,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Krông Pắc",
+    "Code": 1954
+  },
+  {
+    "DistrictID": 1931,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Ea Kar",
+    "Code": 1931
+  },
+  {
+    "DistrictID": 1884,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Krông Ana",
+    "Code": 1884
+  },
+  {
+    "DistrictID": 1789,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Krông Bông",
+    "Code": 1789
+  },
+  {
+    "DistrictID": 1788,
+    "ProvinceID": 210,
+    "DistrictName": "Thị xã Buôn Hồ",
+    "Code": 1788
+  },
+  {
+    "DistrictID": 1787,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Krông Năng",
+    "Code": 1787
+  },
+  {
+    "DistrictID": 1786,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Ea H leo",
+    "Code": 1786
+  },
+  {
+    "DistrictID": 1785,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Cư M gar",
+    "Code": 1785
+  },
+  {
+    "DistrictID": 1784,
+    "ProvinceID": 210,
+    "DistrictName": "Huyện Buôn Ðôn",
+    "Code": 1784
+  },
+  {
+    "DistrictID": 1552,
+    "ProvinceID": 210,
+    "DistrictName": "Thành phố Buôn Ma Thuột",
+    "Code": 1552
+  },
+  {
+    "DistrictID": 3160,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Di Linh",
+    "Code": 3160
+  },
+  {
+    "DistrictID": 3146,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Cát Tiên",
+    "Code": 3146
+  },
+  {
+    "DistrictID": 2106,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Đạ Tẻh",
+    "Code": 2106
+  },
+  {
+    "DistrictID": 2104,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Đạ Huoai",
+    "Code": 2104
+  },
+  {
+    "DistrictID": 1958,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Lâm Hà",
+    "Code": 1958
+  },
+  {
+    "DistrictID": 1956,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Lạc Dương",
+    "Code": 1956
+  },
+  {
+    "DistrictID": 1919,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Đam Rông",
+    "Code": 1919
+  },
+  {
+    "DistrictID": 1839,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Bảo Lâm",
+    "Code": 1839
+  },
+  {
+    "DistrictID": 1838,
+    "ProvinceID": 209,
+    "DistrictName": "Thành phố Bảo Lộc",
+    "Code": 1838
+  },
+  {
+    "DistrictID": 1837,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Đức Trọng",
+    "Code": 1837
+  },
+  {
+    "DistrictID": 1836,
+    "ProvinceID": 209,
+    "DistrictName": "Huyện Đơn Dương",
+    "Code": 1836
+  },
+  {
+    "DistrictID": 1550,
+    "ProvinceID": 209,
+    "DistrictName": "Thành phố Đà Lạt",
+    "Code": 1550
+  },
+  {
+    "DistrictID": 3213,
+    "ProvinceID": 208,
+    "DistrictName": "Huyện Khánh Vĩnh",
+    "Code": 3213
+  },
+  {
+    "DistrictID": 3212,
+    "ProvinceID": 208,
+    "DistrictName": "Huyện Khánh Sơn",
+    "Code": 3212
+  },
+  {
+    "DistrictID": 2117,
+    "ProvinceID": 208,
+    "DistrictName": "Huyện đảo Trường Sa",
+    "Code": 2117
+  },
+  {
+    "DistrictID": 2061,
+    "ProvinceID": 208,
+    "DistrictName": "Thị xã Ninh Hòa",
+    "Code": 2061
+  },
+  {
+    "DistrictID": 1902,
+    "ProvinceID": 208,
+    "DistrictName": "Huyện Cam Lâm",
+    "Code": 1902
+  },
+  {
+    "DistrictID": 1829,
+    "ProvinceID": 208,
+    "DistrictName": "Huyện Vạn Ninh",
+    "Code": 1829
+  },
+  {
+    "DistrictID": 1739,
+    "ProvinceID": 208,
+    "DistrictName": "Huyện Diên Khánh",
+    "Code": 1739
+  },
+  {
+    "DistrictID": 1664,
+    "ProvinceID": 208,
+    "DistrictName": "Thành phố Cam Ranh",
+    "Code": 1664
+  },
+  {
+    "DistrictID": 1548,
+    "ProvinceID": 208,
+    "DistrictName": "Thành phố Nha Trang",
+    "Code": 1548
+  },
+  {
+    "DistrictID": 2165,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Mang Yang",
+    "Code": 2165
+  },
+  {
+    "DistrictID": 2152,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Krông Pa",
+    "Code": 2152
+  },
+  {
+    "DistrictID": 2149,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Kông Chro",
+    "Code": 2149
+  },
+  {
+    "DistrictID": 2144,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Kbang",
+    "Code": 2144
+  },
+  {
+    "DistrictID": 2119,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Đắk Pơ",
+    "Code": 2119
+  },
+  {
+    "DistrictID": 2118,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Đắk Đoa",
+    "Code": 2118
+  },
+  {
+    "DistrictID": 2101,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Chư Pưh",
+    "Code": 2101
+  },
+  {
+    "DistrictID": 1801,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Chư Păh",
+    "Code": 1801
+  },
+  {
+    "DistrictID": 1800,
+    "ProvinceID": 207,
+    "DistrictName": "Thị xã An Khê",
+    "Code": 1800
+  },
+  {
+    "DistrictID": 1799,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Ia Pa",
+    "Code": 1799
+  },
+  {
+    "DistrictID": 1798,
+    "ProvinceID": 207,
+    "DistrictName": "Thị xã Ayun Pa",
+    "Code": 1798
+  },
+  {
+    "DistrictID": 1797,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Phú Thiện",
+    "Code": 1797
+  },
+  {
+    "DistrictID": 1796,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Chư Sê",
+    "Code": 1796
+  },
+  {
+    "DistrictID": 1795,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Chư Prông",
+    "Code": 1795
+  },
+  {
+    "DistrictID": 1794,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Đức Cơ",
+    "Code": 1794
+  },
+  {
+    "DistrictID": 1793,
+    "ProvinceID": 207,
+    "DistrictName": "Huyện Ia Grai",
+    "Code": 1793
+  },
+  {
+    "DistrictID": 1546,
+    "ProvinceID": 207,
+    "DistrictName": "Thành phố Pleiku",
+    "Code": 1546
+  },
+  {
+    "DistrictID": 3769,
+    "ProvinceID": 206,
+    "DistrictName": "Huyện Long Đất",
+    "Code": 3769
+  },
+  {
+    "DistrictID": 2111,
+    "ProvinceID": 206,
+    "DistrictName": "Huyện đảo Côn Đảo",
+    "Code": 2111
+  },
+  {
+    "DistrictID": 1709,
+    "ProvinceID": 206,
+    "DistrictName": "Huyện Châu Đức",
+    "Code": 1709
+  },
+  {
+    "DistrictID": 1701,
+    "ProvinceID": 206,
+    "DistrictName": "Thị Xã Phú Mỹ",
+    "Code": 1701
+  },
+  {
+    "DistrictID": 1699,
+    "ProvinceID": 206,
+    "DistrictName": "Huyện Xuyên Mộc",
+    "Code": 1699
+  },
+  {
+    "DistrictID": 1690,
+    "ProvinceID": 206,
+    "DistrictName": "Huyện Đất Đỏ",
+    "Code": 1690
+  },
+  {
+    "DistrictID": 1689,
+    "ProvinceID": 206,
+    "DistrictName": "Huyện Long Điền",
+    "Code": 1689
+  },
+  {
+    "DistrictID": 1688,
+    "ProvinceID": 206,
+    "DistrictName": "TT Phú Mỹ - cũ",
+    "Code": 1688
+  },
+  {
+    "DistrictID": 1667,
+    "ProvinceID": 206,
+    "DistrictName": "Thành phố Bà Rịa",
+    "Code": 1667
+  },
+  {
+    "DistrictID": 1544,
+    "ProvinceID": 206,
+    "DistrictName": "Thành phố Vũng Tàu",
+    "Code": 1544
+  },
+  {
+    "DistrictID": 3135,
+    "ProvinceID": 205,
+    "DistrictName": "Huyện Bắc Tân Uyên",
+    "Code": 3135
+  },
+  {
+    "DistrictID": 3132,
+    "ProvinceID": 205,
+    "DistrictName": "Huyện Bàu Bàng",
+    "Code": 3132
+  },
+  {
+    "DistrictID": 1992,
+    "ProvinceID": 205,
+    "DistrictName": "Huyện Phú Giáo",
+    "Code": 1992
+  },
+  {
+    "DistrictID": 1746,
+    "ProvinceID": 205,
+    "DistrictName": "Huyện Dầu Tiếng",
+    "Code": 1746
+  },
+  {
+    "DistrictID": 1696,
+    "ProvinceID": 205,
+    "DistrictName": "Thị xã Bến Cát",
+    "Code": 1696
+  },
+  {
+    "DistrictID": 1695,
+    "ProvinceID": 205,
+    "DistrictName": "Thành phố Tân Uyên",
+    "Code": 1695
+  },
+  {
+    "DistrictID": 1541,
+    "ProvinceID": 205,
+    "DistrictName": "Thành phố Thuận An",
+    "Code": 1541
+  },
+  {
+    "DistrictID": 1540,
+    "ProvinceID": 205,
+    "DistrictName": "Thành phố Dĩ An",
+    "Code": 1540
+  },
+  {
+    "DistrictID": 1538,
+    "ProvinceID": 205,
+    "DistrictName": "Thành phố Thủ Dầu Một",
+    "Code": 1538
+  },
+  {
+    "DistrictID": 2049,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Vĩnh Cửu",
+    "Code": 2049
+  },
+  {
+    "DistrictID": 1708,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Nhơn Trạch",
+    "Code": 1708
+  },
+  {
+    "DistrictID": 1705,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Thống Nhất",
+    "Code": 1705
+  },
+  {
+    "DistrictID": 1704,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Xuân Lộc",
+    "Code": 1704
+  },
+  {
+    "DistrictID": 1702,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Cẩm Mỹ",
+    "Code": 1702
+  },
+  {
+    "DistrictID": 1700,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Định Quán",
+    "Code": 1700
+  },
+  {
+    "DistrictID": 1694,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Long Thành",
+    "Code": 1694
+  },
+  {
+    "DistrictID": 1693,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Tân Phú",
+    "Code": 1693
+  },
+  {
+    "DistrictID": 1692,
+    "ProvinceID": 204,
+    "DistrictName": "Thành phố Long Khánh",
+    "Code": 1692
+  },
+  {
+    "DistrictID": 1691,
+    "ProvinceID": 204,
+    "DistrictName": "Huyện Trảng Bom",
+    "Code": 1691
+  },
+  {
+    "DistrictID": 1536,
+    "ProvinceID": 204,
+    "DistrictName": "Thành phố Biên Hòa",
+    "Code": 1536
+  },
+  {
+    "DistrictID": 2112,
+    "ProvinceID": 203,
+    "DistrictName": "Huyện đảo Hoàng Sa",
+    "Code": 2112
+  },
+  {
+    "DistrictID": 1687,
+    "ProvinceID": 203,
+    "DistrictName": "Huyện Hòa Vang",
+    "Code": 1687
+  },
+  {
+    "DistrictID": 1531,
+    "ProvinceID": 203,
+    "DistrictName": "Quận Cẩm Lệ",
+    "Code": 1531
+  },
+  {
+    "DistrictID": 1530,
+    "ProvinceID": 203,
+    "DistrictName": "Quận Liên Chiểu",
+    "Code": 1530
+  },
+  {
+    "DistrictID": 1529,
+    "ProvinceID": 203,
+    "DistrictName": "Quận Ngũ Hành Sơn",
+    "Code": 1529
+  },
+  {
+    "DistrictID": 1528,
+    "ProvinceID": 203,
+    "DistrictName": "Quận Sơn Trà",
+    "Code": 1528
+  },
+  {
+    "DistrictID": 1527,
+    "ProvinceID": 203,
+    "DistrictName": "Quận Thanh Khê",
+    "Code": 1527
+  },
+  {
+    "DistrictID": 1526,
+    "ProvinceID": 203,
+    "DistrictName": "Quận Hải Châu",
+    "Code": 1526
+  },
+  {
+    "DistrictID": 3695,
+    "ProvinceID": 202,
+    "DistrictName": "Thành Phố Thủ Đức",
+    "Code": 3695
+  },
+  {
+    "DistrictID": 2090,
+    "ProvinceID": 202,
+    "DistrictName": "Huyện Cần Giờ",
+    "Code": 2090
+  },
+  {
+    "DistrictID": 1534,
+    "ProvinceID": 202,
+    "DistrictName": "Huyện Nhà Bè",
+    "Code": 1534
+  },
+  {
+    "DistrictID": 1533,
+    "ProvinceID": 202,
+    "DistrictName": "Huyện Bình Chánh",
+    "Code": 1533
+  },
+  {
+    "DistrictID": 1463,
+    "ProvinceID": 202,
+    "DistrictName": "Quận Thủ Đức",
+    "Code": 1463
+  },
+  {
+    "DistrictID": 1462,
+    "ProvinceID": 202,
+    "DistrictName": "Quận Bình Thạnh",
+    "Code": 1462
+  },
+  {
+    "DistrictID": 1461,
+    "ProvinceID": 202,
+    "DistrictName": "Quận Gò Vấp",
+    "Code": 1461
+  },
+  {
+    "DistrictID": 1460,
+    "ProvinceID": 202,
+    "DistrictName": "Huyện Củ Chi",
+    "Code": 1460
+  },
+  {
+    "DistrictID": 1459,
+    "ProvinceID": 202,
+    "DistrictName": "Huyện Hóc Môn",
+    "Code": 1459
+  },
+  {
+    "DistrictID": 1458,
+    "ProvinceID": 202,
+    "DistrictName": "Quận Bình Tân",
+    "Code": 1458
+  },
+  {
+    "DistrictID": 1457,
+    "ProvinceID": 202,
+    "DistrictName": "Quận Phú Nhuận",
+    "Code": 1457
+  },
+  {
+    "DistrictID": 1456,
+    "ProvinceID": 202,
+    "DistrictName": "Quận Tân Phú",
+    "Code": 1456
+  },
+  {
+    "DistrictID": 1455,
+    "ProvinceID": 202,
+    "DistrictName": "Quận Tân Bình",
+    "Code": 1455
+  },
+  {
+    "DistrictID": 1454,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 12",
+    "Code": 1454
+  },
+  {
+    "DistrictID": 1453,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 11",
+    "Code": 1453
+  },
+  {
+    "DistrictID": 1452,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 10",
+    "Code": 1452
+  },
+  {
+    "DistrictID": 1451,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 9",
+    "Code": 1451
+  },
+  {
+    "DistrictID": 1450,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 8",
+    "Code": 1450
+  },
+  {
+    "DistrictID": 1449,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 7",
+    "Code": 1449
+  },
+  {
+    "DistrictID": 1448,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 6",
+    "Code": 1448
+  },
+  {
+    "DistrictID": 1447,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 5",
+    "Code": 1447
+  },
+  {
+    "DistrictID": 1446,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 4",
+    "Code": 1446
+  },
+  {
+    "DistrictID": 1444,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 3",
+    "Code": 1444
+  },
+  {
+    "DistrictID": 1443,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 2",
+    "Code": 1443
+  },
+  {
+    "DistrictID": 1442,
+    "ProvinceID": 202,
+    "DistrictName": "Quận 1",
+    "Code": 1442
+  },
+  {
+    "DistrictID": 3440,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Nam Từ Liêm",
+    "Code": 3440
+  },
+  {
+    "DistrictID": 3303,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Thường Tín",
+    "Code": 3303
+  },
+  {
+    "DistrictID": 3255,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Phú Xuyên",
+    "Code": 3255
+  },
+  {
+    "DistrictID": 2004,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Quốc Oai",
+    "Code": 2004
+  },
+  {
+    "DistrictID": 1915,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Chương Mỹ",
+    "Code": 1915
+  },
+  {
+    "DistrictID": 1810,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Ứng Hòa",
+    "Code": 1810
+  },
+  {
+    "DistrictID": 1809,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Thanh Oai",
+    "Code": 1809
+  },
+  {
+    "DistrictID": 1808,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Thạch Thất",
+    "Code": 1808
+  },
+  {
+    "DistrictID": 1807,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Phúc Thọ",
+    "Code": 1807
+  },
+  {
+    "DistrictID": 1806,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Mỹ Đức",
+    "Code": 1806
+  },
+  {
+    "DistrictID": 1805,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Hoài Đức",
+    "Code": 1805
+  },
+  {
+    "DistrictID": 1804,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Đan Phượng",
+    "Code": 1804
+  },
+  {
+    "DistrictID": 1803,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Ba Vì",
+    "Code": 1803
+  },
+  {
+    "DistrictID": 1711,
+    "ProvinceID": 201,
+    "DistrictName": "Thị xã Sơn Tây",
+    "Code": 1711
+  },
+  {
+    "DistrictID": 1710,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Thanh Trì",
+    "Code": 1710
+  },
+  {
+    "DistrictID": 1703,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Gia Lâm",
+    "Code": 1703
+  },
+  {
+    "DistrictID": 1583,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Sóc Sơn",
+    "Code": 1583
+  },
+  {
+    "DistrictID": 1582,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Đông Anh",
+    "Code": 1582
+  },
+  {
+    "DistrictID": 1581,
+    "ProvinceID": 201,
+    "DistrictName": "Huyện Mê Linh",
+    "Code": 1581
+  },
+  {
+    "DistrictID": 1542,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Hà Đông",
+    "Code": 1542
+  },
+  {
+    "DistrictID": 1493,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Thanh Xuân",
+    "Code": 1493
+  },
+  {
+    "DistrictID": 1492,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Tây Hồ",
+    "Code": 1492
+  },
+  {
+    "DistrictID": 1491,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Long Biên",
+    "Code": 1491
+  },
+  {
+    "DistrictID": 1490,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Hoàng Mai",
+    "Code": 1490
+  },
+  {
+    "DistrictID": 1489,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Hoàn Kiếm",
+    "Code": 1489
+  },
+  {
+    "DistrictID": 1488,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Hai Bà Trưng",
+    "Code": 1488
+  },
+  {
+    "DistrictID": 1486,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Đống Đa",
+    "Code": 1486
+  },
+  {
+    "DistrictID": 1485,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Cầu Giấy",
+    "Code": 1485
+  },
+  {
+    "DistrictID": 1484,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Ba Đình",
+    "Code": 1484
+  },
+  {
+    "DistrictID": 1482,
+    "ProvinceID": 201,
+    "DistrictName": "Quận Bắc Từ Liêm",
+    "Code": 1482
+  }
+]
