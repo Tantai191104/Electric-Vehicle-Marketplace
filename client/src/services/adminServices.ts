@@ -107,11 +107,11 @@ export const adminServices = {
     const response = await API.get("/admin/orders");
     return response.data.data;
   },
-  async refundDeposit(orderId: string, reason: string): Promise<null> {
+  async refundDeposit(orderId: string, reason: string) {
     const response = await API.patch(`/deposit/${orderId}/cancel`, { reason });
     return response.data;
   },
-  async confirmDeposit(orderId: string, notes: string): Promise<null> {
+  async confirmDeposit(orderId: string, notes: string) {
     const response = await API.patch(`/deposit/${orderId}/confirm`, { notes });
     return response.data;
   },
