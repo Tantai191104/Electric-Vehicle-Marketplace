@@ -15,6 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FiTrendingUp, FiDollarSign } from "react-icons/fi";
 import { useRevenueData } from "@/hooks/useAdmin";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 ChartJS.register(
   CategoryScale,
@@ -30,75 +32,122 @@ ChartJS.register(
 interface RevenueChartProps {
   title: string;
   description: string;
-  timeRange: string;
+  timeRange?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
-export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, timeRange }) => {
-  const { data: revenueData, isLoading } = useRevenueData(timeRange);
+export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, timeRange, startDate, endDate }) => {
+  // Local state for date pickers
+  const [localStartDate, setLocalStartDate] = useState(startDate || "");
+  const [localEndDate, setLocalEndDate] = useState(endDate || "");
+  const [filterParams, setFilterParams] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    if (timeRange) initial.range = timeRange;
+    if (startDate) initial.startDate = startDate;
+    if (endDate) initial.endDate = endDate;
+    return initial;
+  });
+
+  // Only reload chart when user clicks 'Lọc'
+  const handleFilter = () => {
+    const params: Record<string, string> = {};
+    if (timeRange) params.range = timeRange;
+    if (localStartDate) params.startDate = localStartDate;
+    if (localEndDate) params.endDate = localEndDate;
+    setFilterParams(params);
+  };
+
+  const { data: apiData, isLoading } = useRevenueData(filterParams);
+  // ...params and useRevenueData now handled above with localStartDate/localEndDate...
 
   // Fallback data for when API is not available
-  const getFallbackData = (range: string) => {
+  const getFallbackData = (range?: string) => {
     switch (range) {
       case '7d':
-        return [
-          { date: 'T2', revenue: 125, orders: 45 },
-          { date: 'T3', revenue: 185, orders: 67 },
-          { date: 'T4', revenue: 155, orders: 52 },
-          { date: 'T5', revenue: 210, orders: 78 },
-          { date: 'T6', revenue: 175, orders: 63 },
-          { date: 'T7', revenue: 245, orders: 89 },
-          { date: 'CN', revenue: 195, orders: 71 },
-        ];
+        return {
+          labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+          revenue: [125, 185, 155, 210, 175, 245, 195],
+          orders: [45, 67, 52, 78, 63, 89, 71],
+          growth: '+0%',
+          summary: { totalRevenue: 1290, totalOrders: 465, avgOrderValue: 2.8 },
+        };
       case '30d':
-        return [
-          { date: 'Tuần 1', revenue: 890, orders: 285 },
-          { date: 'Tuần 2', revenue: 1250, orders: 412 },
-          { date: 'Tuần 3', revenue: 1100, orders: 356 },
-          { date: 'Tuần 4', revenue: 1540, orders: 523 },
-        ];
+        return {
+          labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
+          revenue: [890, 1250, 1100, 1540],
+          orders: [285, 412, 356, 523],
+          growth: '+0%',
+          summary: { totalRevenue: 4780, totalOrders: 1576, avgOrderValue: 3.0 },
+        };
       case '90d':
-        return [
-          { date: 'Tháng 1', revenue: 3200, orders: 1024 },
-          { date: 'Tháng 2', revenue: 4100, orders: 1387 },
-          { date: 'Tháng 3', revenue: 4850, orders: 1654 },
-        ];
+        return {
+          labels: ['Tháng 1', 'Tháng 2', 'Tháng 3'],
+          revenue: [3200, 4100, 4850],
+          orders: [1024, 1387, 1654],
+          growth: '+0%',
+          summary: { totalRevenue: 12150, totalOrders: 4065, avgOrderValue: 3.0 },
+        };
       case '1y':
-        return [
-          { date: 'Q1', revenue: 9200, orders: 3240 },
-          { date: 'Q2', revenue: 11500, orders: 4125 },
-          { date: 'Q3', revenue: 13800, orders: 4980 },
-          { date: 'Q4', revenue: 16200, orders: 5890 },
-        ];
+        return {
+          labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+          revenue: [9200, 11500, 13800, 16200],
+          orders: [3240, 4125, 4980, 5890],
+          growth: '+0%',
+          summary: { totalRevenue: 50700, totalOrders: 18235, avgOrderValue: 2.8 },
+        };
       default:
-        return [
-          { date: 'T2', revenue: 125, orders: 45 },
-          { date: 'T3', revenue: 185, orders: 67 },
-          { date: 'T4', revenue: 155, orders: 52 },
-          { date: 'T5', revenue: 210, orders: 78 },
-          { date: 'T6', revenue: 175, orders: 63 },
-          { date: 'T7', revenue: 245, orders: 89 },
-          { date: 'CN', revenue: 195, orders: 71 },
-        ];
+        return {
+          labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+          revenue: [125, 185, 155, 210, 175, 245, 195],
+          orders: [45, 67, 52, 78, 63, 89, 71],
+          growth: '+0%',
+          summary: { totalRevenue: 1290, totalOrders: 465, avgOrderValue: 2.8 },
+        };
     }
   };
 
   // Use API data if available, otherwise use fallback data
-  const chartData = revenueData || getFallbackData(timeRange);
-  const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0);
-  const totalOrders = chartData.reduce((sum, item) => sum + item.orders, 0);
+  let totalRevenue = 0;
+  let totalOrders = 0;
+  let growthDisplay = '+0%';
+  let labels: string[] = [];
+  let revenue: number[] = [];
+  let orders: number[] = [];
 
-  // Calculate growth rate (simplified - comparing first and last values)
-  const growthRate = chartData.length > 1
-    ? (((chartData[chartData.length - 1].revenue - chartData[0].revenue) / chartData[0].revenue) * 100).toFixed(1)
-    : '0.0';
-  const growthDisplay = `${parseFloat(growthRate) >= 0 ? '+' : ''}${growthRate}%`;
+  if (
+    apiData &&
+    typeof apiData === 'object' &&
+    !Array.isArray(apiData) &&
+    'labels' in apiData &&
+    'revenue' in apiData &&
+    'orders' in apiData &&
+    'summary' in apiData &&
+    'growth' in apiData
+  ) {
+    labels = apiData.labels as string[];
+    revenue = apiData.revenue as number[];
+    orders = apiData.orders as number[];
+    totalRevenue = (apiData.summary)?.totalRevenue || 0;
+    totalOrders = (apiData.summary)?.totalOrders || 0;
+    growthDisplay = apiData.growth as string || '+0%';
+  } else {
+    // Use fallback
+    const fallback = getFallbackData(timeRange);
+    labels = fallback.labels;
+    revenue = fallback.revenue;
+    orders = fallback.orders;
+    totalRevenue = fallback.summary?.totalRevenue || 0;
+    totalOrders = fallback.summary?.totalOrders || 0;
+    growthDisplay = fallback.growth || '+0%';
+  }
 
   const data = {
-    labels: chartData.map(item => item.date),
+    labels,
     datasets: [
       {
         label: 'Doanh thu (triệu VNĐ)',
-        data: chartData.map(item => item.revenue),
+        data: revenue,
         borderColor: '#1f2937',
         backgroundColor: (context: { chart: { ctx: CanvasRenderingContext2D } }) => {
           const ctx = context.chart.ctx;
@@ -147,7 +196,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
           },
           label: (context: { parsed: { y: number }; dataIndex: number }) => {
             const revenueValue = context.parsed.y;
-            const orderValue = chartData[context.dataIndex].orders;
+            const orderValue = orders?.[context.dataIndex] || 0;
             return [
               `Doanh thu: ${revenueValue} triệu VNĐ`,
               `Đơn hàng: ${orderValue} giao dịch`
@@ -192,7 +241,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
       },
     },
   };
-
+  console.log("Rendering RevenueChart with data:", { labels, revenue, orders, totalRevenue, totalOrders, growthDisplay });
   return (
     <Card className="border border-gray-200 shadow-sm bg-white h-full">
       <CardHeader className="pb-4">
@@ -216,6 +265,35 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
       </CardHeader>
 
       <CardContent className="pt-2">
+        {/* Date Pickers + Filter Button */}
+        <div className="flex gap-4 mb-4 items-center">
+          <div className="flex flex-col">
+            <label htmlFor="start-date" className="text-xs text-gray-600 mb-1">Từ ngày</label>
+            <Input
+              id="start-date"
+              type="date"
+              value={localStartDate}
+              onChange={e => setLocalStartDate(e.target.value)}
+              className="w-36"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label htmlFor="end-date" className="text-xs text-gray-600 mb-1">Đến ngày</label>
+            <Input
+              id="end-date"
+              type="date"
+              value={localEndDate}
+              onChange={e => setLocalEndDate(e.target.value)}
+              className="w-36"
+            />
+          </div>
+          <button
+            className="px-4 py-2 bg-gray-900 text-white rounded-lg ml-2 mt-5 h-10"
+            onClick={handleFilter}
+          >
+            Lọc
+          </button>
+        </div>
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">

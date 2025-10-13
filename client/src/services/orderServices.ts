@@ -1,5 +1,5 @@
 import API from "@/lib/axios";
-import type { OrderPayload, ShippingFeePayload } from "@/types/shippingType";
+import type { DepositPayload, OrderPayload, ShippingFeePayload } from "@/types/shippingType";
 
 export const orderServices = {
   async getShippingFee(shippingPayload: ShippingFeePayload) {
@@ -12,6 +12,10 @@ export const orderServices = {
   },
   async cancelOrder(order_code: string) {
     const response = await API.post(`/shipping/cancel`, { order_code });
+    return response.data;
+  } ,
+  async createDepositOrder(data: DepositPayload) {
+    const response = await API.post("/deposit/vehicle", data);
     return response.data;
   }
 };

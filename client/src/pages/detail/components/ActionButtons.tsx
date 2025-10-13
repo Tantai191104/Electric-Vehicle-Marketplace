@@ -118,7 +118,7 @@ export function ActionButtons({
                 type="secondary"
                 fullWidth
             >
-                {isContractLoading ? "Đang tạo hợp đồng..." : "Lên hợp đồng"}
+                {isContractLoading ? "Đang lên lịch hẹn..." : "Lên lịch hẹn"}
             </ButtonWithIcon>
         </div>
     );

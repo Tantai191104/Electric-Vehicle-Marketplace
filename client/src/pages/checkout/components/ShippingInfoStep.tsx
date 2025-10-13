@@ -54,23 +54,49 @@ export const ShippingInfoStep: React.FC<ShippingInfoStepProps> = ({
     const navigate = useNavigate();
     const [formData, setFormData] = useState<ShippingInfo>(shippingInfo);
 
-    // Initialize with user data from system
+    // Check if product is vehicle via window.location or context
+    // For this step, we assume a global variable or query param 'category=vehicle' is present if vehicle
+    const isVehicle = (() => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('category') === 'vehicle';
+        } catch {
+            return false;
+        }
+    })();
+
     useEffect(() => {
         if (user) {
-            const userBasedShippingInfo: ShippingInfo = {
-                fullName: user.profile?.fullName || user.name || '',
-                phone: user.phone || '',
-                email: user.email || '',
-                houseNumber: user.profile?.address?.houseNumber || '123 Đường Lê Lợi',
-                city: user.profile?.address?.province || 'TP. Hồ Chí Minh',
-                district: user.profile?.address?.district || 'Quận 1',
-                ward: user.profile?.address?.ward || 'Phường Bến Nghé',
-                note: ''
-            };
-            setFormData(userBasedShippingInfo);
-            onUpdate(userBasedShippingInfo);
+            let info: ShippingInfo;
+            if (isVehicle) {
+                // Buyer info for vehicle
+                info = {
+                    fullName: user.profile?.fullName || user.name || '',
+                    phone: user.phone || '',
+                    email: user.email || '',
+                    houseNumber: user.profile?.address?.houseNumber || '',
+                    city: user.profile?.address?.province || '',
+                    district: user.profile?.address?.district || '',
+                    ward: user.profile?.address?.ward || '',
+                    note: ''
+                };
+            } else {
+                // Receiver info for normal
+                info = {
+                    fullName: user.profile?.fullName || user.name || '',
+                    phone: user.phone || '',
+                    email: user.email || '',
+                    houseNumber: user.profile?.address?.houseNumber || '123 Đường Lê Lợi',
+                    city: user.profile?.address?.province || 'TP. Hồ Chí Minh',
+                    district: user.profile?.address?.district || 'Quận 1',
+                    ward: user.profile?.address?.ward || 'Phường Bến Nghé',
+                    note: ''
+                };
+            }
+            setFormData(info);
+            onUpdate(info);
         }
-    }, [user, onUpdate]);
+    }, [user, onUpdate, isVehicle]);
 
     const handleNoteChange = (value: string) => {
         const updated = { ...formData, note: value };
@@ -106,7 +132,7 @@ export const ShippingInfoStep: React.FC<ShippingInfoStepProps> = ({
                 {/* Header with edit button */}
                 <div className="flex items-center justify-between bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <div>
-                        <h3 className="font-semibold text-blue-900">Thông tin giao hàng</h3>
+                        <h3 className="font-semibold text-blue-900">{isVehicle ? "Thông tin người mua" : "Thông tin giao hàng"}</h3>
                         <p className="text-sm text-blue-700">Sử dụng thông tin từ hồ sơ của bạn</p>
                     </div>
                     <Button
@@ -123,20 +149,20 @@ export const ShippingInfoStep: React.FC<ShippingInfoStepProps> = ({
                 {/* Display user information (read-only) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <InfoDisplay
-                        label="Họ và tên"
+                        label={isVehicle ? "Họ và tên người mua" : "Họ và tên"}
                         value={formData.fullName}
                         icon={<FiUser className="w-4 h-4 text-blue-600" />}
                     />
 
                     <InfoDisplay
-                        label="Số điện thoại"
+                        label={isVehicle ? "Số điện thoại người mua" : "Số điện thoại"}
                         value={formData.phone}
                         icon={<FiUser className="w-4 h-4 text-blue-600" />}
                     />
 
                     <div className="md:col-span-2">
                         <InfoDisplay
-                            label="Email"
+                            label={isVehicle ? "Email người mua" : "Email"}
                             value={formData.email}
                             icon={<FiUser className="w-4 h-4 text-blue-600" />}
                         />
@@ -144,7 +170,7 @@ export const ShippingInfoStep: React.FC<ShippingInfoStepProps> = ({
 
                     <div className="md:col-span-2">
                         <InfoDisplay
-                            label="Địa chỉ giao hàng"
+                            label={isVehicle ? "Địa chỉ người mua" : "Địa chỉ giao hàng"}
                             value={user?.profile?.address ?
                                 `${user.profile.address.houseNumber || formData.houseNumber}, ${user.profile.address.ward || getWardLabel(formData.ward)}, ${user.profile.address.district || getDistrictLabel(formData.district)}, ${user.profile.address.province || getCityLabel(formData.city)}` :
                                 `${formData.houseNumber}, ${getWardLabel(formData.ward)}, ${getDistrictLabel(formData.district)}, ${getCityLabel(formData.city)}`
@@ -157,14 +183,14 @@ export const ShippingInfoStep: React.FC<ShippingInfoStepProps> = ({
                 {/* Only note field is editable */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Ghi chú giao hàng (tùy chọn)
+                        {isVehicle ? "Ghi chú cho người mua (tùy chọn)" : "Ghi chú giao hàng (tùy chọn)"}
                     </label>
                     <textarea
                         value={formData.note || ''}
                         onChange={(e) => handleNoteChange(e.target.value)}
                         rows={3}
                         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        placeholder="Ghi chú đặc biệt cho việc giao hàng..."
+                        placeholder={isVehicle ? "Ghi chú đặc biệt cho người mua..." : "Ghi chú đặc biệt cho việc giao hàng..."}
                     />
                 </div>
 
@@ -176,7 +202,7 @@ export const ShippingInfoStep: React.FC<ShippingInfoStepProps> = ({
                         </div>
                         <div>
                             <p className="text-sm text-yellow-800">
-                                <strong>Lưu ý:</strong> Để thay đổi thông tin cá nhân và địa chỉ giao hàng,
+                                <strong>Lưu ý:</strong> Để thay đổi thông tin cá nhân và địa chỉ {isVehicle ? "người mua" : "giao hàng"},
                                 vui lòng cập nhật trong phần <strong>Hồ sơ</strong> của bạn.
                             </p>
                         </div>

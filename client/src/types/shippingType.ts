@@ -59,3 +59,10 @@ export type OrderPayload = {
     }
   ];
 };
+export type DepositPayload = {
+  product_id: string;
+  seller_id: string;
+  buyer_name: string;
+  buyer_phone: string;
+  buyer_address: string;
+};
