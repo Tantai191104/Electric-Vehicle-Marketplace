@@ -64,7 +64,7 @@ export default function OrderManage() {
 
                 if (newStatus === 'confirmed') {
                     // Use confirmDeposit for confirm action as requested
-                    await adminServices.confirmDeposit(orderId);
+                    await adminServices.confirmDeposit(orderId, "Đã hoàn thành giao dịch");
                     await refetch();
                     toast.success("Xác nhận đơn hàng thành công");
                     return;
@@ -72,7 +72,7 @@ export default function OrderManage() {
 
                 if (newStatus === 'refunded') {
                     // Use refundDeposit for refund action as requested
-                    await adminServices.refundDeposit(orderId);
+                    await adminServices.refundDeposit(orderId, "Hoàn tiền đơn hàng");
                     await refetch();
                     toast.success("Hoàn tiền thành công");
                     return;
