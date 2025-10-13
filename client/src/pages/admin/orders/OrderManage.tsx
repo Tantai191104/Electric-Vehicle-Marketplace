@@ -59,28 +59,30 @@ export default function OrderManage() {
     // Handle status change - Disabled for GHN orders
     const handleStatusChange = useCallback(
         async (orderId: string, newStatus: Order['status']) => {
+            let loadingToastId: string | number | undefined;
             try {
-                toast.loading("Đang thực hiện thao tác...");
+                loadingToastId = toast.loading("Đang thực hiện thao tác...");
 
                 if (newStatus === 'confirmed') {
-                    // Use confirmDeposit for confirm action as requested
                     await adminServices.confirmDeposit(orderId, "Đã hoàn thành giao dịch");
                     await refetch();
+                    toast.dismiss(loadingToastId);
                     toast.success("Xác nhận đơn hàng thành công");
                     return;
                 }
 
                 if (newStatus === 'refunded') {
-                    // Use refundDeposit for refund action as requested
                     await adminServices.refundDeposit(orderId, "Hoàn tiền đơn hàng");
                     await refetch();
+                    toast.dismiss(loadingToastId);
                     toast.success("Hoàn tiền thành công");
                     return;
                 }
 
-                // Only confirmDeposit and refundDeposit are supported here
+                toast.dismiss(loadingToastId);
                 toast.error("Không hỗ trợ thao tác này");
             } catch (err) {
+                toast.dismiss(loadingToastId);
                 console.error(err);
                 toast.error("Thao tác thất bại. Vui lòng thử lại.");
             }
