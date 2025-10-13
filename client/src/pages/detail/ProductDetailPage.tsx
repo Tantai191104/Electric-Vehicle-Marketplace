@@ -14,6 +14,7 @@ import { LoadingState } from "./components/LoadingState";
 import { ErrorState } from "./components/ErrorState";
 import { NotFoundState } from "./components/NotFoundState";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 interface ProductDetailPageProps {
     className?: string;
@@ -27,13 +28,13 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     const findExistingConversation = useFindExistingConversation();
     const { user } = useAuthStore();
 
-    console.log("Raw data from API:", data);
-
+    // Loading & Error states
     if (isLoading) return <LoadingState />;
     if (error) return <ErrorState onRetry={() => refetch()} />;
-    if (!data || !data.product) return <NotFoundState onGoBack={() => navigate(-1)} />;
+    if (!data?.product) return <NotFoundState onGoBack={() => navigate(-1)} />;
+
     const product = data.product;
-    console.log("Extracted product data:", product);
+
     const handleContact = async (): Promise<void> => {
         if (!user) {
             toast.error("Bạn cần đăng nhập để liên hệ với người bán");
@@ -41,9 +42,8 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
             return;
         }
 
-        // Check product và seller trước
-        if (!product || !product.seller || !product._id) {
-            toast.error("Thông tin sản phẩm chưa sẵn sàng");
+        if (!product?.seller?._id) {
+            toast.error("Thông tin sản phẩm hoặc người bán không hợp lệ");
             return;
         }
 
@@ -69,17 +69,30 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
 
             toast.dismiss(toastId);
             toast.success("Tạo cuộc hội thoại thành công!");
-
             navigate(`/chat/${newConversation._id}`);
         } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : "Có lỗi xảy ra khi tạo cuộc hội thoại";
-            toast.error(errorMessage);
-            console.error("Error creating conversation:", error);
+            toast.dismiss();
+
+            if (error instanceof AxiosError) {
+                console.error("Axios error:", error.response?.data);
+                const message =
+                    (error.response?.data as { message?: string })?.message ||
+                    "Lỗi từ máy chủ. Vui lòng thử lại.";
+                toast.error(message);
+            } else if (error instanceof Error) {
+                // Trường hợp lỗi JS thông thường
+                console.error("Error creating conversation:", error.message);
+                toast.error(error.message);
+            } else {
+                // Trường hợp lỗi không xác định (rare)
+                console.error("Unknown error:", error);
+                toast.error("Có lỗi xảy ra khi tạo cuộc hội thoại");
+            }
         }
     };
 
 
+    // 🟢 Handle buy now
     const handleBuyNow = async (): Promise<void> => {
         if (!user) {
             toast.error("Bạn cần đăng nhập để mua hàng");
@@ -95,84 +108,91 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
         if (product.category === "battery") {
             toast.success("Chuyển đến trang thanh toán...");
             navigate(`/checkout/${product._id}/1`);
+            return;
+        }
+
+        if (product.category === "vehicle") {
+            let toastId;
+            try {
+                toastId = toast.loading("Đang tạo đơn đặt cọc xe...");
+
+                const depositPayload = {
+                    product_id: product._id,
+                    seller_id: product.seller._id,
+                    buyer_name: user.name,
+                    buyer_phone: user.phone || "",
+                    buyer_address: typeof user.profile?.address === "string" ? user.profile.address : "",
+                };
+                console.log(depositPayload);
+                const { orderServices } = await import("@/services/orderServices");
+                await orderServices.createDepositOrder(depositPayload);
+
+                toast.dismiss(toastId);
+                toast.success("Đặt cọc xe thành công!");
+                navigate(`/checkout/${product._id}/deposit`);
+            } catch (error: unknown) {
+                toast.dismiss(toastId);
+                console.error("Error creating deposit:", error);
+                let message = "Có lỗi khi đặt cọc xe. Vui lòng thử lại.";
+                if (typeof error === "object" && error && "response" in error) {
+                    // @ts-expect-error dynamic error response typing
+                    message = error.response?.data?.message || message;
+                }
+                toast.error(message);
+            }
         }
     };
-
-    const handleCreateContract = () => {
+    // 🟢 Handle schedule appointment (deposit flow)
+    const handleScheduleAppointment = async (): Promise<void> => {
         if (!user) {
-            toast.error("Bạn cần đăng nhập để lập hợp đồng");
+            toast.error("Bạn cần đăng nhập để lên lịch hẹn");
             navigate("/auth/login");
             return;
         }
 
         if (user._id === product.seller._id) {
-            toast.error("Bạn không thể lập hợp đồng với chính mình");
+            toast.error("Bạn không thể lên lịch hẹn với chính mình");
             return;
         }
 
-        navigate("/contract", {
-            state: {
-                product,
-                buyer: {
-                    name: user.name,
-                    idNumber: user._id || "",
-                    address: user.profile.address || "",
-                    phone: user.phone || ""
-                },
-                seller: {
-                    name: product.seller.name,
-                    idNumber: product.seller._id || "",
-                    address: product.seller.address || "",
-                }
+        if (product.category === "vehicle") {
+            try {
+                toast.success("Chuyển đến trang thanh toán...");
+                navigate(`/checkout/${product._id}/deposit`);
+            } catch (error) {
+                console.error("Error navigating to checkout:", error);
+                toast.error("Không thể chuyển đến trang thanh toán. Vui lòng thử lại.");
             }
-        });
+        } else {
+            toast.error("Chỉ xe mới có thể lên lịch hẹn.");
+        }
     };
 
 
     return (
-        <div
-            className={`max-w-7xl mx-auto mt-18 md:mt-36 bg-white rounded-2xl shadow-lg p-4 md:p-6 ${className}`}
-        >
+        <div className={`max-w-7xl mx-auto mt-18 md:mt-36 bg-white rounded-2xl shadow-lg p-4 md:p-6 ${className}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 {/* Left Column */}
                 <div>
                     <ImageGallery images={product.images} brand={product.brand} model={product.model} />
-
                     <GuaranteeBadges className="mt-4 md:mt-5" />
-
-                    <SocialShare
-                        className="mt-4 md:mt-5"
-                        productName={`${product.brand} ${product.model}`}
-                        productUrl={window.location.href}
-                    />
-
-                    <ProductDescription
-                        description={product.description || ""}
-                        className="mt-4 md:mt-5"
-                    />
+                    <SocialShare className="mt-4 md:mt-5" productName={`${product.brand} ${product.model}`} productUrl={window.location.href} />
+                    <ProductDescription description={product.description || ""} className="mt-4 md:mt-5" />
                 </div>
 
                 {/* Right Column */}
                 <div>
                     <ProductHeader car={product} className="mb-5" />
-
                     <ActionButtons
                         onContact={handleContact}
                         onBuyNow={handleBuyNow}
-                        onContract={handleCreateContract}
+                        onContract={handleScheduleAppointment}
                         isContactLoading={createConversation.isPending}
                         isInWishlist={product.isInWishlist || false}
                         category={product.category}
                         className="mb-5"
                     />
-
-                    <ProductStats
-                        likes={product.likes}
-                        views={product.views}
-                        updatedAt={product.updatedAt}
-                        className="mb-4"
-                    />
-
+                    <ProductStats likes={product.likes} views={product.views} updatedAt={product.updatedAt} className="mb-4" />
                     <SpecificationTable product={product} />
                 </div>
             </div>

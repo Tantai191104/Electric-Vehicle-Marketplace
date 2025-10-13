@@ -52,7 +52,7 @@ export default function EVBatteryGrid() {
     );
   }
 
-  const products = data?.products || [];
+  const products = (data?.products || []).slice(0, 8);
 
   return (
     <section className="max-w-7xl mx-auto px-2 py-8">

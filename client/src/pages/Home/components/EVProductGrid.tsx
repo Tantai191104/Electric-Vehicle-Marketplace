@@ -52,7 +52,7 @@ export default function EVProductGrid() {
       </section>
     );
   }
-  const products = data?.products || [];
+  const products = (data?.products || []).slice(0, 8);
 
   return (
     <section className="max-w-7xl mx-auto px-2 py-6">
@@ -84,7 +84,7 @@ export default function EVProductGrid() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product: Product) => (
+          {products.slice(0, 8).map((product: Product) => (
             <Card
               onClick={() => navigate(`/detail/${product._id}`)}
               key={product._id}
