@@ -108,11 +108,11 @@ export const adminServices = {
     return response.data.data;
   },
   async refundDeposit(orderId: string): Promise<{ message: string }> {
-    const response = await API.post(`/deposit/${orderId}/confirm`);
+    const response = await API.patch(`/deposit/${orderId}/confirm`);
     return response.data;
   },
   async confirmDeposit(orderId: string): Promise<{ message: string }> {
-    const response = await API.post(`/deposit/${orderId}/cancel`);
+    const response = await API.patch(`/deposit/${orderId}/cancel`);
     return response.data;
   },
 };
