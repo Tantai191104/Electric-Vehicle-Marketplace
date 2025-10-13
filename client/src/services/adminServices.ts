@@ -28,11 +28,6 @@ export type TransactionStats = {
   totalValue: number;
   successRate: string;
 };
-interface RevenueItem {
-  date: string;
-  revenue: number;
-  orders: number;
-}
 export const adminServices = {
   async fetchUsers(): Promise<User[]> {
     const response = await API.get("/users/list");
@@ -80,7 +75,17 @@ export const adminServices = {
     console.log(response.data);
     return response.data.data;
   },
-  async getPlatformRevenue(params?: MetricsParams): Promise<RevenueItem[]> {
+  async getPlatformRevenue(params?: MetricsParams): Promise<{
+    labels: string[];
+    revenue: number[];
+    orders: number[];
+    growth: string;
+    summary: {
+      totalRevenue: number;
+      totalOrders: number;
+      avgOrderValue: number;
+    };
+  }> {
     const query: MetricsParams = {};
     if (params?.range) query.range = params.range;
     if (params?.startDate) query.startDate = params.startDate;
@@ -90,21 +95,19 @@ export const adminServices = {
       params: Object.keys(query).length ? query : undefined,
     });
 
-    const data = response.data.data;
-
-    // Map labels, revenue, orders thành array object
-    const timeline: RevenueItem[] = data.labels.map(
-      (label: string, index: number) => ({
-        date: label,
-        revenue: data.revenue[index],
-        orders: data.orders[index],
-      })
-    );
-
-    return timeline;
+    // Trả về đúng object cho chart
+    return response.data.data;
   },
   async getAllOrders(): Promise<Order[]> {
     const response = await API.get("/admin/orders");
     return response.data.data;
+  },
+  async refundDeposit(orderId: string, reason: string) {
+    const response = await API.patch(`/deposit/${orderId}/cancel`, { reason });
+    return response.data;
+  },
+  async confirmDeposit(orderId: string, notes: string) {
+    const response = await API.patch(`/deposit/${orderId}/confirm`, { notes });
+    return response.data;
   },
 };

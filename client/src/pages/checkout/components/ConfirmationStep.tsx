@@ -28,14 +28,26 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
 }) => {
 
     const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
-    const { subtotal, shipping, tax, total } = calculateOrderSummary(
-        product.price,
-        quantity,
-        selectedMethod?.fee || 0,
-        discount,
-        shippingFee ?? 0
-    );
-    console.log(shippingFee)
+    let subtotal = 0, shipping = 0, tax = 0, total = 0;
+    const isVehicle = product.category === "vehicle";
+    if (isVehicle) {
+        subtotal = 0;
+        shipping = 500000;
+        tax = 0;
+        total = 500000;
+    } else {
+        const summary = calculateOrderSummary(
+            product.price,
+            quantity,
+            selectedMethod?.fee || 0,
+            discount,
+            shippingFee ?? 0
+        );
+        subtotal = summary.subtotal;
+        shipping = summary.shipping;
+        tax = summary.tax;
+        total = summary.total;
+    }
     const SummaryCard = ({
         title,
         children,
@@ -122,7 +134,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             </SummaryCard>
 
             {/* Order Summary */}
-            <SummaryCard title="Chi tiết thanh toán">
+            <SummaryCard title={isVehicle ? "Lên lịch hẹn" : "Chi tiết thanh toán"}>
                 <div className="space-y-2">
                     {/* Payment Method */}
                     <div className="bg-blue-50 border border-blue-100 rounded-md p-2.5 mb-3">
@@ -139,51 +151,59 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
                         </div>
                     </div>
 
-                    {/* Subtotal */}
-                    <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
-                        <span className="text-gray-700 font-medium text-sm">
-                            Tạm tính
-                            <span className="text-xs text-gray-500 ml-1">
-                                ({quantity} x {formatVND(product.price)})
-                            </span>
-                        </span>
-                        <span className="font-semibold text-gray-900">{formatVND(subtotal)}</span>
-                    </div>
-
-                    {/* Shipping */}
-                    <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
-                        <span className="text-gray-700 font-medium text-sm">Phí vận chuyển</span>
-                        <span className={`font-semibold ${shipping === 0 ? "text-green-600" : "text-gray-900"}`}>
-                            {shipping === 0 ? (
-                                <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">
-                                    Miễn phí
+                    {/* Subtotal, Shipping, Tax, Discount for non-vehicle */}
+                    {!isVehicle && (
+                        <>
+                            <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
+                                <span className="text-gray-700 font-medium text-sm">
+                                    Tạm tính
+                                    <span className="text-xs text-gray-500 ml-1">
+                                        ({quantity} x {formatVND(product.price)})
+                                    </span>
                                 </span>
-                            ) : (
-                                formatVND(shipping)
+                                <span className="font-semibold text-gray-900">{formatVND(subtotal)}</span>
+                            </div>
+                            <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
+                                <span className="text-gray-700 font-medium text-sm">Phí vận chuyển</span>
+                                <span className={`font-semibold ${shipping === 0 ? "text-green-600" : "text-gray-900"}`}>
+                                    {shipping === 0 ? (
+                                        <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">
+                                            Miễn phí
+                                        </span>
+                                    ) : (
+                                        formatVND(shipping)
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
+                                <span className="text-gray-700 font-medium text-sm">
+                                    Thuế VAT
+                                    <span className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded ml-1">10%</span>
+                                </span>
+                                <span className="font-semibold text-gray-900">{formatVND(tax)}</span>
+                            </div>
+                            {discount > 0 && (
+                                <div className="flex justify-between items-center bg-green-50 px-2.5 py-2 rounded-md border border-green-100">
+                                    <span className="text-green-800 font-medium text-sm">
+                                        Giảm giá
+                                        <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded ml-1">
+                                            {couponCode}
+                                        </span>
+                                    </span>
+                                    <span className="font-semibold text-green-700">-{formatVND(discount)}</span>
+                                </div>
                             )}
-                        </span>
-                    </div>
+                        </>
+                    )}
 
-                    {/* Tax */}
-                    <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
-                        <span className="text-gray-700 font-medium text-sm">
-                            Thuế VAT
-                            <span className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded ml-1">10%</span>
-                        </span>
-                        <span className="font-semibold text-gray-900">{formatVND(tax)}</span>
-                    </div>
-
-                    {/* Discount */}
-                    {discount > 0 && (
-                        <div className="flex justify-between items-center bg-green-50 px-2.5 py-2 rounded-md border border-green-100">
-                            <span className="text-green-800 font-medium text-sm">
-                                Giảm giá
-                                <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded ml-1">
-                                    {couponCode}
-                                </span>
-                            </span>
-                            <span className="font-semibold text-green-700">-{formatVND(discount)}</span>
-                        </div>
+                    {/* Only show shipping fee and total for vehicle */}
+                    {isVehicle && (
+                        <>
+                            <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
+                                <span className="text-gray-700 font-medium text-sm">Phí lên lịch hẹn</span>
+                                <span className="font-semibold text-blue-600">{formatVND(500000)}</span>
+                            </div>
+                        </>
                     )}
 
                     {/* Total */}

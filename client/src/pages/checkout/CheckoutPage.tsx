@@ -18,9 +18,13 @@ import { orderServices } from "@/services/orderServices";
 
 export default function CheckoutPage() {
     const navigate = useNavigate();
-    const params = useParams<{ productId: string; quantity: string }>();
+    const params = useParams<{ productId: string; quantity?: string }>();
     const productId = params.productId;
-    const quantity = parseInt(params.quantity || "1");
+    let quantity = 1;
+    if (params.quantity) {
+        const parsed = parseInt(params.quantity);
+        if (!isNaN(parsed) && parsed > 0) quantity = parsed;
+    }
 
     const { user, updateUser } = useAuthStore();
     const [currentStep, setCurrentStep] = useState(1);
@@ -56,6 +60,10 @@ export default function CheckoutPage() {
     useEffect(() => {
         async function fetchShippingFee() {
             if (!product || !user || !product.seller?.address) return;
+            if (product.category === "vehicle") {
+                setShippingFee(500000);
+                return;
+            }
             const payload = {
                 service_type_id: 2,
                 from_district_id: Number(product.seller.address.districtCode) || 0,
@@ -104,7 +112,7 @@ export default function CheckoutPage() {
         { id: 1, title: "Sản phẩm", icon: FiShoppingBag },
         { id: 2, title: "Giao hàng", icon: FiTruck },
         { id: 3, title: "Thanh toán", icon: FiCreditCard },
-        { id: 4, title: "Xác nhận", icon: FiCheck }
+        { id: 4, title: product?.category === "vehicle" ? "Lên lịch hẹn" : "Xác nhận", icon: FiCheck }
     ];
 
     const isStepValid = (step: number): boolean => {
@@ -142,7 +150,13 @@ export default function CheckoutPage() {
         setIsProcessing(true);
         try {
             const toastId = toast.loading("Đang xử lý thanh toán...");
-            const totalAmount = product.price * quantity + (shippingFee ?? 0) - discount;
+            let totalAmount: number;
+            if (product.category === "vehicle") {
+                // Chỉ lấy đúng 500,000, không lấy VAT hay gì thêm
+                totalAmount = 500000;
+            } else {
+                totalAmount = product.price * quantity + (shippingFee ?? 0) - discount;
+            }
 
             if (selectedPaymentMethod === "system_wallet" && typeof user?.wallet.balance === "number") {
                 if (user.wallet.balance < totalAmount) {
@@ -157,7 +171,7 @@ export default function CheckoutPage() {
                 productName: product.title || "",
                 from_name: product.seller.name,
                 from_phone: product.seller.phone || "",
-                from_address: product.seller.address ? 
+                from_address: product.seller.address ?
                     `${product.seller.address.houseNumber}, ${product.seller.address.ward}, ${product.seller.address.district}, ${product.seller.address.province}` : "",
                 from_ward_name: product.seller.address?.ward || "",
                 from_district_name: product.seller.address?.district || "",
@@ -177,7 +191,7 @@ export default function CheckoutPage() {
                 insurance_value: 0,
                 cod_amount: totalAmount,
                 required_note: "KHONGCHOXEMHANG",
-                shipping_fee: shippingFee,
+                shipping_fee: product.category === "vehicle" ? 500000 : shippingFee,
                 unit_price: product.price || 0,
                 content: `${product.title} x${product.brand}`,
                 product_id: product._id,

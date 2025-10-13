@@ -75,9 +75,9 @@ export async function getAdminStats(req, res) {
     ] = await Promise.all([
       // Current period
       User.countDocuments({ isActive: true }),
-      Product.countDocuments({ status: "active" }), // Tổng số products active
+      Product.countDocuments({ status: 'active' }), // Tổng số products active
       Product.countDocuments({
-        status: "active",
+        status: 'active',
         ...(Object.keys(currentDateFilter).length > 0
           ? { createdAt: currentDateFilter }
           : {}),
@@ -127,7 +127,7 @@ export async function getAdminStats(req, res) {
         : Promise.resolve(0),
       Object.keys(previousDateFilter).length > 0
         ? Product.countDocuments({
-            status: "active",
+            status: 'active',
             createdAt: previousDateFilter,
           })
         : Promise.resolve(0),
@@ -212,7 +212,10 @@ export async function getAdminStats(req, res) {
             ) / 100,
           products:
             Math.round(
-              calculatePercentageChange(totalProductsCreated, previousProducts) * 100
+              calculatePercentageChange(
+                totalProductsCreated,
+                previousProducts
+              ) * 100
             ) / 100,
           orders:
             Math.round(
@@ -252,7 +255,7 @@ export async function getSystemStats(req, res) {
           { $group: { _id: '$role', count: { $sum: 1 } } },
         ]),
         Product.aggregate([
-          { $match: { status: "active" } },
+          { $match: { status: 'active' } },
           { $group: { _id: '$category', count: { $sum: 1 } } },
         ]),
         Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
@@ -894,66 +897,81 @@ export async function handleViolation(req, res) {
 // Báo cáo doanh thu platform
 export async function getPlatformRevenue(req, res) {
   try {
-    const { startDate, endDate, groupBy = 'month' } = req.query;
-
-    // Build filter
+    const { startDate, endDate } = req.query;
     const matchQuery = { status: { $in: ['delivered', 'confirmed'] } };
-    if (startDate || endDate) {
-      matchQuery.createdAt = {};
-      if (startDate) matchQuery.createdAt.$gte = new Date(startDate);
-      if (endDate) matchQuery.createdAt.$lte = new Date(endDate);
-    }
 
-    // Aggregate timeline
-    const revenueData = await Order.aggregate([
+    // Nếu không có startDate/endDate thì lấy mặc định từ đầu năm đến nay
+    const now = new Date();
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(now.getFullYear(), 0, 1);
+    const end = endDate ? new Date(endDate) : now;
+
+    // Gộp về đầu tháng và cuối tháng để tính đủ các tháng nằm giữa
+    const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+    const endMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0);
+
+    matchQuery.createdAt = { $gte: startMonth, $lte: endMonth };
+
+    // Aggregate doanh thu theo tháng
+    const monthlyData = await Order.aggregate([
       { $match: matchQuery },
       {
         $group: {
-          _id:
-            groupBy === 'day'
-              ? {
-                  year: { $year: '$createdAt' },
-                  month: { $month: '$createdAt' },
-                  day: { $dayOfMonth: '$createdAt' },
-                }
-              : groupBy === 'month'
-              ? {
-                  year: { $year: '$createdAt' },
-                  month: { $month: '$createdAt' },
-                }
-              : { year: { $year: '$createdAt' } }, // fallback yearly
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+          },
           totalRevenue: { $sum: '$finalAmount' },
           totalOrders: { $sum: 1 },
         },
       },
-      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
 
-    // Build labels and arrays for FE
-    const labels = [];
-    const revenue = [];
-    const orders = [];
+    // ✅ Tạo danh sách các tháng giữa start và end (đảm bảo đủ tháng)
+    const months = [];
+    const cursor = new Date(startMonth);
+    while (
+      cursor.getFullYear() < endMonth.getFullYear() ||
+      (cursor.getFullYear() === endMonth.getFullYear() &&
+        cursor.getMonth() <= endMonth.getMonth())
+    ) {
+      months.push({
+        year: cursor.getFullYear(),
+        month: cursor.getMonth() + 1,
+        label: `Tháng ${cursor.getMonth() + 1}/${cursor.getFullYear()}`,
+      });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
 
-    revenueData.forEach((item) => {
-      const { _id } = item;
-      let label = '';
-      if (groupBy === 'day') label = `${_id.day}/${_id.month}/${_id.year}`;
-      else if (groupBy === 'month') label = `Tháng ${_id.month}/${_id.year}`;
-      else label = `${_id.year}`;
-      labels.push(label);
-      revenue.push(item.totalRevenue);
-      orders.push(item.totalOrders);
+    // ✅ Map dữ liệu thực vào danh sách tháng
+    const labels = months.map((m) => m.label);
+    const revenue = months.map((m) => {
+      const found = monthlyData.find(
+        (item) => item._id.year === m.year && item._id.month === m.month
+      );
+      return found ? found.totalRevenue : 0;
+    });
+    const orders = months.map((m) => {
+      const found = monthlyData.find(
+        (item) => item._id.year === m.year && item._id.month === m.month
+      );
+      return found ? found.totalOrders : 0;
     });
 
-    // Calculate growth vs previous period (mock simple for now)
+    // ✅ Tính % tăng trưởng (tháng gần nhất vs tháng trước)
     let growth = '+0%';
     if (revenue.length > 1) {
       const last = revenue[revenue.length - 1];
       const prev = revenue[revenue.length - 2];
-      growth = prev ? `${(((last - prev) / prev) * 100).toFixed(1)}%` : '+0%';
+      growth =
+        prev && prev !== 0
+          ? `${(((last - prev) / prev) * 100).toFixed(1)}%`
+          : '+0%';
     }
 
-    // Summary
+    // ✅ Tổng hợp summary
     const summaryAgg = await Order.aggregate([
       { $match: matchQuery },
       {
@@ -965,7 +983,6 @@ export async function getPlatformRevenue(req, res) {
         },
       },
     ]);
-
     const summary = summaryAgg[0] || {
       totalRevenue: 0,
       totalOrders: 0,
@@ -979,11 +996,7 @@ export async function getPlatformRevenue(req, res) {
         revenue,
         orders,
         growth,
-        summary: {
-          totalRevenue: summary.totalRevenue,
-          totalOrders: summary.totalOrders,
-          avgOrderValue: summary.avgOrderValue,
-        },
+        summary,
       },
     });
   } catch (error) {

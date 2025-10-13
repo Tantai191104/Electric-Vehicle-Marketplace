@@ -111,7 +111,7 @@ const UserDropdown = () => {
                 <div className="flex justify-between text-sm text-gray-700 mb-2">
                   <span>Đồng Tốt</span>
                   <span className="font-semibold text-yellow-600">
-                    {formatVND(user?.wallet.balance ?? 0)}
+                    {formatVND(user?.wallet?.balance ?? 0)}
                   </span>
                 </div>
                 <Link to="/wallet/recharge">
