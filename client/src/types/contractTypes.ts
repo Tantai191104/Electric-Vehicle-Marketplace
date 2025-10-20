@@ -51,4 +51,7 @@ export interface ContractTemplate {
     unitPrice: number;
     [key: string]: string | number; // phòng khi có thêm placeholder khác
   };
+  terms?: Array<{ title: string; content: string }>;
 }
+
+// ServerContractTemplate not needed; use `ContractTemplate` directly

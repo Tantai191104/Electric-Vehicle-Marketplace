@@ -13,6 +13,7 @@ import {
   getProductsValidation,
 } from "../validations/product.validation.js";
 import cloudinary from "../config/cloudinary.js";
+import { incrementListingUsage } from "../middlewares/subscriptionQuota.js";
 
 export async function createProduct(req, res) {
   try {
@@ -51,6 +52,10 @@ export async function createProduct(req, res) {
     }
 
     const product = await createProductService(productData);
+    // Increment quota usage if present
+    if (req.subscriptionContext?.userSubId) {
+      await incrementListingUsage(req.subscriptionContext.userSubId);
+    }
     res.status(201).json(product);
   } catch (err) {
     const status = err.statusCode || 400;

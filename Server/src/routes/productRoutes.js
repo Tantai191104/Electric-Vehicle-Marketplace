@@ -19,6 +19,7 @@ import { optionalAuth, requireUser, requireAdmin, requireAuth } from "../middlew
 import { requireProductManagement } from "../middlewares/checkPurchasePermission.js";
 import { requireOwnership } from "../middlewares/checkOwnership.js";
 import { productUpload } from "../middlewares/upload.js";
+import { enforceListingQuota } from "../middlewares/subscriptionQuota.js";
 
 const router = express.Router();
 
@@ -473,7 +474,7 @@ router.get("/products/:id", optionalAuth, getProductById);
  *         description: Unauthorized
  */
 // Chỉ User (người bán) có thể tạo sản phẩm, Admin không bán hàng
-router.post("/products", authenticate, requireProductManagement, productUpload.array('files', 10), createProduct);
+router.post("/products", authenticate, requireProductManagement, enforceListingQuota, productUpload.array('files', 10), createProduct);
 
 /**
  * @swagger

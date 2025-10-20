@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { VehicleFormData, BatteryFormData } from "@/types/productType";
@@ -10,6 +11,7 @@ import LocationForm from "./components/LocationForm";
 import ImagesForm from "./components/ImagesForm";
 import { Car, Bike, BatteryCharging } from "lucide-react";
 import { productServices } from "@/services/productServices";
+import { contractServices } from "@/services/contractServices";
 
 const initialVehicleData: VehicleFormData = {
   title: "",
@@ -85,6 +87,7 @@ const EditorPage: React.FC = () => {
   const [form, setForm] = useState<VehicleFormData | BatteryFormData | null>(null);
   const [showTypeDialog, setShowTypeDialog] = useState(true);
   const [images, setImages] = useState<string[]>([]);
+  const navigate = useNavigate();
 
   const handleCategorySelect = (category: "vehicle" | "battery") => {
     if (category === "vehicle") {
@@ -108,6 +111,30 @@ const EditorPage: React.FC = () => {
         toast.success("Đăng tin xe điện thành công!");
       } else {
         toast.success("Đăng tin pin thành công!");
+
+        // Nếu là battery, tạo hợp đồng (server sẽ khởi tạo bản nháp hợp đồng)
+        try {
+          const productData = res?.data || res;
+          const productId = productData?._id || productData?.id || productData?.productId;
+          const sellerId = productData?.seller?.id || productData?.seller?._id || productData?.sellerId;
+
+          if (!productId) {
+            console.warn('Product id not found in createProduct response; skipping contract creation');
+          } else {
+            const contractResp = await contractServices.createContract({ product_id: productId, seller_id: sellerId });
+            const newContractId = contractResp?.data?.contractId;
+            if (newContractId) {
+              toast.success("Hợp đồng đã được tạo cho pin", {
+                description: `Mã hợp đồng: HD${newContractId}`,
+              });
+              // Navigate to contract page to allow editing/signing
+              navigate('/contract', { state: { product: productData, seller: productData?.seller } });
+            }
+          }
+        } catch (err) {
+          console.error('Could not create contract after battery creation', err);
+          toast.error('Tạo hợp đồng không thành công, vui lòng thử lại sau');
+        }
       }
     } catch (error) {
       console.error("Error creating product:", error);
