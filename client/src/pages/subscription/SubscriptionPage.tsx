@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { FiStar, FiZap, FiShield } from "react-icons/fi";
 import { useAuthStore } from "@/store/auth";
 import { subscriptionServices } from "@/services/subscriptionServices";
+import { toast } from 'sonner';
+import PlanCardSkeleton from './components/PlanCardSkeleton';
 
 import type { SubscriptionPlan } from "@/types/subscriptionTypes";
 import { PageHeader } from "./components/PageHeader";
@@ -41,8 +43,22 @@ export default function SubscriptionPage() {
                     features?: { aiAssist?: boolean; priorityBoost?: boolean };
                 };
 
+                type ServerQuotas = {
+                    maxHighlightsPerCycle?: number;
+                    maxListingsPerCycle?: number;
+                    aiUsagePerCycle?: number;
+                    highlightHoursPerListing?: number;
+                    cooldownDaysBetweenListings?: number;
+                };
+                type ServerFeaturesObj = {
+                    aiAssist?: boolean;
+                    priorityBoost?: boolean;
+                    manualReviewBypass?: boolean;
+                    supportLevel?: string;
+                };
+
                 const mapped = raw.map((sRaw: unknown) => {
-                    const s = sRaw as ServerSubscription;
+                    const s = sRaw as ServerSubscription & { quotas?: ServerQuotas; features?: ServerFeaturesObj };
                     return {
                         id: s._id ?? s.id ?? s.key ?? String(s.name),
                         name: s.name ?? 'Gói',
@@ -51,19 +67,24 @@ export default function SubscriptionPage() {
                         duration: s.billingCycle ?? s.duration ?? 'tháng',
                         color: s.key === 'pro' ? 'emerald' : s.key === 'standard' ? 'blue' : 'gray',
                         badge: s.key === 'pro' ? 'PRO' : undefined,
-                        features: s.features ? [
+                        // keep a simple features list for fallback display
+                        features: [
                             ...(s.quotas?.maxListingsPerCycle ? [`${s.quotas.maxListingsPerCycle} bài đăng/chu kỳ`] : []),
                             ...(s.features?.aiAssist ? ['AI Assist'] : []),
                             ...(s.features?.priorityBoost ? ['Priority Boost'] : []),
-                        ] : [],
+                        ],
                         bonuses: [],
                         suitable: s.description ?? '',
                         popular: s.key === 'pro',
+                        // structured/server fields for PlanCard to render
+                        quotas: s.quotas,
+                        featuresObj: s.features,
                     } as SubscriptionPlan;
                 });
                 if (mounted) setSubscriptionPlans(mapped);
             } catch (err) {
                 console.error('Failed to load subscription plans', err);
+                toast.error('Không thể tải danh sách gói. Vui lòng thử lại sau.');
             } finally {
                 if (mounted) setLoading(false);
             }
@@ -105,7 +126,9 @@ export default function SubscriptionPage() {
                         animate="visible"
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
                     >
-                        {loading && <div className="col-span-4 text-center">Đang tải...</div>}
+                        {loading && Array.from({ length: 4 }).map((_, i) => (
+                            <PlanCardSkeleton key={`sk-${i}`} />
+                        ))}
                         {!loading && subscriptionPlans.map((plan) => (
                             <PlanCard
                                 key={plan.id}

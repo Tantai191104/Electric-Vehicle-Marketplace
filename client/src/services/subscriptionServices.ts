@@ -7,6 +7,19 @@ export const subscriptionServices = {
   // fetch active (public) subscription plans for customers
   getActiveSubscriptions: async () => {
     const resp = await API.get("/subscriptions/active");
+    const payload = resp.data;
+    // Normalize common response shapes: array or { success: true, data: [...] }
+    if (Array.isArray(payload)) return payload;
+    if (payload && typeof payload === "object") {
+      if (Array.isArray(payload.data)) return payload.data;
+      if (Array.isArray(payload.result)) return payload.result;
+    }
+    // fallback: return empty array
+    return [];
+  },
+  // fetch the current authenticated user's subscription
+  getMySubscription: async () => {
+    const resp = await API.get("/subscriptions/me");
     return resp.data;
   },
 
