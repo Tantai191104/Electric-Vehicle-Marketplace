@@ -2,18 +2,60 @@ export type Seller = {
   _id: string;
   name: string;
   email: string;
+  password?: string;
   phone?: string;
   avatar?: string | null;
-  address?: {
-    houseNumber: string;
-    provinceCode: string;
-    districtCode: string;
-    wardCode: string;
-    province: string;
-    district: string;
-    ward: string;
+  role?: string;
+  isActive?: boolean;
+  profile?: {
+    address?: {
+      houseNumber?: string;
+      provinceCode?: string;
+      districtCode?: string;
+      wardCode?: string;
+      province?: string;
+      district?: string;
+      ward?: string;
+    };
+    bankAccount?: {
+      bankName?: string | null;
+      accountNumber?: string | null;
+      accountHolder?: string | null;
+    };
+    fullName?: string | null;
+    dateOfBirth?: string | null;
+    gender?: string | null;
+    identityCard?: string | null;
+    violations?: Violation[];
   };
+  wallet?: {
+    balance?: number;
+    totalDeposited?: number;
+    totalSpent?: number;
+  };
+  preferences?: {
+    notifications?: {
+      email?: boolean;
+      sms?: boolean;
+      push?: boolean;
+    };
+    language?: string;
+    currency?: string;
+  };
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  wishlist?: string[];
 };
+
+// Reusable small types
+export interface Violation {
+  reason?: string;
+  date?: string;
+  [key: string]: unknown;
+}
+
 
 export type ContractTemplate = {
   htmlContent: string | null;

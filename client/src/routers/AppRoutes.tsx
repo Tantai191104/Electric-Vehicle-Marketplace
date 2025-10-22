@@ -12,6 +12,8 @@ import MotorbikeProductList from "@/pages/Product/Motorbike/MotorbikeProductList
 import WalletTopupPage from "@/pages/zalopay/WalletTopupPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
 import EditorPage from "@/pages/article/EditorPage";
+import SignContractPage from "@/pages/contract/SignContractPage";
+import ContractEditorPage from "@/pages/contract/ContractEditorPage";
 import ProductDetailPage from "@/pages/detail/ProductDetailPage";
 import OrderPage from "@/pages/order/OrderPage";
 import CheckoutPage from "@/pages/checkout/CheckoutPage";
@@ -78,6 +80,8 @@ export default function App() {
 
           <Route element={<StandardLayout />}>
             <Route path="/articles/create" element={animatePage(<EditorPage />)} />
+            <Route path="/contracts/sign/:productId" element={animatePage(<SignContractPage />)} />
+            <Route path="/contracts/edit/:productId" element={animatePage(<ContractEditorPage />)} />
             <Route path="/profile" element={animatePage(<ProfilePage />)} />
             <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
             <Route path="/orders" element={animatePage(<OrderPage />)} />
