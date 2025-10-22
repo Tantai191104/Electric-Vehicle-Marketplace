@@ -59,8 +59,8 @@ export interface Violation {
 
 export type ContractTemplate = {
   htmlContent: string | null;
-  sellerSignature: string | null;
-  pdfUrl: string | null;
+  sellerSignature: string | null; // data URL (base64) of seller signature image
+  pdfUrl: string | null; // public URL to PDF (Cloudinary or similar)
   createdAt: string | null;
 };
 
@@ -118,7 +118,7 @@ export type Product = {
   __v?: number;
   approvedAt?: string;
   approvedBy?: string;
-  contractTemplate?: ContractTemplate; // Contract có thể có hoặc không
+  contractTemplate?: ContractTemplate | null; // Contract có thể có hoặc không
   isInWishlist?: boolean; // Để check sản phẩm có trong wishlist không
 };
 

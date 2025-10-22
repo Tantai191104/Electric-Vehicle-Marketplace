@@ -7,6 +7,7 @@ import HomePage from "@/pages/Home/HomePage";
 import ProfilePage from "@/pages/profile/ProfilePage";
 import type { JSX } from "react";
 import StandardLayout from "@/layouts/StandardLayout";
+import ContractEditorPage from "@/pages/contract/ContractEditorPage";
 import CarProductList from "@/pages/Product/Car/CarProductList";
 import MotorbikeProductList from "@/pages/Product/Motorbike/MotorbikeProductList";
 import WalletTopupPage from "@/pages/zalopay/WalletTopupPage";
@@ -23,6 +24,7 @@ import AdminLayout from "@/layouts/AdminLayout";
 import UserManage from "@/pages/admin/user/UserManage";
 import ProductManage from "@/pages/admin/product/ProductManage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
+import SubscriptionManage from "@/pages/admin/subscriptions/SubscriptionManage";
 import TransactionsPage from "@/pages/transaction/TransactionsPage";
 import OwnProduct from "@/pages/Product/own/OwnProduct";
 import OrderManage from "@/pages/admin/orders/OrderManage";
@@ -103,6 +105,7 @@ export default function App() {
             />
             <Route path="orders" element={animatePage(<OrderManage />)} />
             <Route path="products" element={animatePage(<ProductManage />)} />
+             <Route path="subscriptions" element={animatePage(<SubscriptionManage />)} />
           </Route>
         </Route>
       </Routes>

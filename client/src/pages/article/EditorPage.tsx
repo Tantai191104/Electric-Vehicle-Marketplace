@@ -15,7 +15,6 @@ import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/auth";
 import { DialogContent as DialogContent2, DialogHeader as DialogHeader2, DialogTitle as DialogTitle2 } from "@/components/ui/dialog";
- 
 
 const initialVehicleData: VehicleFormData = {
   title: "",

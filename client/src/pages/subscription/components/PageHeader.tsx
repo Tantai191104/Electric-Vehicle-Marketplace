@@ -3,21 +3,23 @@ import { FiTarget } from "react-icons/fi";
 
 export const PageHeader: React.FC = () => {
     return (
-        <motion.div
+        <motion.header
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="text-center mb-14"
         >
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-lg mb-6">
-                <FiTarget className="w-8 h-8 text-white" />
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-gray-100 text-gray-800 rounded-xl mb-5 shadow-sm">
+                <FiTarget className="w-7 h-7" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+
+            <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-3">
                 Chọn gói phù hợp với bạn
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Từ miễn phí đến enterprise, chúng tôi có gói dịch vụ phù hợp với mọi quy mô kinh doanh.
+
+            <p className="text-base md:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                Từ miễn phí đến doanh nghiệp, chúng tôi có gói phù hợp cho mọi quy mô kinh doanh.
             </p>
-        </motion.div>
+        </motion.header>
     );
 };
