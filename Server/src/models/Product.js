@@ -55,6 +55,9 @@ const productSchema = new mongoose.Schema(
     rejectedAt: { type: Date },
     rejectionReason: { type: String },
     isFeatured: { type: Boolean, default: false },
+    // Priority controls for subscription-based boosting
+    priorityLevel: { type: String, enum: ["low", "medium", "high"], default: "low" },
+    featuredUntil: { type: Date, default: null },
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     // Contract template (seller-customizable)

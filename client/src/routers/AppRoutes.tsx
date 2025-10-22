@@ -23,7 +23,6 @@ import ProductManage from "@/pages/admin/product/ProductManage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
 import TransactionsPage from "@/pages/transaction/TransactionsPage";
 import OwnProduct from "@/pages/Product/own/OwnProduct";
-import ContractPage from "@/pages/contract/ContractPage";
 import OrderManage from "@/pages/admin/orders/OrderManage";
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
@@ -85,7 +84,6 @@ export default function App() {
             <Route path="/subscriptions" element={animatePage(<SubscriptionPage />)} />
             <Route path="/transactions" element={animatePage(<TransactionsPage />)} />
             <Route path="/own/product" element={animatePage(<OwnProduct />)} />
-            <Route path="/contract" element={animatePage(<ContractPage />)} />
           </Route>
         </Route>
         <Route element={<ProtectedRoute role="admin" />}>

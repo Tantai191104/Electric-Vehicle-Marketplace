@@ -29,6 +29,7 @@ import zalopayRoutes from './routes/zalopayRoutes.js';
 import contractRoutes from './routes/contractRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import depositRoutes from './routes/depositRoutes.js';
+import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 await connectDB(process.env.MONGO_URI);
@@ -107,6 +108,7 @@ app.use('/api', chatRoutes);
 app.use('/api', zalopayRoutes);
 app.use('/api', contractRoutes);
 app.use('/api', depositRoutes);
+app.use('/api', subscriptionRoutes);
 app.use(
   '/api-docs',
   swaggerUi.serve,

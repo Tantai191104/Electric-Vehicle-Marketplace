@@ -69,7 +69,7 @@ export function ActionButtons({
         );
     };
 
-    // Layout cho battery
+    // Layout cho battery: hiển thị nút Xem hợp đồng
     if (category === "battery") {
         return (
             <div className={`flex flex-col gap-3 ${className}`}>
@@ -93,12 +93,22 @@ export function ActionButtons({
                     >
                         {isContactLoading ? "Đang tạo cuộc hội thoại..." : "Liên hệ người bán"}
                     </ButtonWithIcon>
+
+                    <ButtonWithIcon
+                        onClick={onContract!}
+                        isLoading={isContractLoading}
+                        icon={<FiFileText className="w-4 h-4" />}
+                        type="secondary"
+                        fullWidth
+                    >
+                        {isContractLoading ? "Đang tải hợp đồng..." : "Xem hợp đồng"}
+                    </ButtonWithIcon>
                 </div>
             </div>
         );
     }
 
-    // Layout cho vehicle
+    // Layout cho vehicle: không hiển thị nút hợp đồng
     return (
         <div className={`flex flex-col sm:flex-row gap-3 ${className}`}>
             <ButtonWithIcon
@@ -112,13 +122,13 @@ export function ActionButtons({
             </ButtonWithIcon>
 
             <ButtonWithIcon
-                onClick={onContract!}
-                isLoading={isContractLoading}
-                icon={<FiFileText className="w-4 h-4" />}
+                onClick={onBuyNow!}
+                isLoading={isBuyNowLoading}
+                icon={<FiShoppingBag className="w-5 h-5" />}
                 type="secondary"
                 fullWidth
             >
-                {isContractLoading ? "Đang lên lịch hẹn..." : "Lên lịch hẹn"}
+                {isBuyNowLoading ? "Đang xử lý..." : "Mua ngay"}
             </ButtonWithIcon>
         </div>
     );
