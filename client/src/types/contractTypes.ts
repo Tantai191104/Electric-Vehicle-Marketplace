@@ -33,7 +33,22 @@ export interface ContractData {
   status: "draft" | "signed" | "completed" | string; // có thể refine thêm nếu biết rõ trạng thái
   seller: Party;
   buyer: Party;
+  // Server may return template info that can be either a simple template descriptor
+  // (name + placeholders) or a richer template with htmlContent / terms.
   template: ContractTemplate;
+
+  // URLs stored on the contract
+  draftPdfUrl?: string | null;
+  finalPdfUrl?: string | null;
+
+  // Timestamps when parties signed
+  sellerSignedAt?: string | null;
+  buyerSignedAt?: string | null;
+  signedAt?: string | null;
+
+  // optional metadata from product/creation
+  metadata?: Record<string, unknown>;
+  templateName?: string | null;
 }
 
 export interface Party {
@@ -43,15 +58,24 @@ export interface Party {
 }
 
 export interface ContractTemplate {
-  name: string;
-  placeholders: {
-    sellerName: string;
-    buyerName: string;
-    productTitle: string;
-    unitPrice: number;
-    [key: string]: string | number; // phòng khi có thêm placeholder khác
-  };
-  terms?: Array<{ title: string; content: string }>;
-}
+  // human-facing name of the template (if provided by server)
+  name?: string | null;
 
-// ServerContractTemplate not needed; use `ContractTemplate` directly
+  // Optionally the rendered HTML content for the template (server may store it)
+  htmlContent?: string | null;
+
+  // base64 dataURL of seller signature (if present on product template)
+  sellerSignature?: string | null;
+
+  // URL to an existing PDF for the template (product-level)
+  pdfUrl?: string | null;
+
+  // When returned from /contracts/initiate the server includes placeholders
+  // used by the client to populate the template. These are optional.
+  placeholders?: Record<string, string | number> | null;
+
+  // Optional editable terms array
+  terms?: Array<{ title: string; content: string }> | null;
+
+  createdAt?: string | null;
+}
