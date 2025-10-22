@@ -1,5 +1,69 @@
 import Product from "../models/Product.js";
 import User from "../models/User.js";
+import UserSubscription from "../models/UserSubscription.js";
+
+// Helper function to create aggregation pipeline for subscription-based sorting
+export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) {
+  return [
+    { $match: baseQuery },
+    {
+      $lookup: {
+        from: "usersubscriptions",
+        localField: "seller",
+        foreignField: "userId",
+        as: "sellerSubscription"
+      }
+    },
+    {
+      $addFields: {
+        sellerPlanKey: {
+          $ifNull: [
+            { $arrayElemAt: ["$sellerSubscription.planKey", 0] },
+            "free" // Default to free if no subscription found
+          ]
+        },
+        planPriority: {
+          $switch: {
+            branches: [
+              { case: { $eq: ["$sellerPlanKey", "pro"] }, then: 1 },
+              { case: { $eq: ["$sellerPlanKey", "trial"] }, then: 2 },
+              { case: { $eq: ["$sellerPlanKey", "free"] }, then: 3 }
+            ],
+            default: 3
+          }
+        }
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "seller",
+        foreignField: "_id",
+        as: "seller"
+      }
+    },
+    {
+      $addFields: {
+        seller: { $arrayElemAt: ["$seller", 0] }
+      }
+    },
+    {
+      $project: {
+        sellerSubscription: 0,
+        sellerPlanKey: 0,
+        planPriority: 0
+      }
+    },
+    {
+      $sort: {
+        planPriority: 1, // Lower number = higher priority (pro=1, trial=2, free=3)
+        createdAt: -1   // Within same plan, newest first
+      }
+    },
+    { $skip: skip },
+    { $limit: limit }
+  ];
+}
 
 // Helper function to format product with seller address
 function formatProductWithAddress(product) {
@@ -80,12 +144,9 @@ export async function listProductsService(filters, page = 1, limit = 10) {
       ];
     }
 
-    const products = await Product.find(query)
-      .populate("seller", "name email phone avatar profile.address")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
+    // Use aggregation pipeline to join with UserSubscription and sort by subscription plan
+    const pipeline = createSubscriptionSortPipeline(query, skip, limit);
+    const products = await Product.aggregate(pipeline);
     const total = await Product.countDocuments(query);
 
     // Format products to include seller address in a clean format
@@ -101,6 +162,11 @@ export async function listProductsService(filters, page = 1, limit = 10) {
       },
     };
   } catch (error) {
+    // Enhanced error handling for aggregation pipeline
+    if (error.name === 'MongoServerError') {
+      console.error('MongoDB aggregation error:', error.message);
+      throw new Error('Database query failed. Please try again.');
+    }
     throw error;
   }
 }
@@ -166,13 +232,12 @@ export async function getUserProductsService(userId, page = 1, limit = 10) {
   try {
     const skip = (page - 1) * limit;
     
-    const products = await Product.find({ seller: userId })
-      .populate("seller", "name email phone avatar profile.address")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const total = await Product.countDocuments({ seller: userId });
+    // Use aggregation pipeline for consistent sorting with other product listings
+    const pipeline = createSubscriptionSortPipeline({ seller: userId }, skip, limit);
+    const [products, total] = await Promise.all([
+      Product.aggregate(pipeline),
+      Product.countDocuments({ seller: userId })
+    ]);
 
     // Format products to include seller address in a clean format
     const formattedProducts = products.map(formatProductWithAddress);

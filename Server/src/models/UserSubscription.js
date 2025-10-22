@@ -15,8 +15,8 @@ const userSubscriptionSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true, unique: true },
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: true },
-    planKey: { type: String, enum: ['free', 'trial', 'pro'], required: true },
-    status: { type: String, enum: ['active', 'expired', 'cancelled'], default: 'active' },
+    planKey: { type: String, enum: ['free', 'trial', 'pro'], required: true, index: true },
+    status: { type: String, enum: ['active', 'expired', 'cancelled'], default: 'active', index: true },
     startedAt: { type: Date, required: true },
     expiresAt: { type: Date, required: true },
     autoRenew: { type: Boolean, default: false },
@@ -25,6 +25,10 @@ const userSubscriptionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Compound indexes for better aggregation performance
+userSubscriptionSchema.index({ userId: 1, planKey: 1 });
+userSubscriptionSchema.index({ planKey: 1, status: 1 });
 
 export default mongoose.model('UserSubscription', userSubscriptionSchema);
 

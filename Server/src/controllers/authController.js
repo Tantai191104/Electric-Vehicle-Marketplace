@@ -4,6 +4,8 @@ import { signJwt, verifyJwt } from "../utils/jwt.js";
 import { BadRequestException, UnauthorizedException } from "../utils/error.js";
 import { registerSchema, loginSchema } from "../validations/auth.validation.js";
 import { STATUS_CODE } from "../constants/httpStatus.js";
+import UserSubscription from "../models/UserSubscription.js";
+import SubscriptionPlan from "../models/SubscriptionPlan.js";
 
 const isProd = process.env.NODE_ENV === "production";
 const REFRESH_PATH = `${process.env.BASE_PATH || "/api"}/auth/refresh-token`;
@@ -37,6 +39,43 @@ export const register = async (req, res, next) => {
     const user = await User.create({
       name, email, password: hashed, phone: phone || null, role: role || "user", isActive: true,
     });
+
+    // Auto-assign free plan to new users
+    try {
+      console.log("Attempting to assign free plan to new user:", user._id);
+      const freePlan = await SubscriptionPlan.findOne({ key: "free", isActive: true });
+      console.log("Free plan found:", freePlan ? freePlan._id : "NOT FOUND");
+      
+      if (freePlan) {
+        const now = new Date();
+        const expiresAt = new Date(now);
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+        const subscription = await UserSubscription.create({
+          userId: user._id,
+          planId: freePlan._id,
+          planKey: "free",
+          status: "active",
+          startedAt: now,
+          expiresAt,
+          autoRenew: false,
+          usage: {
+            listingsUsed: 0,
+            aiUsed: 0,
+            highlightsUsed: 0,
+            cycleStart: now,
+            cycleEnd: expiresAt,
+          },
+        });
+        console.log("Free plan assigned successfully:", subscription._id);
+      } else {
+        console.warn("Free plan not found or inactive");
+      }
+    } catch (subscriptionError) {
+      console.error("Failed to assign free plan to new user:", subscriptionError.message);
+      console.error("Error details:", subscriptionError);
+      // Don't fail registration if subscription assignment fails
+    }
 
     const accessToken = signJwt({ userId: user._id, role: user.role }, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES || "15m" });
     const refreshToken = signJwt({ userId: user._id, role: user.role }, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES || "7d" });
