@@ -253,6 +253,240 @@ const options = {
             },
           },
         },
+        Product: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Product ID',
+              example: '507f1f77bcf86cd799439011',
+            },
+            title: {
+              type: 'string',
+              description: 'Product title',
+              example: 'VinFast VF8 2023',
+            },
+            description: {
+              type: 'string',
+              description: 'Product description',
+              example: 'Xe điện VinFast VF8 đã qua sử dụng',
+            },
+            price: {
+              type: 'number',
+              description: 'Product price in VND',
+              example: 890000000,
+            },
+            category: {
+              type: 'string',
+              enum: ['vehicle', 'battery', 'motorcycle'],
+              description: 'Product category',
+              example: 'vehicle',
+            },
+            brand: {
+              type: 'string',
+              description: 'Product brand',
+              example: 'VinFast',
+            },
+            model: {
+              type: 'string',
+              description: 'Product model',
+              example: 'VF8',
+            },
+            year: {
+              type: 'number',
+              description: 'Manufacturing year',
+              example: 2023,
+            },
+            condition: {
+              type: 'string',
+              enum: ['used', 'refurbished'],
+              description: 'Product condition',
+              example: 'used',
+            },
+            images: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'url',
+              },
+              description: 'Product images',
+            },
+            seller: {
+              $ref: '#/components/schemas/User',
+            },
+            status: {
+              type: 'string',
+              enum: ['pending', 'active', 'sold', 'inactive', 'rejected', 'deposit'],
+              description: 'Product status',
+              example: 'active',
+            },
+            isFeatured: {
+              type: 'boolean',
+              description: 'Whether product is featured',
+              example: false,
+            },
+            views: {
+              type: 'number',
+              description: 'Number of views',
+              example: 0,
+            },
+            likes: {
+              type: 'number',
+              description: 'Number of likes',
+              example: 0,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Creation timestamp',
+              example: '2024-01-15T10:30:00.000Z',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
+              example: '2024-01-15T10:30:00.000Z',
+            },
+          },
+        },
+        VehicleProduct: {
+          allOf: [
+            { $ref: '#/components/schemas/Product' },
+            {
+              type: 'object',
+              properties: {
+                category: {
+                  type: 'string',
+                  enum: ['vehicle'],
+                  example: 'vehicle',
+                },
+                specifications: {
+                  type: 'object',
+                  properties: {
+                    batteryCapacity: { type: 'string', example: '3.5 kWh' },
+                    range: { type: 'string', example: '203 km' },
+                    chargingTime: { type: 'string', example: '6-7 giờ' },
+                    power: { type: 'string', example: '2,500 W' },
+                    maxSpeed: { type: 'string', example: '120 km/h' },
+                    warranty: { type: 'string', example: '3 năm hoặc 30,000 km' },
+                    compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast' },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        BatteryProduct: {
+          allOf: [
+            { $ref: '#/components/schemas/Product' },
+            {
+              type: 'object',
+              properties: {
+                category: {
+                  type: 'string',
+                  enum: ['battery'],
+                  example: 'battery',
+                },
+                specifications: {
+                  type: 'object',
+                  properties: {
+                    batteryType: { type: 'string', example: 'LFP' },
+                    voltage: { type: 'string', example: '48V' },
+                    capacity: { type: 'string', example: '34.6 Ah' },
+                    cycleLife: { type: 'string', example: '2000 chu kỳ' },
+                    warranty: { type: 'string', example: '3 năm hoặc 30,000 km' },
+                    compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast' },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        MotorcycleProduct: {
+          allOf: [
+            { $ref: '#/components/schemas/Product' },
+            {
+              type: 'object',
+              properties: {
+                category: {
+                  type: 'string',
+                  enum: ['motorcycle'],
+                  example: 'motorcycle',
+                },
+                specifications: {
+                  type: 'object',
+                  properties: {
+                    batteryCapacity: { type: 'string', example: '3.5 kWh' },
+                    range: { type: 'string', example: '203 km' },
+                    chargingTime: { type: 'string', example: '6-7 giờ' },
+                    power: { type: 'string', example: '2,500 W' },
+                    maxSpeed: { type: 'string', example: '120 km/h' },
+                    warranty: { type: 'string', example: '3 năm hoặc 30,000 km' },
+                    compatibility: { type: 'string', example: 'Tương thích trạm sạc VinFast' },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        UpdateProduct: {
+          type: 'object',
+          properties: {
+            title: {
+              type: 'string',
+              minLength: 5,
+              maxLength: 200,
+              description: 'Product title',
+              example: 'VinFast VF8 2023 - Updated',
+            },
+            description: {
+              type: 'string',
+              minLength: 20,
+              maxLength: 2000,
+              description: 'Product description',
+              example: 'Updated description',
+            },
+            price: {
+              type: 'number',
+              minimum: 0,
+              description: 'Product price in VND',
+              example: 850000000,
+            },
+            brand: {
+              type: 'string',
+              description: 'Product brand',
+              example: 'VinFast',
+            },
+            model: {
+              type: 'string',
+              description: 'Product model',
+              example: 'VF8',
+            },
+            year: {
+              type: 'number',
+              minimum: 2000,
+              description: 'Manufacturing year',
+              example: 2023,
+            },
+            condition: {
+              type: 'string',
+              enum: ['used', 'refurbished'],
+              description: 'Product condition',
+              example: 'used',
+            },
+            status: {
+              type: 'string',
+              enum: ['active', 'sold', 'inactive'],
+              description: 'Product status',
+              example: 'active',
+            },
+            isFeatured: {
+              type: 'boolean',
+              description: 'Whether product is featured',
+              example: false,
+            },
+          },
+        },
       },
     },
     security: [
