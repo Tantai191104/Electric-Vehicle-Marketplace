@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FaRegCircleCheck, FaRegCircle } from "react-icons/fa6";
 
-const categories = ["Xe máy điện", "Ô tô điện", "Phụ kiện"];
+const categories = ["Xe máy điện", "Ô tô điện", "Pin"];
 
 const CategoryDropdown = ({
   selected,

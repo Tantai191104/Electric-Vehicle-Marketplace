@@ -35,20 +35,57 @@ export function updateContractHtml(
 ): string {
     let html = baseHtml;
 
-    // Replace seller signature
+    console.log('🔧 Contract Helper Debug:', {
+        hasSellerSignature: !!data.sellerSignature,
+        hasBuyerSignature: !!data.buyerSignature,
+        htmlLength: html.length,
+        hasSellerCanvas: html.includes('seller-signature-canvas'),
+        hasBuyerCanvas: html.includes('buyer-signature-canvas'),
+    });
+
+    // Replace seller signature - try multiple patterns
     if (data.sellerSignature) {
+        const sellerImg = `<img src="${data.sellerSignature}" alt="Seller Signature" style="width: 220px; height: 80px; border-radius: 8px;" />`;
+        
+        // Pattern 1: canvas với id="seller-signature-canvas"
         html = html.replace(
-            /<canvas id="seller-signature-canvas"[^>]*><\/canvas>/,
-            `<img src="${data.sellerSignature}" alt="Seller Signature" style="width: 220px; height: 80px; border-radius: 8px;" />`
+            /<canvas[^>]*id="seller-signature-canvas"[^>]*>[\s\S]*?<\/canvas>/i,
+            sellerImg
+        );
+        
+        // Pattern 2: canvas với id='seller-signature-canvas'
+        html = html.replace(
+            /<canvas[^>]*id='seller-signature-canvas'[^>]*>[\s\S]*?<\/canvas>/i,
+            sellerImg
+        );
+        
+        // Pattern 3: self-closing canvas
+        html = html.replace(
+            /<canvas[^>]*id=["']?seller-signature-canvas["']?[^>]*\/>/i,
+            sellerImg
         );
     }
 
-    // Replace buyer signature
+    // Replace buyer signature - try multiple patterns
     if (data.buyerSignature) {
+        const buyerImg = `<img src="${data.buyerSignature}" alt="Buyer Signature" style="width: 220px; height: 80px; border-radius: 8px;" /><div style="margin-top: 10px; font-weight: bold;">${data.buyerName || ""}</div>`;
+        
+        // Pattern 1: canvas với id="buyer-signature-canvas"
         html = html.replace(
-            /<canvas id="buyer-signature-canvas"[^>]*><\/canvas>/,
-            `<img src="${data.buyerSignature}" alt="Buyer Signature" style="width: 220px; height: 80px; border-radius: 8px;" />` +
-            `<div style="margin-top: 10px; font-weight: bold;">${data.buyerName || ""}</div>`
+            /<canvas[^>]*id="buyer-signature-canvas"[^>]*>[\s\S]*?<\/canvas>/i,
+            buyerImg
+        );
+        
+        // Pattern 2: canvas với id='buyer-signature-canvas'
+        html = html.replace(
+            /<canvas[^>]*id='buyer-signature-canvas'[^>]*>[\s\S]*?<\/canvas>/i,
+            buyerImg
+        );
+        
+        // Pattern 3: self-closing canvas
+        html = html.replace(
+            /<canvas[^>]*id=["']?buyer-signature-canvas["']?[^>]*\/>/i,
+            buyerImg
         );
     }
 

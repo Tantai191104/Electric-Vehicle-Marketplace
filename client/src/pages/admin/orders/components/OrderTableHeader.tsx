@@ -39,10 +39,12 @@ export default function OrderTableHeader({
                     <p className="text-gray-600 mt-1">
                         Theo dõi đơn hàng Giao Hàng Nhanh (GHN) - Chỉ xem thông tin
                     </p>
-                    <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md">
-                        <Info className="w-3 h-3" />
-                        <span>Đơn hàng được quản lý bởi GHN</span>
-                    </div>
+                    {shippingMethodFilter === "ghn" && (
+                        <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md">
+                            <Info className="w-3 h-3" />
+                            <span>Đơn hàng được quản lý bởi GHN</span>
+                        </div>
+                    )}
                 </div>
                 <Button
                     onClick={onRefresh}

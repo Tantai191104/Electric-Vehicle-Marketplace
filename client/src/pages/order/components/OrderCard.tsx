@@ -234,22 +234,33 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
                   {order.payment.status === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
                 </Badge>
               </div>
-              <div className="space-y-1 text-sm text-gray-700">
-                <div className="flex justify-between">
-                  <span>Giá sản phẩm:</span>
-                  <span>{formatNumberWithDots(order.totalAmount)} VNĐ</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Phí vận chuyển:</span>
-                  <span>{formatNumberWithDots(order.shippingFee)} VNĐ</span>
-                </div>
-                {order.commission > 0 && (
+              {order.shipping.method === "GHN" && (
+
+                <div className="space-y-1 text-sm text-gray-700">
                   <div className="flex justify-between">
-                    <span>Phí hoa hồng:</span>
-                    <span>{formatNumberWithDots(order.commission)} VNĐ</span>
+                    <span>Giá sản phẩm:</span>
+                    <span>{formatNumberWithDots(order.totalAmount)} VNĐ</span>
                   </div>
-                )}
-              </div>
+                  <div className="flex justify-between">
+                    <span>Phí vận chuyển:</span>
+                    <span>{formatNumberWithDots(order.shippingFee)} VNĐ</span>
+                  </div>
+                  {order.commission > 0 && (
+                    <div className="flex justify-between">
+                      <span>Phí hoa hồng:</span>
+                      <span>{formatNumberWithDots(order.commission)} VNĐ</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {order.shipping.method !== "GHN" && (
+                <div className="space-y-1 text-sm text-gray-700">
+                  <div className="flex justify-between">
+                    <span>Tiền cọc:</span>
+                    <span>{formatNumberWithDots(order.finalAmount)} VNĐ</span>
+                  </div>
+                </div>
+              )}
               <Separator className="bg-gray-300" />
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-black">Tổng cộng:</span>
@@ -292,10 +303,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
           <Button
             variant="outline"
             className="flex-1 border-black text-black hover:bg-black hover:text-white transition-all duration-200"
-            onClick={() => navigate(`/orders/${order._id}`)}
+            onClick={() => window.open(order.contract.pdfUrl, '_blank')}
           >
             <FiFileText className="w-4 h-4 mr-2" />
-            Xem chi tiết
+            Xem hợp đồng đã kí
           </Button>
 
           {order.status === "delivered" && (

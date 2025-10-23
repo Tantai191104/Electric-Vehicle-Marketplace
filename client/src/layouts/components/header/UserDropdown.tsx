@@ -138,7 +138,7 @@ const UserDropdown = () => {
                       <div className="font-medium">{mySubscription.name ?? '—'}</div>
                     </div>
                     <div>
-                      <Link to="/subscription" className="text-xs text-blue-600 hover:underline">Quản lý</Link>
+                      <Link to="/subscriptions" className="text-xs text-blue-600 hover:underline">Quản lý</Link>
                     </div>
                   </div>
                 ) : (
@@ -207,7 +207,7 @@ const UserDropdown = () => {
                     <FaStore /> Kênh Đối Tác
                   </DropdownMenuItem>
                 </Link>
-                <Link to="/wallet/history">
+                <Link to="transactions">
                   <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
                     <AiOutlineClockCircle /> Lịch sử giao dịch
                   </DropdownMenuItem>

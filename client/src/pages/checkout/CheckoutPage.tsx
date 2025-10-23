@@ -79,15 +79,15 @@ export default function CheckoutPage() {
     const steps: CheckoutStep[] = product?.category === "battery"
         ? [
             { id: 1, title: "Sản phẩm", icon: FiShoppingBag },
-            { id: 2, title: "Giao hàng", icon: FiTruck },
-            { id: 3, title: "Thanh toán", icon: FiCreditCard },
-            { id: 4, title: "Hợp đồng", icon: FiCheck },
+            { id: 2, title: "Thông tin giao hàng", icon: FiTruck },
+            { id: 3, title: "Hợp đồng", icon: FiCheck },
+            { id: 4, title: "Phương thức thanh toán", icon: FiCreditCard },
             { id: 5, title: "Xác nhận", icon: FiCheck }
         ]
         : [
             { id: 1, title: "Sản phẩm", icon: FiShoppingBag },
-            { id: 2, title: "Giao hàng", icon: FiTruck },
-            { id: 3, title: "Thanh toán", icon: FiCreditCard },
+            { id: 2, title: "Thông tin giao dịch", icon: FiTruck },
+            { id: 3, title: "Phương thức thanh toán cọc", icon: FiCreditCard },
             { id: 4, title: "Lên lịch hẹn", icon: FiCheck }
         ];
 
@@ -218,25 +218,25 @@ export default function CheckoutPage() {
                 setIsProcessing(false);
                 return;
             }
-            
+
             if (!contractPdf || !contractId) {
                 toast.dismiss(toastId);
                 toast.error("Hợp đồng chưa được tạo. Vui lòng quay lại bước trước.");
                 setIsProcessing(false);
                 return;
             }
-            
+
             // 1. Gửi hợp đồng PDF lên server để ký
             toast.loading("Đang gửi hợp đồng lên server...", { id: toastId });
             const signResponse = await contractServices.signContract(contractId, contractPdf);
-            
+
             if (!signResponse) {
                 toast.dismiss(toastId);
                 toast.error("Không thể ký hợp đồng trên server.");
                 setIsProcessing(false);
                 return;
             }
-            
+
             // 2. Tạo đơn hàng sau khi ký hợp đồng thành công
             toast.loading("Đang tạo đơn hàng...", { id: toastId });
             const totalAmount = product.price * quantity + (shippingFee ?? 0) - discount;
@@ -305,26 +305,26 @@ export default function CheckoutPage() {
             toast.error("Vui lòng ký hợp đồng trước.");
             return;
         }
-        
+
         setIsProcessing(true);
         try {
             const toastId = toast.loading("Đang tạo hợp đồng...");
-            
+
             // 1. Tạo contract trên server
             const contractResponse = await contractServices.createContract({
                 product_id: product._id,
                 seller_id: product.seller._id,
             });
-            
+
             if (!contractResponse.data?.contractId) {
                 toast.dismiss(toastId);
                 toast.error("Không thể tạo hợp đồng trên server.");
                 setIsProcessing(false);
                 return;
             }
-            
+
             setContractId(contractResponse.data.contractId);
-            
+
             // 2. Generate PDF từ HTML
             const pdfFile = await generateContractPDF(contractHtml);
             if (!pdfFile) {
@@ -333,12 +333,12 @@ export default function CheckoutPage() {
                 setIsProcessing(false);
                 return;
             }
-            
+
             setContractPdf(pdfFile);
-            
+
             toast.dismiss(toastId);
             toast.success("Hợp đồng đã được tạo thành công!");
-            
+
             // Chuyển sang bước tiếp theo (bước 5 - Xác nhận)
             handleNext();
         } catch (error) {
@@ -360,15 +360,15 @@ export default function CheckoutPage() {
                 case 2:
                     return <ShippingInfoStep shippingInfo={shippingInfo} onUpdate={setShippingInfo} />;
                 case 3:
-                    return <PaymentMethodStep selectedMethod={selectedPaymentMethod} onMethodChange={setSelectedPaymentMethod} methods={paymentMethods} />;
+                    return (<ContractStep
+                        contractHtml={contractHtml}
+                        buyerSignature={buyerSignature}
+                        onSignatureChange={setBuyerSignature}
+                    />)
                 case 4:
-                    return (
-                        <ContractStep
-                            contractHtml={contractHtml}
-                            buyerSignature={buyerSignature}
-                            onSignatureChange={setBuyerSignature}
-                        />
-                    );
+
+                    return (<PaymentMethodStep selectedMethod={selectedPaymentMethod} onMethodChange={setSelectedPaymentMethod} methods={paymentMethods} />);
+
                 case 5:
                     return (
                         <div>
@@ -490,6 +490,6 @@ export default function CheckoutPage() {
                     </div>
                 </div>
             </div>
-        </div>  
+        </div>
     );
 }
