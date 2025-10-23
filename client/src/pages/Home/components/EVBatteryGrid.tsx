@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useProducts } from "@/hooks/useProduct";
+import { useBatteryProducts } from "@/hooks/useProduct";
 import { formatNumberWithDots } from "@/utils/numberFormatter";
 import { getConditionLabel } from "@/utils/productHelper";
 import type { Product } from "@/types/productType";
@@ -11,10 +11,9 @@ import { useNavigate } from "react-router-dom";
 
 export default function EVBatteryGrid() {
   // Fetch battery products với limit 8
-  const { data, isLoading, error } = useProducts({
+  const { data, isLoading, error } = useBatteryProducts({
     page: 1,
-    limit: 8,
-    category: "battery"
+    limit: 8
   });
   const navigate = useNavigate();
   // Loading state
@@ -28,7 +27,7 @@ export default function EVBatteryGrid() {
         </div>
         <div className="text-center py-12">
           <AiOutlineLoading3Quarters className="w-8 h-8 mx-auto mb-4 text-yellow-500 animate-spin" />
-          <p className="text-gray-600">Đang tải phụ kiện...</p>
+          <p className="text-gray-600">Đang tải pin điện...</p>
         </div>
       </section>
     );

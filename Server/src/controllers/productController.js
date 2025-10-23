@@ -5,14 +5,38 @@ import {
   updateProductService,
   deleteProductService,
   getUserProductsService,
+  createSubscriptionSortPipeline,
 } from "../services/productService.js";
 import Product from "../models/Product.js";
+import UserSubscription from "../models/UserSubscription.js";
 import {
   createProductValidation,
   updateProductValidation,
   getProductsValidation,
 } from "../validations/product.validation.js";
 import cloudinary from "../config/cloudinary.js";
+import { incrementListingUsage } from "../middlewares/subscriptionQuota.js";
+
+// Helper function to get products sorted by subscription plan
+async function getProductsSortedByPlan(query, page = 1, limit = 10) {
+  const skip = (Number(page) - 1) * Number(limit);
+  
+  const pipeline = createSubscriptionSortPipeline(query, skip, Number(limit));
+  const [products, total] = await Promise.all([
+    Product.aggregate(pipeline),
+    Product.countDocuments(query)
+  ]);
+
+  return {
+    products,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      pages: Math.ceil(total / Number(limit))
+    }
+  };
+}
 
 export async function createProduct(req, res) {
   try {
@@ -51,6 +75,10 @@ export async function createProduct(req, res) {
     }
 
     const product = await createProductService(productData);
+    // Increment quota usage if present
+    if (req.subscriptionContext?.userSubId) {
+      await incrementListingUsage(req.subscriptionContext.userSubId);
+    }
     res.status(201).json(product);
   } catch (err) {
     const status = err.statusCode || 400;
@@ -138,26 +166,9 @@ export async function getVehicles(req, res) {
       category: "vehicle",
       ...(status && { status })
     };
-    const skip = (Number(page) - 1) * Number(limit);
     
-    const [products, total] = await Promise.all([
-      Product.find(query)
-        .populate('seller', 'name email phone profile.fullName profile.address')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Product.countDocuments(query)
-    ]);
-
-    res.json({
-      products,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        pages: Math.ceil(total / Number(limit))
-      }
-    });
+    const result = await getProductsSortedByPlan(query, page, limit);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -170,26 +181,9 @@ export async function getBatteries(req, res) {
       category: "battery",
       ...(status && { status })
     };
-    const skip = (Number(page) - 1) * Number(limit);
     
-    const [products, total] = await Promise.all([
-      Product.find(query)
-        .populate('seller', 'name email phone profile.fullName profile.address')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Product.countDocuments(query)
-    ]);
-
-    res.json({
-      products,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        pages: Math.ceil(total / Number(limit))
-      }
-    });
+    const result = await getProductsSortedByPlan(query, page, limit);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -202,26 +196,9 @@ export async function getMotorcycles(req, res) {
       category: "motorcycle",
       ...(status && { status })
     };
-    const skip = (Number(page) - 1) * Number(limit);
     
-    const [products, total] = await Promise.all([
-      Product.find(query)
-        .populate('seller', 'name email phone profile.fullName profile.address')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Product.countDocuments(query)
-    ]);
-
-    res.json({
-      products,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        pages: Math.ceil(total / Number(limit))
-      }
-    });
+    const result = await getProductsSortedByPlan(query, page, limit);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

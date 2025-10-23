@@ -11,7 +11,7 @@ export const orderServices = {
     return response.data;
   },
   async cancelOrder(order_code: string) {
-    const response = await API.post(`/shipping/cancel`, { order_code });
+    const response = await API.post(`/shipping/order/cancel`, { order_code });
     return response.data;
   } ,
   async createDepositOrder(data: DepositPayload) {

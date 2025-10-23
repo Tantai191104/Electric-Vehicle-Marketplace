@@ -9,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import OrderConfirmDialog from "./OrderConfirmDialog";
+import { contractServices } from '@/services/contractServices';
+import { toast } from 'sonner';
 import OrderActionMenuItems from "./OrderActionMenuItems";
 import type { Order } from "@/types/orderType";
 interface OrderActionsProps {
@@ -34,8 +36,34 @@ export function OrderActions({
     setConfirmOpen(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async (file?: File | null) => {
     if (!actionType) return;
+
+    // If confirming and a file is provided, attempt to upload and sign contract first
+    if (actionType === 'confirmed') {
+      try {
+        console.log('Uploading and signing contract PDF for order', order);
+        if (file && order.contract && order.contract.contractId) {
+          await contractServices.signContract(order.contract.contractId, file);
+          toast.success('Hợp đồng đã được tải lên và ký thành công');
+        } else if (!file) {
+          // No file provided - in the UI confirm button is disabled when missing, but guard anyway
+          toast.error('Vui lòng chọn file PDF hợp đồng trước khi xác nhận');
+          return;
+        } else {
+          // No contract ID available on the order
+          toast.error('Không tìm thấy contractId cho đơn hàng này.');
+          // proceed to update status anyway or return? we'll return to avoid inconsistent state
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to upload contract PDF', err);
+        toast.error('Tải hợp đồng thất bại. Vui lòng thử lại.');
+        return;
+      }
+    }
+
+    // If we reach here, either it's not a confirm action or the upload succeeded
     onStatusChange(order._id, actionType);
     setConfirmOpen(false);
     setActionType(null);

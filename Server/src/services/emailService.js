@@ -79,6 +79,8 @@ export async function sendBuyerOrderConfirmation({
     .order-code-value { font-size: 20px; font-weight: bold; color: #000; margin-top: 5px; }
     .shipping-info { background: #e7f3ff; border-radius: 8px; padding: 15px; margin: 20px 0; }
     .shipping-info h3 { margin-top: 0; color: #0066cc; }
+    .payment-info { background: #fff3e0; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #FF9800; }
+    .payment-info h3 { margin-top: 0; color: #E65100; }
     .footer { background: #f4f4f4; padding: 20px; text-align: center; color: #666; font-size: 14px; }
     .success-icon { font-size: 48px; margin-bottom: 10px; }
   </style>
@@ -108,8 +110,15 @@ export async function sendBuyerOrderConfirmation({
       </div>
 
       <div class="total-row">
-        <span>Tổng thanh toán:</span>
-        <span>${formattedTotal} VNĐ</span>
+        <span>Tổng tiền hàng:</span>
+        <span>${formattedUnitPrice} VNĐ</span>
+      </div>
+
+      <div class="payment-info">
+        <h3>💰 Thông tin thanh toán</h3>
+        <p><strong>Lưu ý:</strong> Phí vận chuyển sẽ được tính riêng và thanh toán khi nhận hàng.</p>
+        <p><strong>Tổng tiền hàng:</strong> ${formattedUnitPrice} VNĐ (chưa bao gồm phí ship)</p>
+        <p><strong>Phí vận chuyển:</strong> ${formattedShippingFee} VNĐ (thanh toán khi nhận hàng)</p>
       </div>
 
       <div class="order-code">
@@ -225,6 +234,8 @@ export async function sendSellerOrderNotification({
     .order-code-value { font-size: 20px; font-weight: bold; color: #000; margin-top: 5px; }
     .shipping-info { background: #e7f3ff; border-radius: 8px; padding: 15px; margin: 20px 0; }
     .shipping-info h3 { margin-top: 0; color: #0066cc; }
+    .payment-info { background: #fff3e0; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #FF9800; }
+    .payment-info h3 { margin-top: 0; color: #E65100; }
     .footer { background: #f4f4f4; padding: 20px; text-align: center; color: #666; font-size: 14px; }
     .success-icon { font-size: 48px; margin-bottom: 10px; }
     .buyer-detail { margin: 10px 0; padding: 8px 0; }
@@ -255,8 +266,8 @@ export async function sendSellerOrderNotification({
       </div>
 
       <div class="total-row">
-        <span>Tổng giá trị đơn hàng:</span>
-        <span>${formattedTotal} VNĐ</span>
+        <span>Tổng tiền hàng:</span>
+        <span>${formattedUnitPrice} VNĐ</span>
       </div>
 
       <div class="buyer-info">

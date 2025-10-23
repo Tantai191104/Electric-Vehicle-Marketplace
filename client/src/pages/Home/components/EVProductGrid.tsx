@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { formatNumberWithDots } from "@/utils/numberFormatter";
-import { useProducts } from "@/hooks/useProduct";
+import { useVehicleProducts } from "@/hooks/useProduct";
 import { getConditionLabel, getProductType } from "@/utils/productHelper";
 import type { Product } from "@/types/productType";
 import { FiEye, FiHeart, FiCalendar } from "react-icons/fi";
@@ -12,10 +12,9 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 export default function EVProductGrid() {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useProducts({
+  const { data, isLoading, error } = useVehicleProducts({
     page: 1,
-    limit: 8,
-    category: "vehicle"
+    limit: 8
   });
   if (isLoading) {
     return (

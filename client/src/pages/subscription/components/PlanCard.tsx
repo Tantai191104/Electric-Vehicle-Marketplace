@@ -1,6 +1,7 @@
-import { motion, type Variants } from "framer-motion";
-import { FiCheck, FiArrowRight } from "react-icons/fi";
+import { motion } from "framer-motion";
+import { FiArrowRight } from "react-icons/fi";
 import type { SubscriptionPlan } from "@/types/subscriptionTypes";
+
 
 interface PlanCardProps {
     plan: SubscriptionPlan;
@@ -17,26 +18,13 @@ export const PlanCard: React.FC<PlanCardProps> = ({
     isHovered,
     onSelect,
     onHover,
-    onLeave
+    onLeave,
 }) => {
-    const cardVariants: Variants = {
-        hidden: { opacity: 0, y: 30 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.6,
-                ease: "easeOut"
-            }
-        }
-    };
-
     return (
         <motion.div
-            variants={cardVariants}
             onHoverStart={onHover}
             onHoverEnd={onLeave}
-            className={`relative ${plan.popular ? 'lg:scale-105' : ''}`}
+            className={`relative transition-all duration-200 ${plan.popular ? 'lg:scale-105' : ''}`}
         >
             {/* Badges */}
             {plan.popular && (
@@ -46,52 +34,32 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     transition={{ delay: 0.8, type: "spring" }}
                     className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20"
                 >
-                    <div className="bg-gray-900 text-white px-3 py-1 rounded-full text-xs font-medium">
-                        Phổ biến nhất
-                    </div>
-                </motion.div>
-            )}
-
-            {plan.recommended && (
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.8, type: "spring" }}
-                    className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20"
-                >
-                    <div className="bg-gray-900 text-white px-3 py-1 rounded-full text-xs font-medium">
-                        Được đề xuất
+                    <div className="bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow">
+                        PRO
                     </div>
                 </motion.div>
             )}
 
             <motion.div
-                className={`h-full rounded-lg border bg-white transition-all duration-300 overflow-hidden ${isSelected ? 'border-gray-900 shadow-lg' :
-                    plan.popular ? 'border-gray-300 shadow-md' :
-                        'border-gray-200 shadow-sm hover:shadow-md'
-                    }`}
-                whileHover={{
-                    y: -4,
-                    transition: { duration: 0.2 }
-                }}
+                className={`h-full rounded-2xl border border-gray-100 bg-white shadow-[0_2px_16px_0_rgba(0,0,0,0.04)] transition-all duration-300 overflow-hidden ${isSelected ? 'border-gray-900 shadow-lg' : 'hover:shadow-lg'} ${plan.popular ? 'border-emerald-200' : ''}`}
+                whileHover={{ y: -2, scale: 1.01, transition: { duration: 0.18 } }}
             >
                 {/* Header */}
-                <div className="p-6 text-center border-b border-gray-100">
-                    {/* Icon */}
+                <div className="p-6 text-center border-b border-gray-50">
                     <motion.div
-                        className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gray-50 mb-4 text-gray-700"
-                        whileHover={{ scale: 1.05 }}
+                        className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 mb-4 text-gray-700 shadow-sm"
+                        whileHover={{ scale: 1.07 }}
                         transition={{ type: "spring", stiffness: 300 }}
                     >
                         {plan.icon}
                     </motion.div>
 
                     <div className="flex items-center justify-center gap-2 mb-2">
-                        <h3 className="text-xl font-semibold text-gray-900">
+                        <h3 className="text-xl font-bold text-gray-900 tracking-tight">
                             {plan.name}
                         </h3>
                         {plan.badge && (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium">
+                            <span className="px-2 py-1 bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 rounded-full text-xs font-semibold shadow-sm">
                                 {plan.badge}
                             </span>
                         )}
@@ -109,7 +77,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                                     Miễn phí
                                 </div>
                                 <div className="text-sm text-gray-500 mt-1">
-                                    {plan.duration}
+                                    {plan.duration.replace('monthly', 'tháng').replace('chu kỳ', 'tháng')}
                                 </div>
                             </div>
                         ) : (
@@ -122,7 +90,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                                     <span className="text-sm text-gray-500">VNĐ</span>
                                 </div>
                                 <div className="text-sm text-gray-500 mt-1">
-                                    per {plan.duration}
+                                    /{plan.duration.replace('monthly', 'tháng').replace('chu kỳ', 'tháng')}
                                 </div>
                             </div>
                         )}
@@ -131,8 +99,8 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     {/* CTA Button */}
                     <motion.button
                         onClick={onSelect}
-                        className="w-full bg-gray-900 hover:bg-black text-white font-medium py-2.5 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
-                        whileHover={{ scale: 1.02 }}
+                        className="w-full bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm"
+                        whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.98 }}
                     >
                         {plan.price === 0 ? 'Tạo tài khoản miễn phí' : 'Bắt đầu dùng thử'}
@@ -140,30 +108,52 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     </motion.button>
                 </div>
 
-                {/* Features */}
+                {/* Features & Quotas */}
                 <div className="p-6">
-                    <div className="space-y-3">
-                        {plan.features.map((feature, featureIndex) => (
-                            <motion.div
-                                key={featureIndex}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.5 + featureIndex * 0.1 }}
-                                className="flex items-start gap-3"
-                            >
-                                <div className="flex-shrink-0 w-4 h-4 bg-gray-100 rounded-full flex items-center justify-center mt-0.5">
-                                    <FiCheck className="w-2.5 h-2.5 text-gray-600" />
+                    {/* Quotas summary from server (if present) */}
+                    {plan.quotas && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm mb-6">
+                            <div className="flex flex-col gap-4">
+                                <div>
+                                    <span className="font-medium block mb-1">Tin đăng tối đa mỗi tháng</span>
+                                    <span className="block text-gray-700">{plan.quotas?.maxListingsPerCycle && plan.quotas.maxListingsPerCycle > 0 ? `${plan.quotas.maxListingsPerCycle} tin` : 'Không giới hạn'}</span>
                                 </div>
-                                <span className="text-sm text-gray-600 leading-relaxed">
-                                    {feature}
-                                </span>
-                            </motion.div>
-                        ))}
+                                <div>
+                                    <span className="font-medium block mb-1">Tin nổi bật tối đa mỗi tháng</span>
+                                    <span className="block text-gray-700">{plan.quotas?.maxHighlightsPerCycle && plan.quotas.maxHighlightsPerCycle > 0 ? `${plan.quotas.maxHighlightsPerCycle} tin` : 'Không có'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-medium block mb-1">Số lần sử dụng AI mỗi tháng</span>
+                                    <span className="block text-gray-700">{plan.quotas?.aiUsagePerCycle && plan.quotas.aiUsagePerCycle > 0 ? `${plan.quotas.aiUsagePerCycle} lần` : 'Không có'}</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-4">
+                                <div>
+                                    <span className="font-medium block mb-1">Giờ nổi bật mỗi tin</span>
+                                    <span className="block text-gray-700">{plan.quotas?.highlightHoursPerListing && plan.quotas.highlightHoursPerListing > 0 ? `${plan.quotas.highlightHoursPerListing} giờ` : 'Không có'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-medium block mb-1">Thời gian chờ giữa các lần đăng</span>
+                                    <span className="block text-gray-700">{plan.quotas?.cooldownDaysBetweenListings && plan.quotas.cooldownDaysBetweenListings > 0 ? `${plan.quotas.cooldownDaysBetweenListings} ngày` : 'Không có'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex flex-wrap gap-3 mb-4">
+                        {/* Structured features (boolean flags) */}
+                        {plan.featuresObj && (
+                            <div className="flex flex-wrap gap-2">
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${plan.featuresObj.aiAssist ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>Hỗ trợ AI thông minh</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${plan.featuresObj.priorityBoost ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-400'}`}>Ưu tiên hiển thị</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${plan.featuresObj.manualReviewBypass ? 'bg-slate-100 text-slate-700' : 'bg-gray-100 text-gray-400'}`}>Bỏ qua kiểm duyệt thủ công</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${plan.featuresObj.supportLevel !== 'none' && !!plan.featuresObj.supportLevel ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>Hỗ trợ: {plan.featuresObj.supportLevel === 'none' ? 'Không có' : plan.featuresObj.supportLevel === 'priority' ? 'Ưu tiên' : plan.featuresObj.supportLevel}</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Bonuses */}
                     {plan.bonuses && plan.bonuses.length > 0 && (
-                        <div className="mt-6 pt-4 border-t border-gray-100">
+                        <div className="mt-6 pt-4 border-t border-gray-50">
                             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
                                 Tính năng bổ sung
                             </div>
