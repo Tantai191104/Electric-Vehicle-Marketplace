@@ -3,7 +3,11 @@ import {
   productServices,
   type ProductFilters,
 } from "@/services/productServices";
-import type { BatteryFormData, VehicleFormData, ProductDetailResponse } from "@/types/productType";
+import type {
+  BatteryFormData,
+  VehicleFormData,
+  ProductDetailResponse,
+} from "@/types/productType";
 
 // Query Keys
 export const productKeys = {
@@ -14,11 +18,31 @@ export const productKeys = {
   detail: (id: string) => [...productKeys.details(), id] as const,
 };
 
-// Hook để fetch danh sách products
+// Hook để fetch danh sách tất cả sản phẩm
 export const useProducts = (filters?: ProductFilters) => {
   return useQuery({
     queryKey: productKeys.list(filters || {}),
     queryFn: () => productServices.fetchProducts(filters),
+  });
+};
+
+// Hook để fetch danh sách xe điện
+export const useVehicleProducts = (
+  filters?: Omit<ProductFilters, "category">
+) => {
+  return useQuery({
+    queryKey: ["products", "vehicles", filters],
+    queryFn: () => productServices.fetchVehicleProducts(filters),
+  });
+};
+
+// Hook để fetch danh sách pin xe điện
+export const useBatteryProducts = (
+  filters?: Omit<ProductFilters, "category">
+) => {
+  return useQuery({
+    queryKey: ["products", "batteries", filters],
+    queryFn: () => productServices.fetchBatteryProducts(filters),
   });
 };
 

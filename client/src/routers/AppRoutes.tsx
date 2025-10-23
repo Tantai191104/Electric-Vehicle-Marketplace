@@ -14,7 +14,6 @@ import WalletTopupPage from "@/pages/zalopay/WalletTopupPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
 import EditorPage from "@/pages/article/EditorPage";
 import SignContractPage from "@/pages/contract/SignContractPage";
-import ContractEditorPage from "@/pages/contract/ContractEditorPage";
 import ProductDetailPage from "@/pages/detail/ProductDetailPage";
 import OrderPage from "@/pages/order/OrderPage";
 import CheckoutPage from "@/pages/checkout/CheckoutPage";
@@ -105,7 +104,7 @@ export default function App() {
             />
             <Route path="orders" element={animatePage(<OrderManage />)} />
             <Route path="products" element={animatePage(<ProductManage />)} />
-             <Route path="subscriptions" element={animatePage(<SubscriptionManage />)} />
+            <Route path="subscriptions" element={animatePage(<SubscriptionManage />)} />
           </Route>
         </Route>
       </Routes>

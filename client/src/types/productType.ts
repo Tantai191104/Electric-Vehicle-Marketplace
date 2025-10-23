@@ -7,7 +7,6 @@ export type Seller = {
   avatar?: string | null;
   role?: string;
   isActive?: boolean;
-  profile?: {
     address?: {
       houseNumber?: string;
       provinceCode?: string;
@@ -16,7 +15,6 @@ export type Seller = {
       province?: string;
       district?: string;
       ward?: string;
-    };
     bankAccount?: {
       bankName?: string | null;
       accountNumber?: string | null;
