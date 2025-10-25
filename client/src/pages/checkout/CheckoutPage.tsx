@@ -51,10 +51,10 @@ export default function CheckoutPage() {
         phone: user?.phone || "",
         email: user?.email || "",
         houseNumber: user?.profile.address.houseNumber || "",
-        city: user?.profile.address.province || "",
-        district: user?.profile.address.district || "",
-        ward: user?.profile.address.ward || "",
-        note: ""
+        city: product?.category === "vehicle" ? (user?.profile.address.province || "") : (user?.profile.address.province || ""),
+        district: product?.category === "vehicle" ? "" : (user?.profile.address.district || ""),
+        ward: product?.category === "vehicle" ? "" : (user?.profile.address.ward || ""),
+        note: product?.category === "vehicle" ? "" : ""
     });
 
     const paymentMethods: PaymentMethod[] = [
@@ -358,7 +358,7 @@ export default function CheckoutPage() {
                 case 1:
                     return product ? <ProductInfoStep product={product} quantity={quantity} /> : null;
                 case 2:
-                    return <ShippingInfoStep shippingInfo={shippingInfo} onUpdate={setShippingInfo} />;
+                    return <ShippingInfoStep shippingInfo={shippingInfo} onUpdate={setShippingInfo} category={product?.category} />;
                 case 3:
                     return (
                         <ContractStep
@@ -400,7 +400,8 @@ export default function CheckoutPage() {
                 case 1:
                     return product ? <ProductInfoStep product={product} quantity={quantity} /> : null;
                 case 2:
-                    return <ShippingInfoStep shippingInfo={shippingInfo} onUpdate={setShippingInfo} />;
+                    // Truyền category cho ShippingInfoStep
+                    return <ShippingInfoStep shippingInfo={shippingInfo} onUpdate={setShippingInfo} category={product?.category} />;
                 case 3:
                     return <PaymentMethodStep selectedMethod={selectedPaymentMethod} onMethodChange={setSelectedPaymentMethod} methods={paymentMethods} />;
                 case 4:
