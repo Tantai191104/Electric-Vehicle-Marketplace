@@ -12,8 +12,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { FiTrendingUp, FiDollarSign } from "react-icons/fi";
+import { FiDollarSign } from "react-icons/fi";
 import { useRevenueData } from "@/hooks/useAdmin";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -257,10 +256,6 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
               {description}
             </p>
           </div>
-          <Badge className="gap-1 bg-gray-900 text-white border-gray-900">
-            <FiTrendingUp className="w-3 h-3" />
-            {growthDisplay}
-          </Badge>
         </div>
       </CardHeader>
 
