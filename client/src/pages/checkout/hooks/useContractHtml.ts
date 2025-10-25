@@ -48,13 +48,14 @@ export function useContractHtml(
   const [contractHtml, setContractHtml] = useState<string>("");
 
   useEffect(() => {
-    if (product && product.contractTemplate?.htmlContent && currentStep === 4) {
+    if (product && product.contractTemplate?.htmlContent && currentStep === 3) {
       const totalPrice = (product.price || 0) + (shippingFee || 0);
 
-      console.log('🔍 Contract HTML Debug:', {
+      console.log("🔍 Contract HTML Debug:", {
         hasSellerSignature: !!product.contractTemplate.sellerSignature,
         hasBuyerSignature: !!buyerSignature,
-        sellerSignaturePreview: product.contractTemplate.sellerSignature?.substring(0, 50),
+        sellerSignaturePreview:
+          product.contractTemplate.sellerSignature?.substring(0, 50),
         buyerSignaturePreview: buyerSignature?.substring(0, 50),
       });
 
@@ -93,7 +94,7 @@ export function useContractHtml(
       );
 
       setContractHtml(html);
-    } else if (currentStep !== 4) {
+    } else if (currentStep !== 3) {
       setContractHtml("");
     }
   }, [product, currentStep, buyerSignature, user, shippingFee]);

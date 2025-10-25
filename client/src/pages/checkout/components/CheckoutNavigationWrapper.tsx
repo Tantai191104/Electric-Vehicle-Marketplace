@@ -33,7 +33,7 @@ export function CheckoutNavigationWrapper({
     onFinish,
 }: CheckoutNavigationWrapperProps) {
     // Battery flow - Step 4: Contract signing
-    if (category === "battery" && currentStep === 4) {
+    if (category === "battery" && currentStep === 3) {
         return (
             <div className="flex gap-3">
                 <Button

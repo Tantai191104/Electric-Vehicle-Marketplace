@@ -19,11 +19,6 @@ const ContractEditorPage: React.FC = () => {
 
   // Lấy thông tin người mua từ auth
   const user = useAuthStore((state) => state.user);
-  // ...existing code...
-
-
-
-  // --- Load hợp đồng ---
   useEffect(() => {
     if (!productId) return;
     (async () => {

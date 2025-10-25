@@ -42,12 +42,6 @@ export const SignaturePadComponent: React.FC<SignaturePadComponentProps> = ({ on
       padRef.current = null;
     };
   }, [onChange]);
-
-  const handleClear = () => {
-    padRef.current?.clear();
-    onChange("");
-  };
-
   return (
     <div style={{ display: "inline-block" }}>
       <canvas
@@ -63,21 +57,6 @@ export const SignaturePadComponent: React.FC<SignaturePadComponentProps> = ({ on
           touchAction: "none", // Fix 3️⃣: Cho phép vẽ trên thiết bị cảm ứng
         }}
       />
-      <button
-        type="button"
-        onClick={handleClear}
-        style={{
-          marginTop: 8,
-          background: "#f44336",
-          color: "#fff",
-          border: "none",
-          padding: "6px 12px",
-          borderRadius: 4,
-          cursor: "pointer",
-        }}
-      >
-        Xóa chữ ký
-      </button>
     </div>
   );
 };

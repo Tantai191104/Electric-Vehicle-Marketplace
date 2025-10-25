@@ -360,14 +360,17 @@ export default function CheckoutPage() {
                 case 2:
                     return <ShippingInfoStep shippingInfo={shippingInfo} onUpdate={setShippingInfo} />;
                 case 3:
-                    return (<ContractStep
-                        contractHtml={contractHtml}
-                        buyerSignature={buyerSignature}
-                        onSignatureChange={setBuyerSignature}
-                    />)
+                    return (
+                        <ContractStep
+                            contractHtml={contractHtml}
+                            buyerSignature={buyerSignature}
+                            onSignatureChange={setBuyerSignature}
+                        />
+                    );
                 case 4:
-
-                    return (<PaymentMethodStep selectedMethod={selectedPaymentMethod} onMethodChange={setSelectedPaymentMethod} methods={paymentMethods} />);
+                    return (
+                        <PaymentMethodStep selectedMethod={selectedPaymentMethod} onMethodChange={setSelectedPaymentMethod} methods={paymentMethods} />
+                    );
 
                 case 5:
                     return (
@@ -424,9 +427,7 @@ export default function CheckoutPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* ...existing code... */}
             <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
-                {/* ...existing code... */}
                 <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
                     <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="flex items-center gap-2 hover:bg-gray-100 -ml-2">
                         <FiArrowLeft className="w-4 h-4" /> Quay lại
@@ -434,7 +435,6 @@ export default function CheckoutPage() {
                     <h1 className="text-lg font-semibold text-gray-900">Thanh toán đơn hàng</h1>
                     <div className="w-16" />
                 </div>
-                {/* ...existing code... */}
                 <div className="flex items-center justify-center py-2">
                     <div className="flex items-center space-x-8">
                         {steps.map((step, index) => {
@@ -459,7 +459,6 @@ export default function CheckoutPage() {
                     </div>
                 </div>
             </div>
-            {/* ...existing code... */}
             <div className="py-6 max-w-7xl mx-auto px-4">
                 <div className={`mx-auto bg-white rounded-xl border shadow-sm ${product?.category === "battery" && currentStep === 4 ? "max-w-6xl" : "max-w-3xl"}`}>
                     <div className="px-6 py-4 border-b bg-gray-50/50 rounded-t-xl flex items-center gap-3">
