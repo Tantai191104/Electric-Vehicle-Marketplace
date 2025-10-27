@@ -3,6 +3,9 @@ import {
   createVehicleDeposit,
   confirmDepositTransaction,
   cancelDeposit,
+  getAllDeposits,
+  getDepositAmountConfig,
+  updateDepositAmountConfig,
 } from '../controllers/depositController.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { requireAdmin } from '../middlewares/authorize.js';
@@ -132,6 +135,135 @@ router.patch('/deposit/:orderId/confirm', authenticate, requireAdmin, confirmDep
  *         description: Order not found
  */
 router.patch('/deposit/:orderId/cancel', authenticate, requireAdmin, cancelDeposit);
+
+/**
+ * @swagger
+ * /admin/deposits:
+ *   get:
+ *     summary: Get all deposit orders (Admin only)
+ *     description: Admin can view all deposit orders with pagination
+ *     tags: [Deposit]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by order number
+ *     responses:
+ *       200:
+ *         description: List of deposit orders
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/admin/deposits', authenticate, requireAdmin, getAllDeposits);
+
+/**
+ * @swagger
+ * /admin/deposit-amount:
+ *   get:
+ *     summary: Get current deposit amount configuration (Admin only)
+ *     description: Returns the current deposit amount setting
+ *     tags: [Deposit]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current deposit amount configuration
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     amount:
+ *                       type: number
+ *                       description: Deposit amount in VND
+ *                       example: 500000
+ *                     description:
+ *                       type: string
+ *                       description: Description of the deposit
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/admin/deposit-amount', authenticate, requireAdmin, getDepositAmountConfig);
+
+/**
+ * @swagger
+ * /admin/deposit-amount:
+ *   put:
+ *     summary: Update deposit amount configuration (Admin only)
+ *     description: Admin can change the deposit amount for vehicles
+ *     tags: [Deposit]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 description: New deposit amount in VND
+ *                 example: 1000000
+ *                 minimum: 10000
+ *               description:
+ *                 type: string
+ *                 description: Description for the deposit amount
+ *                 example: "Vehicle deposit amount - 1M VND"
+ *     responses:
+ *       200:
+ *         description: Deposit amount updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     amount:
+ *                       type: number
+ *                     description:
+ *                       type: string
+ *       400:
+ *         description: Invalid amount
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.put('/admin/deposit-amount', authenticate, requireAdmin, updateDepositAmountConfig);
 
 export default router;
 

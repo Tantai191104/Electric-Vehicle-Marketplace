@@ -3,6 +3,7 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 import WalletTransaction from '../models/WalletTransaction.js';
+import Config from '../models/Config.js';
 
 // Deposit schema for vehicles - no shipping, just deposit payment
 const depositSchema = z.object({
@@ -13,7 +14,11 @@ const depositSchema = z.object({
   buyer_address: z.string().min(5, 'Valid address is required'),
 });
 
-const DEPOSIT_AMOUNT = 500000; // 500k VND deposit for vehicles
+// Helper function to get deposit amount from config, default 500k VND
+async function getDepositAmount() {
+  const config = await Config.findOne({ key: 'depositAmount' });
+  return config ? config.value : 500000;
+}
 
 /**
  * Create a deposit order for vehicles
@@ -67,6 +72,7 @@ export async function createVehicleDeposit(req, res) {
       return res.status(404).json({ error: 'Buyer not found' });
     }
 
+    const DEPOSIT_AMOUNT = await getDepositAmount();
     const buyerBalance = buyer.wallet?.balance || 0;
     if (buyerBalance < DEPOSIT_AMOUNT) {
       return res.status(400).json({
@@ -285,7 +291,7 @@ export async function cancelDeposit(req, res) {
       return res.status(404).json({ error: 'Buyer not found' });
     }
 
-    const refundAmount = order.finalAmount || DEPOSIT_AMOUNT;
+    const refundAmount = order.finalAmount || await getDepositAmount();
     const balanceBefore = buyer.wallet?.balance || 0;
     buyer.wallet = buyer.wallet || {};
     buyer.wallet.balance = balanceBefore + refundAmount;
@@ -383,6 +389,84 @@ export async function getAllDeposits(req, res) {
     });
   } catch (error) {
     console.error('getAllDeposits error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Get current deposit amount configuration
+ * Admin only
+ */
+export async function getDepositAmountConfig(req, res) {
+  try {
+    const config = await Config.findOne({ key: 'depositAmount' });
+    const amount = config ? config.value : 500000;
+    const description = config ? config.description : 'Default deposit amount';
+
+    res.json({
+      success: true,
+      data: {
+        amount,
+        description,
+        updatedAt: config?.updatedAt || null,
+      },
+    });
+  } catch (error) {
+    console.error('getDepositAmountConfig error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Update deposit amount configuration
+ * Admin only
+ */
+export async function updateDepositAmountConfig(req, res) {
+  try {
+    const adminId = req.user?.sub || req.user?.id;
+    const { amount, description } = req.body;
+
+    if (amount === undefined || amount === null) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount is required',
+      });
+    }
+
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount must be a positive number',
+      });
+    }
+
+    // Find or create config
+    const config = await Config.findOne({ key: 'depositAmount' });
+
+    if (config) {
+      config.value = amount;
+      config.description = description || 'Vehicle deposit amount';
+      config.updatedBy = adminId;
+      await config.save();
+    } else {
+      await Config.create({
+        key: 'depositAmount',
+        value: amount,
+        description: description || 'Vehicle deposit amount',
+        updatedBy: adminId,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Deposit amount updated successfully',
+      data: {
+        amount,
+        description: description || 'Vehicle deposit amount',
+      },
+    });
+  } catch (error) {
+    console.error('updateDepositAmountConfig error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 }

@@ -39,19 +39,12 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
         from: "users",
         localField: "seller",
         foreignField: "_id",
-        as: "seller"
+        as: "sellerData"
       }
     },
     {
       $addFields: {
-        seller: { $arrayElemAt: ["$seller", 0] }
-      }
-    },
-    {
-      $project: {
-        sellerSubscription: 0,
-        sellerPlanKey: 0,
-        planPriority: 0
+        seller: { $arrayElemAt: ["$sellerData", 0] }
       }
     },
     {
@@ -61,13 +54,22 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
       }
     },
     { $skip: skip },
-    { $limit: limit }
+    { $limit: limit },
+    {
+      $project: {
+        sellerSubscription: 0,
+        sellerPlanKey: 0,
+        planPriority: 0,
+        sellerData: 0
+      }
+    }
   ];
 }
 
 // Helper function to format product with seller address
 function formatProductWithAddress(product) {
-  const productObj = product.toObject();
+  // Handle both Mongoose documents and plain objects from aggregate
+  const productObj = product.toObject ? product.toObject() : product;
   if (productObj.seller?.profile?.address) {
     productObj.seller.address = {
       houseNumber: productObj.seller.profile.address.houseNumber || null,
