@@ -173,13 +173,11 @@ router.get('/admin/deposits', authenticate, requireAdmin, getAllDeposits);
 
 /**
  * @swagger
- * /admin/deposit-amount:
+ * /deposit-amount:
  *   get:
- *     summary: Get current deposit amount configuration (Admin only)
- *     description: Returns the current deposit amount setting
+ *     summary: Get current deposit amount configuration
+ *     description: Returns the current deposit amount setting (Public endpoint)
  *     tags: [Deposit]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Current deposit amount configuration
@@ -203,12 +201,10 @@ router.get('/admin/deposits', authenticate, requireAdmin, getAllDeposits);
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *       401:
- *         description: Unauthorized
  *       500:
  *         description: Server error
  */
-router.get('/admin/deposit-amount', authenticate, requireAdmin, getDepositAmountConfig);
+router.get('/deposit-amount', getDepositAmountConfig);
 
 /**
  * @swagger
