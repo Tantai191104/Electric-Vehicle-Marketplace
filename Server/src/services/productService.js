@@ -1,6 +1,7 @@
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import UserSubscription from "../models/UserSubscription.js";
+import mongoose from "mongoose";
 
 // Helper function to create aggregation pipeline for subscription-based sorting
 export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) {
@@ -233,12 +234,14 @@ export async function deleteProductService(productId, userId) {
 export async function getUserProductsService(userId, page = 1, limit = 10) {
   try {
     const skip = (page - 1) * limit;
+    // Ensure we match ObjectId correctly when filtering by seller
+    const sellerObjectId = new mongoose.Types.ObjectId(String(userId));
     
     // Use aggregation pipeline for consistent sorting with other product listings
-    const pipeline = createSubscriptionSortPipeline({ seller: userId }, skip, limit);
+    const pipeline = createSubscriptionSortPipeline({ seller: sellerObjectId }, skip, limit);
     const [products, total] = await Promise.all([
       Product.aggregate(pipeline),
-      Product.countDocuments({ seller: userId })
+      Product.countDocuments({ seller: sellerObjectId })
     ]);
 
     // Format products to include seller address in a clean format
