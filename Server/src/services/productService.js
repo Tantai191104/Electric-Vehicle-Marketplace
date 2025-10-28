@@ -4,7 +4,7 @@ import UserSubscription from "../models/UserSubscription.js";
 import mongoose from "mongoose";
 
 // Helper function to create aggregation pipeline for subscription-based sorting
-export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) {
+export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10, sortMode = "priority") {
   return [
     { $match: baseQuery },
     // Join only ACTIVE user subscription for the seller
@@ -38,20 +38,38 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
         },
         // Compute subscription-derived priority level
         subscriptionPriorityLevel: {
-          $switch: {
-            branches: [
-              { case: { $eq: ["$sellerPlanKey", "pro"] }, then: "high" },
-              { case: { $eq: ["$sellerPlanKey", "trial"] }, then: "medium" }
-            ],
-            default: "low"
-          }
+          $cond: [ { $eq: ["$sellerPlanKey", "pro"] }, "high", "low" ]
         },
         // If product has manually set priority (high/medium), use it; otherwise fallback to subscription
         effectivePriorityLevel: {
           $cond: [
-            { $in: [ { $ifNull: ["$priorityLevel", "low"] }, ["high", "medium"] ] },
-            { $ifNull: ["$priorityLevel", "low"] },
+            { $eq: [ { $ifNull: ["$priorityLevel", "low"] }, "high" ] },
+            "high",
             "$subscriptionPriorityLevel"
+          ]
+        },
+        // Metadata for clients to understand where priority comes from
+        prioritySource: {
+          $cond: [
+            { $eq: [ { $ifNull: ["$priorityLevel", "low"] }, "high" ] },
+            "product",
+            {
+              $cond: [
+                { $ne: ["$subscriptionPriorityLevel", "low"] },
+                "subscription",
+                "default"
+              ]
+            }
+          ]
+        },
+        isPriorityBoosted: {
+          $cond: [
+            { $and: [
+              { $ne: [ "$effectivePriorityLevel", { $ifNull: ["$priorityLevel", "low"] } ] },
+              { $ne: [ "$effectivePriorityLevel", "low" ] }
+            ]},
+            true,
+            false
           ]
         },
         // Normalize to a numeric weight for sorting (lower is higher priority)
@@ -59,21 +77,13 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
           $switch: {
             branches: [
               { case: { $eq: [ "$effectivePriorityLevel", "high" ] }, then: 1 },
-              { case: { $eq: [ "$effectivePriorityLevel", "medium" ] }, then: 2 },
-              { case: { $eq: [ "$effectivePriorityLevel", "low" ] }, then: 3 }
+              { case: { $eq: [ "$effectivePriorityLevel", "low" ] }, then: 2 }
             ],
             default: 3
           }
         },
         planPriority: {
-          $switch: {
-            branches: [
-              { case: { $eq: ["$sellerPlanKey", "pro"] }, then: 1 },
-              { case: { $eq: ["$sellerPlanKey", "trial"] }, then: 2 },
-              { case: { $eq: ["$sellerPlanKey", "free"] }, then: 3 }
-            ],
-            default: 3
-          }
+          $cond: [ { $eq: ["$sellerPlanKey", "pro"] }, 1, 2 ]
         }
       }
     },
@@ -90,17 +100,16 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
         seller: { $arrayElemAt: ["$sellerData", 0] }
       }
     },
-    {
-      $sort: {
-        planPriority: 1,          // Subscription: pro > trial > free
-        priorityWeight: 1,        // Product priority: high > medium > low
-        createdAt: -1             // Newest first
-      }
-    },
+    // Sorting stage depends on sortMode
+    ...(sortMode === "newest"
+      ? [ { $sort: { createdAt: -1 } } ]
+      : [ { $sort: { planPriority: 1, priorityWeight: 1, createdAt: -1 } } ]
+    ),
     // Override output field so clients see boosted priorityLevel
     {
       $addFields: {
-        priorityLevel: "$effectivePriorityLevel"
+        // Map to binary high/low for response
+        priorityLevel: { $cond: [ { $eq: ["$effectivePriorityLevel", "high"] }, "high", "low" ] }
       }
     },
     { $skip: skip },
@@ -159,7 +168,7 @@ export async function createProductService(productData) {
   }
 }
 
-export async function listProductsService(filters, page = 1, limit = 10) {
+export async function listProductsService(filters, page = 1, limit = 10, sortMode = "priority") {
   try {
     const skip = (page - 1) * limit;
     let query = {};
@@ -200,7 +209,7 @@ export async function listProductsService(filters, page = 1, limit = 10) {
     }
 
     // Use aggregation pipeline to join with UserSubscription and sort by subscription plan
-    const pipeline = createSubscriptionSortPipeline(query, skip, limit);
+    const pipeline = createSubscriptionSortPipeline(query, skip, limit, sortMode);
     const products = await Product.aggregate(pipeline);
     const total = await Product.countDocuments(query);
 
@@ -242,9 +251,17 @@ export async function getProductByIdService(productId) {
       const activeSub = await UserSubscription.findOne({ userId: product.seller._id, status: "active" }).select("planKey");
       if (activeSub?.planKey === "pro") {
         product.priorityLevel = "high";
+        product.prioritySource = product.priorityLevel === "high" ? "product" : "subscription";
+        product.isPriorityBoosted = true;
       } else if (activeSub?.planKey === "trial") {
         // Only boost if product was low; preserve explicit higher setting
-        product.priorityLevel = product.priorityLevel === "high" ? "high" : "medium";
+        const wasHigh = product.priorityLevel === "high";
+        product.priorityLevel = wasHigh ? "high" : "medium";
+        product.prioritySource = wasHigh ? "product" : "subscription";
+        product.isPriorityBoosted = !wasHigh;
+      } else {
+        product.prioritySource = ["high", "medium"].includes(product.priorityLevel) ? "product" : "default";
+        product.isPriorityBoosted = false;
       }
     } catch {}
     return product;

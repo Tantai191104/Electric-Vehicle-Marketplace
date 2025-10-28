@@ -28,7 +28,7 @@ const router = express.Router();
  * /products:
  *   get:
  *     summary: Get all products with filtering and pagination
- *     description: Results are sorted by seller subscription priority (pro > trial > free), then by product priorityLevel (high > medium > low), then newest first. If the seller has an active PRO plan, the product's response priorityLevel is boosted to "high" (TRIAL → "medium").
+ *     description: Sorted by seller subscription priority (pro before free), then by product priorityLevel (high before low), then newest first. If seller has active PRO plan, response priorityLevel is boosted to "high". Responses also include isPriorityBoosted and prioritySource.
  *     tags: [Products]
  *     parameters:
  *       - in: query
@@ -109,7 +109,7 @@ router.get("/products", optionalAuth, getProducts);
  * /products/vehicles:
  *   get:
  *     summary: Get all vehicle products
- *     description: Results are sorted by seller subscription priority (pro > trial > free), then by product priorityLevel (high > medium > low), then newest first. If the seller has an active PRO plan, the product's response priorityLevel is boosted to "high" (TRIAL → "medium").
+ *     description: Sorted by seller subscription priority (pro before free), then by product priorityLevel (high before low), then newest first. If seller has active PRO plan, response priorityLevel is boosted to "high". Responses also include isPriorityBoosted and prioritySource.
  *     tags: [Products]
  *     parameters:
  *       - in: query
@@ -177,7 +177,7 @@ router.get("/products/vehicles", optionalAuth, getVehicles);
  * /products/batteries:
  *   get:
  *     summary: Get all battery products
- *     description: Results are sorted by seller subscription priority (pro > trial > free), then by product priorityLevel (high > medium > low), then newest first. If the seller has an active PRO plan, the product's response priorityLevel is boosted to "high" (TRIAL → "medium").
+ *     description: Sorted by seller subscription priority (pro before free), then by product priorityLevel (high before low), then newest first. If seller has active PRO plan, response priorityLevel is boosted to "high". Responses also include isPriorityBoosted and prioritySource.
  *     tags: [Products]
  *     parameters:
  *       - in: query
@@ -245,7 +245,7 @@ router.get("/products/batteries", optionalAuth, getBatteries);
  * /products/motorcycles:
  *   get:
  *     summary: Get all motorcycle products
- *     description: Results are sorted by seller subscription priority (pro > trial > free), then by product priorityLevel (high > medium > low), then newest first. If the seller has an active PRO plan, the product's response priorityLevel is boosted to "high" (TRIAL → "medium").
+ *     description: Sorted by seller subscription priority (pro before free), then by product priorityLevel (high before low), then newest first. If seller has active PRO plan, response priorityLevel is boosted to "high". Responses also include isPriorityBoosted and prioritySource.
  *     tags: [Products]
  *     parameters:
  *       - in: query
@@ -314,6 +314,7 @@ router.get("/products/motorcycles", optionalAuth, getMotorcycles);
  *   get:
  *     summary: Get product by ID
  *     tags: [Products]
+ *     description: Returns a single product. If seller has an active PRO subscription, response priorityLevel is boosted to "high". Also includes isPriorityBoosted and prioritySource.
  *     parameters:
  *       - in: path
  *         name: id
