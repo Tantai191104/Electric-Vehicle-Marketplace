@@ -7,11 +7,24 @@ import mongoose from "mongoose";
 export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) {
   return [
     { $match: baseQuery },
+    // Join only ACTIVE user subscription for the seller
     {
       $lookup: {
         from: "usersubscriptions",
-        localField: "seller",
-        foreignField: "userId",
+        let: { sellerId: "$seller" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$userId", "$$sellerId"] },
+                  { $eq: ["$status", "active"] }
+                ]
+              }
+            }
+          },
+          { $project: { planKey: 1 } }
+        ],
         as: "sellerSubscription"
       }
     },
@@ -22,6 +35,36 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
             { $arrayElemAt: ["$sellerSubscription.planKey", 0] },
             "free" // Default to free if no subscription found
           ]
+        },
+        // Compute subscription-derived priority level
+        subscriptionPriorityLevel: {
+          $switch: {
+            branches: [
+              { case: { $eq: ["$sellerPlanKey", "pro"] }, then: "high" },
+              { case: { $eq: ["$sellerPlanKey", "trial"] }, then: "medium" }
+            ],
+            default: "low"
+          }
+        },
+        // Normalize to a numeric weight for sorting (lower is higher priority)
+        priorityWeight: {
+          $switch: {
+            branches: [
+              { case: { $eq: [ { $ifNull: ["$priorityLevel", null] }, "high" ] }, then: 1 },
+              { case: { $eq: [ { $ifNull: ["$priorityLevel", null] }, "medium" ] }, then: 2 },
+              { case: { $eq: [ { $ifNull: ["$priorityLevel", null] }, "low" ] }, then: 3 }
+            ],
+            // If product.priorityLevel missing, fallback to subscriptionPriorityLevel
+            default: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$subscriptionPriorityLevel", "high"] }, then: 1 },
+                  { case: { $eq: ["$subscriptionPriorityLevel", "medium"] }, then: 2 }
+                ],
+                default: 3
+              }
+            }
+          }
         },
         planPriority: {
           $switch: {
@@ -50,8 +93,9 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
     },
     {
       $sort: {
-        planPriority: 1, // Lower number = higher priority (pro=1, trial=2, free=3)
-        createdAt: -1   // Within same plan, newest first
+        planPriority: 1,          // Subscription: pro > trial > free
+        priorityWeight: 1,        // Product priority: high > medium > low
+        createdAt: -1             // Newest first
       }
     },
     { $skip: skip },
@@ -61,7 +105,9 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
         sellerSubscription: 0,
         sellerPlanKey: 0,
         planPriority: 0,
-        sellerData: 0
+        sellerData: 0,
+        priorityWeight: 0,
+        subscriptionPriorityLevel: 0
       }
     }
   ];
