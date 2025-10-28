@@ -44,6 +44,13 @@ const router = express.Router();
  *           default: 10
  *         description: Number of items per page
  *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [priority, newest]
+ *           default: priority
+ *         description: Sort by priority (high first) or newest
+ *       - in: query
  *         name: category
  *         schema:
  *           type: string

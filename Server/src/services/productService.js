@@ -72,19 +72,9 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10, 
             false
           ]
         },
-        // Normalize to a numeric weight for sorting (lower is higher priority)
-        priorityWeight: {
-          $switch: {
-            branches: [
-              { case: { $eq: [ "$effectivePriorityLevel", "high" ] }, then: 1 },
-              { case: { $eq: [ "$effectivePriorityLevel", "low" ] }, then: 2 }
-            ],
-            default: 3
-          }
-        },
-        planPriority: {
-          $cond: [ { $eq: ["$sellerPlanKey", "pro"] }, 1, 2 ]
-        }
+        // Numeric ranks for stable sorting (lower value sorts first)
+        priorityRank: { $cond: [ { $eq: [ "$effectivePriorityLevel", "high" ] }, 0, 1 ] },
+        planRank: { $cond: [ { $eq: ["$sellerPlanKey", "pro"] }, 0, 1 ] }
       }
     },
     {
@@ -100,11 +90,6 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10, 
         seller: { $arrayElemAt: ["$sellerData", 0] }
       }
     },
-    // Sorting stage depends on sortMode
-    ...(sortMode === "newest"
-      ? [ { $sort: { createdAt: -1 } } ]
-      : [ { $sort: { planPriority: 1, priorityWeight: 1, createdAt: -1 } } ]
-    ),
     // Override output field so clients see boosted priorityLevel
     {
       $addFields: {
@@ -112,15 +97,23 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10, 
         priorityLevel: { $cond: [ { $eq: ["$effectivePriorityLevel", "high"] }, "high", "low" ] }
       }
     },
+    // Final sorting stage depends on sort mode (priority first, then newest)
+    ...(sortMode === "newest"
+      ? [ { $sort: { createdAt: -1 } } ]
+      : [
+          { $addFields: { priorityRank: { $cond: [ { $eq: ["$priorityLevel", "high"] }, 0, 1 ] } } },
+          { $sort: { priorityRank: 1, createdAt: -1 } }
+        ]
+    ),
     { $skip: skip },
     { $limit: limit },
     {
       $project: {
         sellerSubscription: 0,
         sellerPlanKey: 0,
-        planPriority: 0,
+        planRank: 0,
         sellerData: 0,
-        priorityWeight: 0,
+        priorityRank: 0,
         subscriptionPriorityLevel: 0,
         effectivePriorityLevel: 0
       }
