@@ -46,24 +46,23 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
             default: "low"
           }
         },
+        // If product has manually set priority (high/medium), use it; otherwise fallback to subscription
+        effectivePriorityLevel: {
+          $cond: [
+            { $in: [ { $ifNull: ["$priorityLevel", "low"] }, ["high", "medium"] ] },
+            { $ifNull: ["$priorityLevel", "low"] },
+            "$subscriptionPriorityLevel"
+          ]
+        },
         // Normalize to a numeric weight for sorting (lower is higher priority)
         priorityWeight: {
           $switch: {
             branches: [
-              { case: { $eq: [ { $ifNull: ["$priorityLevel", null] }, "high" ] }, then: 1 },
-              { case: { $eq: [ { $ifNull: ["$priorityLevel", null] }, "medium" ] }, then: 2 },
-              { case: { $eq: [ { $ifNull: ["$priorityLevel", null] }, "low" ] }, then: 3 }
+              { case: { $eq: [ "$effectivePriorityLevel", "high" ] }, then: 1 },
+              { case: { $eq: [ "$effectivePriorityLevel", "medium" ] }, then: 2 },
+              { case: { $eq: [ "$effectivePriorityLevel", "low" ] }, then: 3 }
             ],
-            // If product.priorityLevel missing, fallback to subscriptionPriorityLevel
-            default: {
-              $switch: {
-                branches: [
-                  { case: { $eq: ["$subscriptionPriorityLevel", "high"] }, then: 1 },
-                  { case: { $eq: ["$subscriptionPriorityLevel", "medium"] }, then: 2 }
-                ],
-                default: 3
-              }
-            }
+            default: 3
           }
         },
         planPriority: {
@@ -98,6 +97,12 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
         createdAt: -1             // Newest first
       }
     },
+    // Override output field so clients see boosted priorityLevel
+    {
+      $addFields: {
+        priorityLevel: "$effectivePriorityLevel"
+      }
+    },
     { $skip: skip },
     { $limit: limit },
     {
@@ -107,7 +112,8 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
         planPriority: 0,
         sellerData: 0,
         priorityWeight: 0,
-        subscriptionPriorityLevel: 0
+        subscriptionPriorityLevel: 0,
+        effectivePriorityLevel: 0
       }
     }
   ];
@@ -230,7 +236,18 @@ export async function getProductByIdService(productId) {
     if (!updated) {
       throw new Error("Product not found");
     }
-    return formatProductWithAddress(updated);
+    const product = formatProductWithAddress(updated);
+    // Boost priorityLevel in response based on seller's active subscription
+    try {
+      const activeSub = await UserSubscription.findOne({ userId: product.seller._id, status: "active" }).select("planKey");
+      if (activeSub?.planKey === "pro") {
+        product.priorityLevel = "high";
+      } else if (activeSub?.planKey === "trial") {
+        // Only boost if product was low; preserve explicit higher setting
+        product.priorityLevel = product.priorityLevel === "high" ? "high" : "medium";
+      }
+    } catch {}
+    return product;
   } catch (error) {
     throw error;
   }
