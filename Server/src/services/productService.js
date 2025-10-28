@@ -161,6 +161,12 @@ export async function createProductService(productData) {
       throw err;
     }
 
+    // Persist priority based on seller's active subscription (PRO -> high, otherwise low)
+    try {
+      const activeSub = await UserSubscription.findOne({ userId: productData.seller, status: "active" }).select("planKey");
+      productData.priorityLevel = activeSub?.planKey === "pro" ? "high" : "low";
+    } catch {}
+
     const product = await Product.create(productData);
     return product;
   } catch (error) {
