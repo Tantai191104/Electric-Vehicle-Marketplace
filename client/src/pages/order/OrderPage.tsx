@@ -10,11 +10,14 @@ import {
   OrderTabs,
   type Order
 } from "@/pages/order/components";
+import { useMemo } from "react";
 import { userServices } from "@/services/userServices";
 
 
 const OrderPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
   const [isLoading, setIsLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const { user } = useAuthStore();
@@ -43,10 +46,23 @@ const OrderPage: React.FC = () => {
     }
   }, [user]);
 
-  const filteredOrders = orders.filter((order: Order) => {
-    if (activeTab === "all") return true;
-    return order.status === activeTab;
-  });
+  // Tách đơn GHN và đơn đặt cọc
+  const ghnOrders = useMemo(() => orders.filter(o => o.shipping?.method === "GHN"), [orders]);
+  const depositOrders = useMemo(() => orders.filter(o => o.shipping?.method !== "GHN"), [orders]);
+
+  // Tabs: all, ghn, deposit, status
+  const tabOrders = useMemo(() => {
+    if (activeTab === "all") return orders;
+    if (activeTab === "ghn") return ghnOrders;
+    if (activeTab === "deposit") return depositOrders;
+    return orders.filter((order: Order) => order.status === activeTab);
+  }, [activeTab, orders, ghnOrders, depositOrders]);
+
+  // Pagination
+  const paginatedOrders = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return tabOrders.slice(start, start + pageSize);
+  }, [tabOrders, page, pageSize]);
 
   if (isLoading) {
     return <LoadingState />;
@@ -57,19 +73,46 @@ const OrderPage: React.FC = () => {
       <div className="max-w-7xl mx-auto pt-32 px-4 md:px-6 lg:px-8">
         <OrderHeader />
 
+        {/* OrderTabs component for tab navigation */}
         <OrderTabs
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={tab => { setActiveTab(tab); setPage(1); }}
           ordersCount={orders.length}
+          ghnCount={ghnOrders.length}
+          depositCount={depositOrders.length}
         >
-          {filteredOrders.length === 0 ? (
+          {paginatedOrders.length === 0 ? (
             <EmptyState activeTab={activeTab} navigate={navigate} />
           ) : (
-            <div className="space-y-6">
-              {filteredOrders.map((order: Order) => (
-                <OrderCard key={order._id} order={order} navigate={navigate} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-6">
+                {paginatedOrders.map((order: Order) => (
+                  <OrderCard key={order._id} order={order} navigate={navigate} />
+                ))}
+              </div>
+              {/* Modern Pagination */}
+              <div className="flex justify-center items-center gap-3 mt-8">
+                <button
+                  className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-40 transition"
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  aria-label="Trang trước"
+                >
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <span className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-50 rounded">
+                  Trang <span className="font-bold text-black">{page}</span> / <span className="text-gray-500">{Math.max(1, Math.ceil(tabOrders.length / pageSize))}</span>
+                </span>
+                <button
+                  className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-40 transition"
+                  disabled={page >= Math.ceil(tabOrders.length / pageSize)}
+                  onClick={() => setPage(page + 1)}
+                  aria-label="Trang sau"
+                >
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
+                </button>
+              </div>
+            </>
           )}
         </OrderTabs>
       </div>

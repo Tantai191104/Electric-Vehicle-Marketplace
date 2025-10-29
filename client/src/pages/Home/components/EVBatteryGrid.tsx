@@ -39,7 +39,7 @@ export default function EVBatteryGrid() {
       <section className="max-w-7xl mx-auto px-2 py-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-yellow-900">
-            Phụ kiện xe điện nổi bật
+            Pin xe điện cũ
           </h2>
         </div>
         <div className="text-center py-12">
@@ -58,7 +58,7 @@ export default function EVBatteryGrid() {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-2xl font-bold text-yellow-900">
-            Phụ kiện xe điện nổi bật
+            Pin xe điện cũ
           </h2>
           <p className="text-sm text-gray-600 mt-1">
             Hiển thị {products.length} sản phẩm pin xe điện

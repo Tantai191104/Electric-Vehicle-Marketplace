@@ -2,19 +2,19 @@ import { Button } from "@/components/ui/button";
 
 const guides = [
   {
-    image: "/images/ev1.jpg",
+    image: "https://i.pinimg.com/474x/2a/69/47/2a6947a1a3f877caa69d50afafc65572.jpg",
     tag: "Kiến thức xe điện",
     title: "Cách chọn xe điện phù hợp với nhu cầu",
     desc: "Hướng dẫn xác định loại xe điện phù hợp với mục đích sử dụng, ngân sách và sở thích cá nhân.",
   },
   {
-    image: "/images/ev2.jpg",
+    image: "https://i.pinimg.com/1200x/8a/68/eb/8a68eb3c300c9c5cd5fbfa0e3e182300.jpg",
     tag: "Bảo dưỡng",
     title: "Bí quyết bảo dưỡng xe điện hiệu quả",
     desc: "Các bước bảo dưỡng xe điện giúp tăng tuổi thọ, tiết kiệm chi phí và đảm bảo an toàn khi vận hành.",
   },
   {
-    image: "/images/ev3.jpg",
+    image: "https://i.pinimg.com/736x/da/d9/d1/dad9d10cbae5dd4beb8c00cc78138447.jpg",
     tag: "Tiết kiệm năng lượng",
     title: "Mẹo sử dụng xe điện tiết kiệm pin",
     desc: "Những mẹo nhỏ giúp bạn sử dụng xe điện tiết kiệm năng lượng, di chuyển xa hơn mỗi lần sạc.",
