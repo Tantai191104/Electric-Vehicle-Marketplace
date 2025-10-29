@@ -14,6 +14,7 @@ import {
   updateProductContractTemplate,
   getProductContractTemplate,
 } from "../controllers/productController.js";
+import { getFinalContractByProduct } from "../controllers/contractController.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { optionalAuth, requireUser, requireAdmin, requireAuth } from "../middlewares/authorize.js";
 import { requireProductManagement } from "../middlewares/checkPurchasePermission.js";
@@ -758,5 +759,49 @@ router.put("/products/:id/contract-template", authenticate, requireUser, updateP
  *         description: Product not found
  */
 router.get("/products/:id/contract-template", getProductContractTemplate);
+
+/**
+ * @swagger
+ * /products/{id}/final-contract:
+ *   get:
+ *     summary: Get latest signed contract PDF for a product
+ *     description: Returns the latest signed contract for the given product. Falls back to latest draft if a final PDF isn't available.
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Latest contract data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     contractId:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [draft, signed]
+ *                     pdfUrl:
+ *                       type: string
+ *                       format: uri
+ *                     signedAt:
+ *                       type: string
+ *                       format: date-time
+ *       404:
+ *         description: Contract not found or no PDF available
+ */
+// Get latest (final) contract PDF for a product
+router.get("/products/:id/final-contract", getFinalContractByProduct);
 
 export default router;
