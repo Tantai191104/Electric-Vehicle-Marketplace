@@ -59,6 +59,20 @@ export const productServices = {
     const response = await API.post("/products", data);
     return response.data;
   },
+  async updateContractTemplate(
+    productId: string,
+    payload: {
+      htmlContent?: string;
+      sellerSignature?: string | null;
+      pdfUrl?: string | null;
+    }
+  ) {
+    const response = await API.put(
+      `/products/${productId}/contract-template`,
+      payload
+    );
+    return response.data;
+  },
   async addWishlist(productId: string): Promise<null> {
     const response = await API.post("/profile/wishlist", { productId });
     return response.data;

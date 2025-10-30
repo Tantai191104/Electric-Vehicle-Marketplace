@@ -19,7 +19,7 @@ interface OrderDetailDialogProps {
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("vi-VN", {
     year: "numeric",
-    month: "2-digit", 
+    month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit"
@@ -42,7 +42,7 @@ export function OrderDetailDialog({
       cancelled: { label: "Đã hủy", variant: "destructive" as const },
       refunded: { label: "Đã hoàn tiền", variant: "secondary" as const },
     };
-    
+
     const config = statusConfig[status] || statusConfig.pending;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
@@ -54,7 +54,7 @@ export function OrderDetailDialog({
       refunded: { label: "Đã hoàn tiền", variant: "outline" as const },
       failed: { label: "Thất bại", variant: "destructive" as const },
     };
-    
+
     const config = statusConfig[paymentStatus] || statusConfig.pending;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
@@ -67,15 +67,19 @@ export function OrderDetailDialog({
             Chi tiết đơn hàng {order.orderNumber}
           </DialogTitle>
           {/* GHN Notice */}
-          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
-            <Info className="h-4 w-4 text-blue-600" />
-            <div className="text-sm text-blue-800">
-              <span className="font-medium">Đơn hàng Giao Hàng Nhanh (GHN)</span>
-              <p className="text-xs text-blue-600 mt-1">
-                Đây là đơn hàng được quản lý bởi GHN. Admin chỉ có thể xem thông tin, không thể thay đổi trạng thái.
-              </p>
-            </div>
-          </div>
+          {
+            order.shipping.method === 'GHN' && (
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+                <Info className="h-4 w-4 text-blue-600" />
+                <div className="text-sm text-blue-800">
+                  <span className="font-medium">Đơn hàng Giao Hàng Nhanh (GHN)</span>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Đây là đơn hàng được quản lý bởi GHN. Admin chỉ có thể xem thông tin, không thể thay đổi trạng thái.
+                  </p>
+                </div>
+              </div>
+            )
+          }
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
@@ -100,9 +104,9 @@ export function OrderDetailDialog({
                   <span className="text-gray-600">Phương thức:</span>
                   <span className="font-medium">
                     {order.payment.method === 'wallet' ? 'Ví điện tử' :
-                     order.payment.method === 'vnpay' ? 'VNPay' :
-                     order.payment.method === 'zalopay' ? 'ZaloPay' :
-                     order.payment.method === 'cod' ? 'COD' : 'Chuyển khoản'}
+                      order.payment.method === 'vnpay' ? 'VNPay' :
+                        order.payment.method === 'zalopay' ? 'ZaloPay' :
+                          order.payment.method === 'cod' ? 'COD' : 'Chuyển khoản'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -130,18 +134,35 @@ export function OrderDetailDialog({
                   <span className="text-gray-600">Số lượng:</span>
                   <span className="font-medium">{order.quantity}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Đơn giá:</span>
-                  <span className="font-medium">{formatVND(order.unitPrice)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Phí ship:</span>
-                  <span className="font-medium">{formatVND(order.shippingFee)}</span>
-                </div>
-                <div className="flex justify-between border-t pt-2">
-                  <span className="text-gray-600">Tổng tiền:</span>
-                  <span className="font-bold text-green-600">{formatVND(order.finalAmount)}</span>
-                </div>
+                {order.shipping.method == 'GHN' && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Đơn giá:</span>
+                      <span className="font-medium">{formatVND(order.unitPrice)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Phí ship:</span>
+                      <span className="font-medium">{formatVND(order.shippingFee)}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2">
+                      <span className="text-gray-600">Tổng tiền:</span>
+                      <span className="font-bold text-green-600">{formatVND(order.finalAmount)}</span>
+                    </div>
+                  </>
+                )}
+                {order.shipping.method != 'GHN' && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tiền cọc:</span>
+                      <p className="font-bold">{formatVND(order.finalAmount)}</p>
+                    </div>
+                    <div className="flex justify-between border-t pt-2">
+                      <span className="text-gray-600">Tổng tiền:</span>
+                      <span className="font-bold text-green-600">{formatVND(order.finalAmount)}</span>
+                    </div>
+                  </>
+                )}
+
               </div>
             </div>
           </div>
@@ -182,26 +203,42 @@ export function OrderDetailDialog({
               </div>
             </div>
 
-            {/* Shipping Address */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-3">Địa chỉ giao hàng</h3>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-gray-600">Người nhận:</span>
-                  <p className="font-medium">{order.shippingAddress.fullName}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600">Số điện thoại:</span>
-                  <p className="font-medium">{order.shippingAddress.phone}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600">Địa chỉ:</span>
-                  <p className="font-medium">
-                    {order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.province}
-                  </p>
+            {/* Shipping or Meeting Info */}
+            {order.shipping.method === 'GHN' ? (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-900 mb-3">Địa chỉ giao hàng</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">Người nhận:</span>
+                    <p className="font-medium">{order.shippingAddress.fullName}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Số điện thoại:</span>
+                    <p className="font-medium">{order.shippingAddress.phone}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Địa chỉ:</span>
+                    <p className="font-medium">
+                      {order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.province}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-900 mb-3">Thông tin gặp mặt</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">Địa điểm gặp mặt:</span>
+                    <p className="font-medium">{order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.province}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Thời gian gặp mặt:</span>
+                    <p className="font-medium">{order.shipping.estimatedDelivery ? formatDate(order.shipping.estimatedDelivery) : '…'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Timeline */}
             <div className="bg-gray-50 p-4 rounded-lg">
@@ -214,7 +251,7 @@ export function OrderDetailDialog({
                     <p className="text-gray-600 text-xs">{formatDate(order.createdAt)}</p>
                   </div>
                 </div>
-                
+
                 {order.timeline.map((event) => (
                   <div key={event._id} className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -229,6 +266,6 @@ export function OrderDetailDialog({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

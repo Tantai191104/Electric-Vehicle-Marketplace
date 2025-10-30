@@ -99,7 +99,12 @@ router.post('/deposit/vehicle', authenticate, createVehicleDeposit);
  *       404:
  *         description: Order not found
  */
-router.patch('/deposit/:orderId/confirm', authenticate, requireAdmin, confirmDepositTransaction);
+router.patch(
+  '/deposit/:orderId/confirm',
+  authenticate,
+  requireAdmin,
+  confirmDepositTransaction
+);
 
 /**
  * @swagger
@@ -134,7 +139,12 @@ router.patch('/deposit/:orderId/confirm', authenticate, requireAdmin, confirmDep
  *       404:
  *         description: Order not found
  */
-router.patch('/deposit/:orderId/cancel', authenticate, requireAdmin, cancelDeposit);
+router.patch(
+  '/deposit/:orderId/cancel',
+  authenticate,
+  requireAdmin,
+  cancelDeposit
+);
 
 /**
  * @swagger
@@ -262,4 +272,3 @@ router.get('/deposit-amount', getDepositAmountConfig);
 router.put('/admin/deposit-amount', authenticate, requireAdmin, updateDepositAmountConfig);
 
 export default router;
-

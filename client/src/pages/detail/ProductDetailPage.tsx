@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { ImageGallery } from "./components/ImageGallery";
 import { GuaranteeBadges } from "./components/GuaranteeBadges";
 import { SocialShare } from "./components/SocialShare";
@@ -15,10 +16,12 @@ import { ErrorState } from "./components/ErrorState";
 import { NotFoundState } from "./components/NotFoundState";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 interface ProductDetailPageProps {
     className?: string;
 }
+
 
 export default function ProductDetailPage({ className = "" }: ProductDetailPageProps) {
     const { id } = useParams<{ id: string }>();
@@ -27,6 +30,9 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     const createConversation = useCreateConversation();
     const findExistingConversation = useFindExistingConversation();
     const { user } = useAuthStore();
+
+    // Modal state for contract view
+    const [isContractModalOpen, setContractModalOpen] = useState(false);
 
     // Loading & Error states
     if (isLoading) return <LoadingState />;
@@ -91,7 +97,6 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
         }
     };
 
-
     // 🟢 Handle buy now
     const handleBuyNow = async (): Promise<void> => {
         if (!user) {
@@ -112,36 +117,12 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
         }
 
         if (product.category === "vehicle") {
-            let toastId;
-            try {
-                toastId = toast.loading("Đang tạo đơn đặt cọc xe...");
-
-                const depositPayload = {
-                    product_id: product._id,
-                    seller_id: product.seller._id,
-                    buyer_name: user.name,
-                    buyer_phone: user.phone || "",
-                    buyer_address: typeof user.profile?.address === "string" ? user.profile.address : "",
-                };
-                console.log(depositPayload);
-                const { orderServices } = await import("@/services/orderServices");
-                await orderServices.createDepositOrder(depositPayload);
-
-                toast.dismiss(toastId);
-                toast.success("Đặt cọc xe thành công!");
-                navigate(`/checkout/${product._id}/deposit`);
-            } catch (error: unknown) {
-                toast.dismiss(toastId);
-                console.error("Error creating deposit:", error);
-                let message = "Có lỗi khi đặt cọc xe. Vui lòng thử lại.";
-                if (typeof error === "object" && error && "response" in error) {
-                    // @ts-expect-error dynamic error response typing
-                    message = error.response?.data?.message || message;
-                }
-                toast.error(message);
-            }
+            toast.success("Chuyển đến trang thanh toán...");
+            navigate(`/checkout/${product._id}/deposit`);
+            return;
         }
     };
+
     // 🟢 Handle schedule appointment (deposit flow)
     const handleScheduleAppointment = async (): Promise<void> => {
         if (!user) {
@@ -156,18 +137,22 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
         }
 
         if (product.category === "vehicle") {
-            try {
-                toast.success("Chuyển đến trang thanh toán...");
-                navigate(`/checkout/${product._id}/deposit`);
-            } catch (error) {
-                console.error("Error navigating to checkout:", error);
-                toast.error("Không thể chuyển đến trang thanh toán. Vui lòng thử lại.");
-            }
+            toast.success("Chuyển đến trang thanh toán...");
+            navigate(`/checkout/${product._id}/deposit`);
+            return;
         } else {
             toast.error("Chỉ xe mới có thể lên lịch hẹn.");
         }
     };
 
+    // Chuẩn bị HTML hợp đồng với chữ ký người bán (thay placeholder)
+    const rawContract = product.contractTemplate?.htmlContent || "";
+    const contractHtml = product.contractTemplate?.sellerSignature
+        ? rawContract.replace(
+            "{{sellerSignature}}",
+            `<img src="${product.contractTemplate.sellerSignature}" alt="Chữ ký người bán" class="h-24 mt-4 ml-auto block" />`
+        )
+        : rawContract;
 
     return (
         <div className={`max-w-7xl mx-auto mt-18 md:mt-36 bg-white rounded-2xl shadow-lg p-4 md:p-6 ${className}`}>
@@ -185,8 +170,8 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                     <ProductHeader car={product} className="mb-5" />
                     <ActionButtons
                         onContact={handleContact}
-                        onBuyNow={handleBuyNow}
-                        onContract={handleScheduleAppointment}
+                        onBuyNow={product.category === "battery" ? handleBuyNow : undefined}
+                        onContract={product.category === "battery" ? () => setContractModalOpen(true) : handleScheduleAppointment}
                         isContactLoading={createConversation.isPending}
                         isInWishlist={product.isInWishlist || false}
                         category={product.category}
@@ -196,6 +181,35 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                     <SpecificationTable product={product} />
                 </div>
             </div>
+            {/* Modal for contract view */}
+            <Dialog open={isContractModalOpen} onOpenChange={setContractModalOpen}>
+                <DialogContent className="!max-w-[90vw] !max-h-[90vh] p-6 flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Xem hợp đồng mẫu</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto mt-4 border rounded-md p-4 bg-gray-50">
+                        {contractHtml ? (
+                            <div
+                                className="prose max-w-none"
+                                dangerouslySetInnerHTML={{ __html: contractHtml }}
+                            />
+                        ) : (
+                            <div className="text-gray-700 text-sm mb-4">Không có nội dung hợp đồng.</div>
+                        )}
+                    </div>
+
+                    <DialogFooter className="mt-4">
+                        <DialogClose asChild>
+                            <button className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">
+                                Đóng
+                            </button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+
         </div>
     );
 }

@@ -25,7 +25,6 @@ const FixedHeader: React.FC = () => {
     { name: "Xe điện", path: "/cars" },
     { name: "Xe máy điện", path: "/motorbikes" },
     { name: "Pin xe điện", path: "/batteries" },
-    { name: "Phụ kiện", path: "/accessories" }
   ];
   const topLinks = [
     { name: "Trang chủ", path: "/" },
