@@ -41,8 +41,12 @@ import type { User } from "@/types/authType";
     const response = await API.get("/profile/wallet/transactions");
     return response.data;
   },
-  async fetchOwnedProducts() {
-    const response = await API.get("/products/my/products");
+  async syncReturnStatus() {
+    const response = await API.post("/shipping/returns/sync");
+    return response.data;
+  },
+  async fetchOwnedProducts(params?: { page?: number; limit?: number; status?: string; category?: string; sort?: string; q?: string }) {
+    const response = await API.get("/products/my/products", { params });
     return response.data;
   }
 };

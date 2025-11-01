@@ -32,15 +32,26 @@ export default function OwnProduct() {
     const [selectedStatus, setSelectedStatus] = useState("all");
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(8);
+    const [totalItems, setTotalItems] = useState(0);
     // Removed unused productToDelete state
     const navigate = useNavigate();
     useEffect(() => {
         const loadProducts = async () => {
             setLoading(true);
             try {
-                const data = await userServices.fetchOwnedProducts();
-                setProducts(data.products);
-                setFilteredProducts(data.products);
+                const params: Record<string, unknown> = { page, limit };
+                if (selectedStatus && selectedStatus !== "all") params.status = selectedStatus;
+                if (selectedCategory && selectedCategory !== "all") params.category = selectedCategory;
+                if (sortBy) params.sort = sortBy;
+                if (searchTerm) params.q = searchTerm;
+
+                const data = await userServices.fetchOwnedProducts(params);
+                // Expecting API to return { products: [], total: number, page, limit }
+                setProducts(data.products || []);
+                setFilteredProducts(data.products || []);
+                setTotalItems(data.total || data.totalItems || data.meta?.total || 0);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -49,32 +60,38 @@ export default function OwnProduct() {
         };
 
         loadProducts();
-    }, []);
+    }, [page, limit, selectedStatus, selectedCategory, sortBy, searchTerm]);
 
-    // Filter and search products
+    // When filters, search, sort or page size change, reset to first page to avoid empty pages
     useEffect(() => {
-        let filtered = products;
+        setPage(1);
+    }, [selectedStatus, selectedCategory, sortBy, searchTerm, limit]);
+
+    // Client-side filtering & sorting as a fallback when backend doesn't fully apply filters/sort
+    useEffect(() => {
+        let filtered = products.slice();
+
+        // Status filter (client-side)
+        if (selectedStatus && selectedStatus !== "all") {
+            filtered = filtered.filter(p => p.status === selectedStatus);
+        }
+
+        // Category filter (client-side)
+        if (selectedCategory && selectedCategory !== "all") {
+            filtered = filtered.filter(p => p.category === selectedCategory);
+        }
 
         // Search filter
         if (searchTerm) {
+            const q = searchTerm.toLowerCase();
             filtered = filtered.filter(product =>
-                product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                product.brand.toLowerCase().includes(searchTerm.toLowerCase())
+                (product.title || "").toLowerCase().includes(q) ||
+                (product.description || "").toLowerCase().includes(q) ||
+                (product.brand || "").toLowerCase().includes(q)
             );
         }
 
-        // Status filter
-        if (selectedStatus !== "all") {
-            filtered = filtered.filter(product => product.status === selectedStatus);
-        }
-
-        // Category filter
-        if (selectedCategory !== "all") {
-            filtered = filtered.filter(product => product.category === selectedCategory);
-        }
-
-        // Sort
+        // Client-side sort
         filtered.sort((a, b) => {
             switch (sortBy) {
                 case "newest":
@@ -82,13 +99,9 @@ export default function OwnProduct() {
                 case "oldest":
                     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
                 case "price-high":
-                    return b.price - a.price;
+                    return (b.price || 0) - (a.price || 0);
                 case "price-low":
-                    return a.price - b.price;
-                case "views":
-                    return b.views - a.views;
-                case "likes":
-                    return b.likes - a.likes;
+                    return (a.price || 0) - (b.price || 0);
                 default:
                     return 0;
             }
@@ -101,20 +114,7 @@ export default function OwnProduct() {
         console.log("Edit product:", product._id);
     };
 
-    const handleDeleteProduct = (product: Product) => {
-        // Implement delete logic here if needed, or remove this function if not used
-        // For now, just log the product to delete
-        console.log("Delete product:", product._id);
-    };
-
-    const handleToggleStatus = (product: Product) => {
-        const newStatus = product.status === "active" ? "inactive" : "active";
-        setProducts(products.map(p =>
-            p._id === product._id
-                ? { ...p, status: newStatus as "active" | "inactive" | "pending" | "sold" }
-                : p
-        ));
-    };
+    // Note: delete/toggle actions are not exposed in the owner list per current UX.
 
     const handleViewProduct = (product: Product) => {
         console.log("View product:", product._id);
@@ -208,6 +208,7 @@ export default function OwnProduct() {
                                     <SelectItem value="active">Đang hiển thị</SelectItem>
                                     <SelectItem value="pending">Chờ duyệt</SelectItem>
                                     <SelectItem value="inactive">Tạm ẩn</SelectItem>
+                                    <SelectItem value="rejected">Bị từ chối</SelectItem>
                                     <SelectItem value="sold">Đã bán</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -221,13 +222,11 @@ export default function OwnProduct() {
                                     <SelectItem value="all">Tất cả danh mục</SelectItem>
                                     <SelectItem value="vehicle">Xe điện</SelectItem>
                                     <SelectItem value="battery">Pin xe điện</SelectItem>
-                                    <SelectItem value="charger">Sạc xe điện</SelectItem>
-                                    <SelectItem value="accessory">Phụ kiện</SelectItem>
                                 </SelectContent>
                             </Select>
 
                             {/* Sort */}
-                            <Select value={sortBy} onValueChange={setSortBy}>
+                            <Select value={sortBy} onValueChange={setSortBy} >
                                 <SelectTrigger className="border-gray-200 focus:border-gray-900 focus:ring-gray-900">
                                     <SelectValue placeholder="Sắp xếp" />
                                 </SelectTrigger>
@@ -236,8 +235,6 @@ export default function OwnProduct() {
                                     <SelectItem value="oldest">Cũ nhất</SelectItem>
                                     <SelectItem value="price-high">Giá cao nhất</SelectItem>
                                     <SelectItem value="price-low">Giá thấp nhất</SelectItem>
-                                    <SelectItem value="views">Nhiều lượt xem</SelectItem>
-                                    <SelectItem value="likes">Nhiều lượt thích</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -248,7 +245,7 @@ export default function OwnProduct() {
                 <Card className="border border-gray-200 shadow-lg bg-white">
                     <CardHeader className="border-b border-gray-100">
                         <CardTitle className="text-lg text-gray-900">
-                            Danh sách sản phẩm ({filteredProducts.length})
+                            Danh sách sản phẩm ({totalItems > 0 ? totalItems : filteredProducts.length})
                         </CardTitle>
                     </CardHeader>
 
@@ -286,8 +283,6 @@ export default function OwnProduct() {
                                                 key={product._id}
                                                 product={product}
                                                 onEdit={handleEditProduct}
-                                                onDelete={handleDeleteProduct}
-                                                onToggleStatus={handleToggleStatus}
                                                 onView={handleViewProduct}
                                             />
                                         ))}
@@ -299,13 +294,44 @@ export default function OwnProduct() {
                                                 key={product._id}
                                                 product={product}
                                                 onEdit={handleEditProduct}
-                                                onDelete={handleDeleteProduct}
-                                                onToggleStatus={handleToggleStatus}
                                                 onView={handleViewProduct}
                                             />
                                         ))}
                                     </div>
                                 )}
+                                {/* Pagination */}
+                                <div className="mt-6 flex items-center justify-between">
+                                    <div className="text-sm text-gray-600">
+                                        Hiển thị {Math.min((page - 1) * limit + 1, totalItems || 0)} - {Math.min(page * limit, totalItems || 0)} trên {totalItems}
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
+                                            <SelectTrigger className="w-28 border-gray-200 focus:border-gray-900 focus:ring-gray-900">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="6">6 / trang</SelectItem>
+                                                <SelectItem value="12">12 / trang</SelectItem>
+                                                <SelectItem value="24">24 / trang</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        <div className="flex items-center gap-2">
+                                            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(Math.max(1, page - 1))}>
+                                                Trước
+                                            </Button>
+
+                                            <div className="px-3 py-1 border rounded text-sm text-gray-700">
+                                                {page} / {Math.max(1, Math.ceil((totalItems || 0) / limit))}
+                                            </div>
+
+                                            <Button size="sm" variant="outline" disabled={page >= Math.max(1, Math.ceil((totalItems || 0) / limit))} onClick={() => setPage(Math.min(Math.max(1, Math.ceil((totalItems || 0) / limit)), page + 1))}>
+                                                Sau
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </CardContent>

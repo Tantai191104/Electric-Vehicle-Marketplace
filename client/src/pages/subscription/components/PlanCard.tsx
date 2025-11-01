@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 import type { SubscriptionPlan } from "@/types/subscriptionTypes";
 
-
 interface PlanCardProps {
     plan: SubscriptionPlan;
     isSelected: boolean;
@@ -10,6 +9,7 @@ interface PlanCardProps {
     onSelect: () => void;
     onHover: () => void;
     onLeave: () => void;
+    isCurrent?: boolean;
 }
 
 export const PlanCard: React.FC<PlanCardProps> = ({
@@ -19,7 +19,11 @@ export const PlanCard: React.FC<PlanCardProps> = ({
     onSelect,
     onHover,
     onLeave,
+    isCurrent = false,
 }) => {
+    // ✅ Xác định gói bình thường (miễn phí / mặc định)
+    const isDefaultPlan = plan.price === 0 || plan.name.toLowerCase() === "basic";
+
     return (
         <motion.div
             onHoverStart={onHover}
@@ -27,7 +31,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
             className={`relative transition-all duration-200 ${plan.popular ? 'lg:scale-105' : ''}`}
         >
             {/* Badges */}
-            {plan.popular && (
+            {plan.popular && !isCurrent && (
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -36,6 +40,34 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                 >
                     <div className="bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow">
                         PRO
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Hiển thị nếu là gói hiện tại */}
+            {isCurrent && (
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.8, type: "spring" }}
+                    className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20"
+                >
+                    <div className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow border border-yellow-300 animate-pulse">
+                        Đang sử dụng
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Hiển thị nếu là gói bình thường */}
+            {isDefaultPlan && !isCurrent && (
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.8, type: "spring" }}
+                    className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20"
+                >
+                    <div className="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow border border-gray-300">
+                        Đang áp dụng
                     </div>
                 </motion.div>
             )}
@@ -58,9 +90,14 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         <h3 className="text-xl font-bold text-gray-900 tracking-tight">
                             {plan.name}
                         </h3>
-                        {plan.badge && (
+                        {plan.badge && !isCurrent && (
                             <span className="px-2 py-1 bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 rounded-full text-xs font-semibold shadow-sm">
                                 {plan.badge}
+                            </span>
+                        )}
+                        {isCurrent && (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold shadow-sm border border-yellow-300">
+                                Đang sử dụng
                             </span>
                         )}
                     </div>
@@ -99,18 +136,23 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     {/* CTA Button */}
                     <motion.button
                         onClick={onSelect}
-                        className="w-full bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm"
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.98 }}
+                        disabled={isCurrent || isDefaultPlan}
+                        className={`w-full bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm ${isCurrent || isDefaultPlan ? 'opacity-60 cursor-not-allowed' : ''
+                            }`}
+                        whileHover={isCurrent || isDefaultPlan ? {} : { scale: 1.03 }}
+                        whileTap={isCurrent || isDefaultPlan ? {} : { scale: 0.98 }}
                     >
-                        {plan.price === 0 ? 'Tạo tài khoản miễn phí' : 'Bắt đầu dùng thử'}
-                        <FiArrowRight className="w-4 h-4" />
+                        {isCurrent || isDefaultPlan
+                            ? 'Gói đang sử dụng'
+                            : plan.price === 0
+                                ? 'Tạo tài khoản miễn phí'
+                                : 'Đăng kí ngay'}
+                        {!isCurrent && !isDefaultPlan && <FiArrowRight className="w-4 h-4" />}
                     </motion.button>
                 </div>
 
                 {/* Features & Quotas */}
                 <div className="p-6">
-                    {/* Quotas summary from server (if present) */}
                     {plan.quotas && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm mb-6">
                             <div className="flex flex-col gap-4">
@@ -140,7 +182,6 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         </div>
                     )}
                     <div className="flex flex-wrap gap-3 mb-4">
-                        {/* Structured features (boolean flags) */}
                         {plan.featuresObj && (
                             <div className="flex flex-wrap gap-2">
                                 <span className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${plan.featuresObj.aiAssist ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>Hỗ trợ AI thông minh</span>
@@ -151,7 +192,6 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         )}
                     </div>
 
-                    {/* Bonuses */}
                     {plan.bonuses && plan.bonuses.length > 0 && (
                         <div className="mt-6 pt-4 border-t border-gray-50">
                             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
@@ -173,7 +213,6 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     )}
                 </div>
 
-                {/* Hover Overlay */}
                 {isHovered && (
                     <motion.div
                         initial={{ opacity: 0 }}

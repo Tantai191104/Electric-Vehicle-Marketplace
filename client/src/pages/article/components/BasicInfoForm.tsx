@@ -39,6 +39,22 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm }) => {
     const [customBrand, setCustomBrand] = useState(false);
     const [customModel, setCustomModel] = useState(false);
 
+    // Đảm bảo với vehicle thì luôn có length, width, height, weight = 1
+    React.useEffect(() => {
+        if (form.category === "vehicle") {
+            setForm((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    length: 1,
+                    width: 1,
+                    height: 1,
+                    weight: 1,
+                };
+            });
+        }
+    }, [form.category, setForm]);
+
     // Lấy brand/model phù hợp theo category
     const getBrandModels = () => {
         return form.category === "vehicle" ? VEHICLE_BRAND_MODELS : BATTERY_BRAND_MODELS;
@@ -54,6 +70,10 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm }) => {
     const handleOptionalChange = (field: string, value: number | undefined) => {
         setForm((prev) => {
             if (!prev) return prev;
+            // Nếu là vehicle thì luôn set = 1
+            if (prev.category === "vehicle") {
+                return { ...prev, [field]: 1 };
+            }
             return { ...prev, [field]: value };
         });
     };
@@ -208,27 +228,12 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm }) => {
                     <Label className="text-sm font-semibold text-gray-800">Tình trạng</Label>
                     <Select
                         value={form.condition || ""}
-                        onValueChange={(val) => {
-                            const mapped = val === "new" ? "used" : val === "like-new" ? "refurbished" : val;
-                            handleChange("condition", mapped);
-                        }}
+                        onValueChange={(val) => handleChange("condition", val)}
                     >
                         <SelectTrigger className={inputClass}>
                             <SelectValue placeholder="Chọn tình trạng" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border border-gray-200 shadow-lg">
-                            <SelectItem value="new" className="rounded-lg hover:bg-yellow-50">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                    Mới
-                                </div>
-                            </SelectItem>
-                            <SelectItem value="like-new" className="rounded-lg hover:bg-yellow-50">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
-                                    Như mới
-                                </div>
-                            </SelectItem>
                             <SelectItem value="used" className="rounded-lg hover:bg-yellow-50">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 bg-yellow-700 rounded-full"></div>
@@ -260,54 +265,56 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm }) => {
                 </div>
 
                 {/* Thông số kích thước */}
-                <div className="md:col-span-2">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        Kích thước & Trọng lượng
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-gray-800">Dài (cm)</Label>
-                            <Input
-                                type="number"
-                                value={form.length || ""}
-                                onChange={(e) => handleOptionalChange("length", e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder="180"
-                                className={inputClass}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-gray-800">Rộng (cm)</Label>
-                            <Input
-                                type="number"
-                                value={form.width || ""}
-                                onChange={(e) => handleOptionalChange("width", e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder="80"
-                                className={inputClass}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-gray-800">Cao (cm)</Label>
-                            <Input
-                                type="number"
-                                value={form.height || ""}
-                                onChange={(e) => handleOptionalChange("height", e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder="120"
-                                className={inputClass}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-gray-800">Cân nặng (kg)</Label>
-                            <Input
-                                type="number"
-                                value={form.weight || ""}
-                                onChange={(e) => handleOptionalChange("weight", e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder="45"
-                                className={inputClass}
-                            />
+                {form.category !== "vehicle" && (
+                    <div className="md:col-span-2">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                            Kích thước & Trọng lượng
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-gray-800">Dài (cm)</Label>
+                                <Input
+                                    type="number"
+                                    value={form.length || ""}
+                                    onChange={(e) => handleOptionalChange("length", e.target.value ? Number(e.target.value) : undefined)}
+                                    placeholder="180"
+                                    className={inputClass}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-gray-800">Rộng (cm)</Label>
+                                <Input
+                                    type="number"
+                                    value={form.width || ""}
+                                    onChange={(e) => handleOptionalChange("width", e.target.value ? Number(e.target.value) : undefined)}
+                                    placeholder="80"
+                                    className={inputClass}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-gray-800">Cao (cm)</Label>
+                                <Input
+                                    type="number"
+                                    value={form.height || ""}
+                                    onChange={(e) => handleOptionalChange("height", e.target.value ? Number(e.target.value) : undefined)}
+                                    placeholder="120"
+                                    className={inputClass}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-gray-800">Cân nặng (kg)</Label>
+                                <Input
+                                    type="number"
+                                    value={form.weight || ""}
+                                    onChange={(e) => handleOptionalChange("weight", e.target.value ? Number(e.target.value) : undefined)}
+                                    placeholder="45"
+                                    className={inputClass}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 <div className="md:col-span-2 space-y-2">
                     <Label className="text-sm font-semibold text-gray-800">Giá (VNĐ)</Label>

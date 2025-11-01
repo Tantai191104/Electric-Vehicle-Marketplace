@@ -9,6 +9,7 @@ import type { JSX } from "react";
 import StandardLayout from "@/layouts/StandardLayout";
 import ContractEditorPage from "@/pages/contract/ContractEditorPage";
 import CarProductList from "@/pages/Product/Car/CarProductList";
+import BatteryProductList from "@/pages/Product/Battery/BatteryProductList";
 import MotorbikeProductList from "@/pages/Product/Motorbike/MotorbikeProductList";
 import WalletTopupPage from "@/pages/zalopay/WalletTopupPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
@@ -18,7 +19,6 @@ import ProductDetailPage from "@/pages/detail/ProductDetailPage";
 import OrderPage from "@/pages/order/OrderPage";
 import CheckoutPage from "@/pages/checkout/CheckoutPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import SubscriptionPage from "@/pages/subscription/SubscriptionPage";
 import AdminLayout from "@/layouts/AdminLayout";
 import UserManage from "@/pages/admin/user/UserManage";
 import ProductManage from "@/pages/admin/product/ProductManage";
@@ -70,6 +70,7 @@ export default function App() {
         </Route>
         <Route element={<StandardLayout />}>
           <Route path="/cars" element={animatePage(<CarProductList />)} />
+          <Route path="/batteries" element={animatePage(<BatteryProductList />)} />
           <Route path="/motorbikes" element={animatePage(<MotorbikeProductList />)} />
           <Route path="/detail/:id" element={animatePage(<ProductDetailPage />)} />
         </Route>
@@ -86,7 +87,6 @@ export default function App() {
             <Route path="/profile" element={animatePage(<ProfilePage />)} />
             <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
             <Route path="/orders" element={animatePage(<OrderPage />)} />
-            <Route path="/subscriptions" element={animatePage(<SubscriptionPage />)} />
             <Route path="/transactions" element={animatePage(<TransactionsPage />)} />
             <Route path="/own/product" element={animatePage(<OwnProduct />)} />
           </Route>

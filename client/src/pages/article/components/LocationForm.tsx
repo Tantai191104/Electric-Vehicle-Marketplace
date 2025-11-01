@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { VehicleFormData, BatteryFormData, Location } from "@/types/productType";
+import { useAuthStore } from "@/store/auth";
 
 interface Props {
   form: VehicleFormData | BatteryFormData;
@@ -9,6 +10,29 @@ interface Props {
 }
 
 const LocationForm: React.FC<Props> = ({ form, setForm }) => {
+  const { user } = useAuthStore();
+
+  // Auto-fill location from user profile
+  useEffect(() => {
+    if (user?.profile?.address) {
+      setForm((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          location: {
+            city: user.profile.address.province || "",
+            province: user.profile.address.province || "",
+            address: [
+              user.profile.address.houseNumber,
+              user.profile.address.ward,
+              user.profile.address.district
+            ].filter(Boolean).join(", ")
+          },
+        };
+      });
+    }
+  }, [user, setForm]);
+
   const handleLocationChange = (field: keyof Location, value: string) => {
     setForm((prev) => {
       if (!prev) return prev;
@@ -54,7 +78,8 @@ const LocationForm: React.FC<Props> = ({ form, setForm }) => {
               value={form.location[key as keyof Location]}
               onChange={(e) => handleLocationChange(key as keyof Location, e.target.value)}
               placeholder={locationPlaceholders[key as keyof typeof locationPlaceholders]}
-              className="w-full rounded-xl bg-white border border-gray-200 h-12 px-4 shadow-sm hover:border-yellow-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-500 transition duration-200"
+              disabled
+              className="w-full rounded-xl bg-gray-50 border border-gray-200 h-12 px-4 shadow-sm cursor-not-allowed text-gray-600"
             />
           </div>
         ))}

@@ -48,7 +48,10 @@ export function useContractHtml(
   const [contractHtml, setContractHtml] = useState<string>("");
 
   useEffect(() => {
-    if (product && product.contractTemplate?.htmlContent && currentStep === 3) {
+    // Contract is shown at step 3 for battery products (after payment method step was removed)
+    const isContractStep = product?.category === "battery" && currentStep === 3;
+
+    if (product && product.contractTemplate?.htmlContent && isContractStep) {
       const totalPrice = (product.price || 0) + (shippingFee || 0);
 
       console.log("🔍 Contract HTML Debug:", {
@@ -57,6 +60,9 @@ export function useContractHtml(
         sellerSignaturePreview:
           product.contractTemplate.sellerSignature?.substring(0, 50),
         buyerSignaturePreview: buyerSignature?.substring(0, 50),
+        currentStep,
+        category: product.category,
+        isContractStep,
       });
 
       const html = updateContractHtml(
@@ -94,7 +100,8 @@ export function useContractHtml(
       );
 
       setContractHtml(html);
-    } else if (currentStep !== 3) {
+    } else {
+      // Clear contract HTML when not on contract step
       setContractHtml("");
     }
   }, [product, currentStep, buyerSignature, user, shippingFee]);

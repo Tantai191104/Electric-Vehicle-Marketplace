@@ -38,7 +38,16 @@ body {
   display: flex;
   flex-direction: column;
 }
+/* Fix Radix Select không làm giật layout */
+html {
+  overflow-y: scroll !important;
+}
 
+body[data-scroll-locked] {
+  overflow: visible !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
 img,
 picture,
 video,

@@ -102,6 +102,27 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
     navigate(`/payment/${orderId}`);
   };
 
+  // Call return API for GHN delivered_fail
+  const handleReturnOrder = async () => {
+    try {
+      const res = await fetch('/shipping/order/return', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId: order._id }),
+      });
+      if (res.ok) {
+        toast.success('Yêu cầu trả hàng đã được gửi!');
+      } else {
+        toast.error('Gửi yêu cầu trả hàng thất bại!');
+      }
+    } catch (err) {
+      toast.error('Có lỗi xảy ra khi gửi yêu cầu trả hàng!');
+      console.error(err);
+    }
+  };
+
   const isDepositOrder = order.shipping?.method !== "GHN";
   return (
     <Card className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden">
@@ -349,6 +370,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
               className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-400 hover:text-white transition-all duration-200"
             >
               Đánh giá sản phẩm
+            </Button>
+          )}
+
+          {/* Button for GHN orders with status delivered_fail */}
+          {order.shipping?.method === "GHN" && order.status === "delivered_fail" && (
+            <Button
+              variant="outline"
+              className="flex-1 border-yellow-400 text-yellow-700 hover:bg-yellow-400 hover:text-white transition-all duration-200"
+              onClick={handleReturnOrder}
+            >
+              Trả hàng
             </Button>
           )}
 
