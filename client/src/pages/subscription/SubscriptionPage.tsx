@@ -6,7 +6,6 @@ import { useAuthStore } from "@/store/auth";
 import { subscriptionServices } from "@/services/subscriptionServices";
 import { toast } from 'sonner';
 import PlanCardSkeleton from './components/PlanCardSkeleton';
-
 import type { SubscriptionPlan } from "@/types/subscriptionTypes";
 import { PageHeader } from "./components/PageHeader";
 import { PlanCard } from "./components/PlanCard";

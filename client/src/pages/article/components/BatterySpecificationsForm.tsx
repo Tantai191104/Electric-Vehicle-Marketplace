@@ -39,6 +39,14 @@ const BATTERY_SPEC_UNITS: Record<keyof BatterySpecifications, string> = {
 
 // Options cho dropdown pin
 const BATTERY_SPEC_OPTIONS: Partial<Record<keyof BatterySpecifications, string[]>> = {
+    compatibility: [
+        "VinFast Station",
+        "Tesla Supercharger",
+        "EVN Station",
+        "Charge+",
+        "ABB Station",
+        "Khác"
+    ],
     batteryCapacity: ["3.5", "5.0", "7.5", "10.0", "15.0", "20.0"],
     voltage: ["12", "24", "36", "48", "72", "96"],
     capacity: ["10", "15", "20", "25", "30", "35"],
@@ -84,8 +92,13 @@ const BatterySpecificationsForm: React.FC<Props> = ({ form, setForm }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {Object.keys(form.specifications).map((key) => {
                     const typedKey = key as keyof BatterySpecifications;
-                    const options = BATTERY_SPEC_OPTIONS[typedKey];
+                    let options = BATTERY_SPEC_OPTIONS[typedKey];
                     const isCustom = customFields[typedKey];
+
+                    // For compatibility, always use dropdown
+                    if (typedKey === "compatibility") {
+                        options = BATTERY_SPEC_OPTIONS.compatibility;
+                    }
 
                     return (
                         <div key={key} className="space-y-2">
@@ -104,7 +117,6 @@ const BatterySpecificationsForm: React.FC<Props> = ({ form, setForm }) => {
                                                 {opt} {BATTERY_SPEC_UNITS[typedKey]}
                                             </SelectItem>
                                         ))}
-                                        <SelectItem value="Khác" className="rounded-lg hover:bg-yellow-50">Khác</SelectItem>
                                     </SelectContent>
                                 </Select>
                             ) : (

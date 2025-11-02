@@ -44,7 +44,7 @@ const WalletTopupPage: React.FC = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
-  const { status, checking } = useZaloPayOrder(orderId, open);
+  const { status } = useZaloPayOrder(orderId, open);
 
   const dongTot = parseNumberFromFormatted(amount) || 0;
 
@@ -272,25 +272,6 @@ const WalletTopupPage: React.FC = () => {
 
                 <div className="space-y-4">
                   <PaymentQR orderUrl={orderUrl} />
-
-                  {/* Status */}
-                  <div className="text-center">
-                    {checking ? (
-                      <div className="flex items-center justify-center gap-2 text-gray-700">
-                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-gray-700 border-t-transparent"></div>
-                        <span className="text-xs font-medium">Đang kiểm tra thanh toán...</span>
-                      </div>
-                    ) : status === "pending" ? (
-                      <div className="text-gray-600 text-xs font-medium">
-                        ⏳ Chờ thanh toán...
-                      </div>
-                    ) : status === "fail" ? (
-                      <div className="text-gray-800 text-xs font-medium">
-                        ❌ Thanh toán thất bại
-                      </div>
-                    ) : null}
-                  </div>
-
                   <Button
                     variant="outline"
                     className="w-full rounded-xl h-10 font-medium border border-gray-200 hover:bg-gray-50 text-sm"
@@ -307,11 +288,11 @@ const WalletTopupPage: React.FC = () => {
         {/* Footer compact */}
         <div className="text-center mt-4">
           <p className="text-xs text-gray-400 leading-relaxed">
-            Bằng việc tiếp tục, bạn đồng ý với{" "}
+            Bằng việc tiếp tục, bạn đồng ý với
             <a href="#" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
               Điều khoản
-            </a>{" "}
-            và{" "}
+            </a>
+            và
             <a href="#" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
               Chính sách
             </a>

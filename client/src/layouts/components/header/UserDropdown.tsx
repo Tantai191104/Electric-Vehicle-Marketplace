@@ -5,7 +5,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from 'react';
 import {
   AiOutlineUser,
   AiOutlineStar,
@@ -21,25 +20,9 @@ import { RiLogoutBoxLine } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
 import { formatVND } from "@/utils/formatVND";
 import { toast } from "sonner";
-import { subscriptionServices } from '@/services/subscriptionServices';
 const UserDropdown = () => {
   const { clearAuth, isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
-  const [mySubscription, setMySubscription] = useState<{ name?: string } | null>(null);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    let mounted = true;
-    (async () => {
-      try {
-        const s = await subscriptionServices.getMySubscription();
-        if (mounted) setMySubscription(s ?? null);
-      } catch (err) {
-        console.error('Failed to fetch my subscription', err);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [isAuthenticated]);
   const handleLogout = () => {
     clearAuth();
     authServices.logout();
@@ -131,21 +114,8 @@ const UserDropdown = () => {
                     {formatVND(user?.wallet?.balance ?? 0)}
                   </span>
                 </div>
-                {mySubscription ? (
-                  <div className="flex items-center justify-between text-sm text-gray-700 mt-2">
-                    <div>
-                      <div className="text-xs text-gray-500">Gói của bạn</div>
-                      <div className="font-medium">{mySubscription.name ?? '—'}</div>
-                    </div>
-                    <div>
-                      <Link to="/subscriptions" className="text-xs text-blue-600 hover:underline">Quản lý</Link>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-500 mt-2">Bạn chưa đăng ký gói trả phí</div>
-                )}
                 <Link to="/wallet/recharge">
-                  <Button className="w-full bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500">
+                  <Button className="w-full bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 mt-2">
                     Nạp ngay
                   </Button>
                 </Link>

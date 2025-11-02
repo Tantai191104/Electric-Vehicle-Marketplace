@@ -1,9 +1,9 @@
-// components/CarProductList.tsx
+// components/BatteryProductList.tsx
 import React, { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
-import CarCard from "./components/CarCard";
+import BatteryCard from "./components/BatteryCard";
 import { useProducts } from "@/hooks/useProduct";
 import { BiErrorCircle } from "react-icons/bi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
@@ -11,7 +11,7 @@ import type { Product } from "@/types/productType";
 
 const PAGE_SIZE = 12;
 
-const CarProductList: React.FC = () => {
+const BatteryProductList: React.FC = () => {
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState<string>("newest");
 
@@ -19,7 +19,7 @@ const CarProductList: React.FC = () => {
     const { data, isLoading, error } = useProducts({
         page,
         limit: PAGE_SIZE,
-        category: "vehicle"
+        category: "battery"
     });
 
     const totalPages = Math.ceil((data?.pagination.total || 0) / PAGE_SIZE);
@@ -52,8 +52,8 @@ const CarProductList: React.FC = () => {
         return (
             <div className="max-w-7xl mx-auto mt-[180px] px-4 md:px-0">
                 <div className="text-center py-12">
-                    <AiOutlineLoading3Quarters className="w-8 h-8 mx-auto mb-4 text-yellow-500 animate-spin" />
-                    <p className="text-gray-600">Đang tải danh sách xe điện...</p>
+                    <AiOutlineLoading3Quarters className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin" />
+                    <p className="text-gray-600">Đang tải danh sách pin...</p>
                 </div>
             </div>
         );
@@ -66,7 +66,7 @@ const CarProductList: React.FC = () => {
                 <div className="text-center py-12">
                     <BiErrorCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Không thể tải dữ liệu</h3>
-                    <p className="text-gray-600 mb-4">Có lỗi xảy ra khi tải danh sách xe điện</p>
+                    <p className="text-gray-600 mb-4">Có lỗi xảy ra khi tải danh sách pin</p>
                     <Button onClick={() => window.location.reload()} variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
                         Thử lại
                     </Button>
@@ -80,7 +80,7 @@ const CarProductList: React.FC = () => {
             <div className="mb-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Xe điện</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Pin xe điện</h1>
                         <p className="text-sm text-gray-600">
                             Hiển thị {sortedProducts.length} tin đăng (Trang {page}/{totalPages})
                         </p>
@@ -108,7 +108,7 @@ const CarProductList: React.FC = () => {
                         <p className="text-gray-600">Hãy quay lại sau để xem các tin đăng mới</p>
                     </div>
                 ) : (
-                    sortedProducts.map((product: Product) => <CarCard key={product._id} car={product} />)
+                    sortedProducts.map((product: Product) => <BatteryCard key={product._id} battery={product} />)
                 )}
             </div>
 
@@ -133,4 +133,4 @@ const CarProductList: React.FC = () => {
     );
 };
 
-export default CarProductList;
+export default BatteryProductList;

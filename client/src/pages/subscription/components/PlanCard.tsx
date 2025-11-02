@@ -1,7 +1,19 @@
 import { motion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 import type { SubscriptionPlan } from "@/types/subscriptionTypes";
-
+import { subscriptionServices } from "@/services/subscriptionServices";
+import { toast } from "sonner";
+import { useState } from "react";
+import { useAuthStore } from "@/store/auth";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface PlanCardProps {
     plan: SubscriptionPlan;
@@ -10,6 +22,7 @@ interface PlanCardProps {
     onSelect: () => void;
     onHover: () => void;
     onLeave: () => void;
+    isCurrent?: boolean;
 }
 
 export const PlanCard: React.FC<PlanCardProps> = ({
@@ -19,7 +32,54 @@ export const PlanCard: React.FC<PlanCardProps> = ({
     onSelect,
     onHover,
     onLeave,
+    isCurrent = false,
 }) => {
+    const isDefaultPlan = plan.price === 0 || plan.name.toLowerCase() === "basic";
+    const [loading, setLoading] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const updateUser = useAuthStore((state) => state.updateUser);
+    const currentBalance = useAuthStore((state) => state.user?.wallet?.balance || 0);
+
+    const handleConfirmPurchase = async () => {
+        if (loading) return;
+
+        setLoading(true);
+        setShowConfirm(false);
+        try {
+            const response = await subscriptionServices.purchaseSubscription(plan.id);
+
+            // Cập nhật số dư ví trong store
+            if (response?.newBalance !== undefined) {
+                updateUser({
+                    wallet: {
+                        balance: response.newBalance,
+                    }
+                });
+            } else {
+                // Nếu API không trả về newBalance, tự tính
+                updateUser({
+                    wallet: {
+                        balance: currentBalance - plan.price,
+                    }
+                });
+            }
+
+            toast.success("Đăng ký gói thành công!");
+            onSelect();
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } } };
+            const message = err?.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.";
+            toast.error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePurchase = () => {
+        if (isCurrent || isDefaultPlan || loading) return;
+        setShowConfirm(true);
+    };
+
     return (
         <motion.div
             onHoverStart={onHover}
@@ -27,7 +87,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
             className={`relative transition-all duration-200 ${plan.popular ? 'lg:scale-105' : ''}`}
         >
             {/* Badges */}
-            {plan.popular && (
+            {plan.popular && !isCurrent && (
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -36,6 +96,34 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                 >
                     <div className="bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow">
                         PRO
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Hiển thị nếu là gói hiện tại */}
+            {isCurrent && (
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.8, type: "spring" }}
+                    className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20"
+                >
+                    <div className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow border border-yellow-300 animate-pulse">
+                        Đang sử dụng
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Hiển thị nếu là gói bình thường */}
+            {isDefaultPlan && !isCurrent && (
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.8, type: "spring" }}
+                    className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20"
+                >
+                    <div className="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow border border-gray-300">
+                        Đang áp dụng
                     </div>
                 </motion.div>
             )}
@@ -58,9 +146,14 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         <h3 className="text-xl font-bold text-gray-900 tracking-tight">
                             {plan.name}
                         </h3>
-                        {plan.badge && (
+                        {plan.badge && !isCurrent && (
                             <span className="px-2 py-1 bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 rounded-full text-xs font-semibold shadow-sm">
                                 {plan.badge}
+                            </span>
+                        )}
+                        {isCurrent && (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold shadow-sm border border-yellow-300">
+                                Đang sử dụng
                             </span>
                         )}
                     </div>
@@ -98,19 +191,26 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
                     {/* CTA Button */}
                     <motion.button
-                        onClick={onSelect}
-                        className="w-full bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm"
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.98 }}
+                        onClick={handlePurchase}
+                        disabled={isCurrent || isDefaultPlan || loading}
+                        className={`w-full bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm ${isCurrent || isDefaultPlan || loading ? 'opacity-60 cursor-not-allowed' : ''
+                            }`}
+                        whileHover={isCurrent || isDefaultPlan || loading ? {} : { scale: 1.03 }}
+                        whileTap={isCurrent || isDefaultPlan || loading ? {} : { scale: 0.98 }}
                     >
-                        {plan.price === 0 ? 'Tạo tài khoản miễn phí' : 'Bắt đầu dùng thử'}
-                        <FiArrowRight className="w-4 h-4" />
+                        {loading
+                            ? 'Đang xử lý...'
+                            : isCurrent || isDefaultPlan
+                                ? 'Gói đang sử dụng'
+                                : plan.price === 0
+                                    ? 'Tạo tài khoản miễn phí'
+                                    : 'Đăng kí ngay'}
+                        {!isCurrent && !isDefaultPlan && !loading && <FiArrowRight className="w-4 h-4" />}
                     </motion.button>
                 </div>
 
                 {/* Features & Quotas */}
                 <div className="p-6">
-                    {/* Quotas summary from server (if present) */}
                     {plan.quotas && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm mb-6">
                             <div className="flex flex-col gap-4">
@@ -140,7 +240,6 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         </div>
                     )}
                     <div className="flex flex-wrap gap-3 mb-4">
-                        {/* Structured features (boolean flags) */}
                         {plan.featuresObj && (
                             <div className="flex flex-wrap gap-2">
                                 <span className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${plan.featuresObj.aiAssist ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>Hỗ trợ AI thông minh</span>
@@ -151,7 +250,6 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         )}
                     </div>
 
-                    {/* Bonuses */}
                     {plan.bonuses && plan.bonuses.length > 0 && (
                         <div className="mt-6 pt-4 border-t border-gray-50">
                             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
@@ -173,7 +271,6 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     )}
                 </div>
 
-                {/* Hover Overlay */}
                 {isHovered && (
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -183,6 +280,61 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     />
                 )}
             </motion.div>
+
+            {/* Confirm Dialog */}
+            <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận đăng ký gói {plan.name}</DialogTitle>
+                        <DialogDescription className="space-y-2 pt-2">
+                            <p>Bạn có chắc chắn muốn đăng ký gói <span className="font-semibold text-gray-900">{plan.name}</span>?</p>
+                            <div className="bg-gray-50 p-3 rounded-lg space-y-1 text-sm">
+                                <div className="flex justify-between">
+                                    <span>Giá gói:</span>
+                                    <span className="font-semibold text-emerald-600">
+                                        {plan.price.toLocaleString('vi-VN')} VNĐ
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Số dư hiện tại:</span>
+                                    <span className="font-semibold">
+                                        {currentBalance.toLocaleString('vi-VN')} VNĐ
+                                    </span>
+                                </div>
+                                <div className="flex justify-between border-t border-gray-200 pt-1 mt-1">
+                                    <span>Số dư sau khi đăng ký:</span>
+                                    <span className={`font-semibold ${currentBalance - plan.price < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                                        {(currentBalance - plan.price).toLocaleString('vi-VN')} VNĐ
+                                    </span>
+                                </div>
+                            </div>
+                            {currentBalance < plan.price && (
+                                <p className="text-red-600 text-sm font-medium">
+                                    ⚠️ Số dư không đủ. Vui lòng nạp thêm tiền vào ví.
+                                </p>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex-row gap-2 sm:justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowConfirm(false)}
+                            disabled={loading}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={handleConfirmPurchase}
+                            disabled={loading || currentBalance < plan.price}
+                            className="bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800"
+                        >
+                            {loading ? 'Đang xử lý...' : 'Xác nhận đăng ký'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </motion.div>
     );
 };

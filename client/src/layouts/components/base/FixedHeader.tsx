@@ -69,7 +69,7 @@ const FixedHeader: React.FC = () => {
               {item.name}
             </button>
           ))}
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button className="rounded-full border-yellow-400 text-black bg-white hover:bg-yellow-100 font-semibold flex-shrink-0">
                 <AiOutlineMenu className="mr-2 h-4 w-4" />
@@ -127,7 +127,7 @@ const FixedHeader: React.FC = () => {
             </span>
           </button>
 
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button className="ml-2  font-semibold">
                 <AiOutlineMenu className="mr-2 h-5 w-5" />

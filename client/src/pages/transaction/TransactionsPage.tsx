@@ -29,16 +29,19 @@ export default function TransactionsPage() {
   const [filters, setFilters] = useState({
     type: "all",
     status: "all",
-    paymentMethod: "all",
-    dateRange: "all",
     amountRange: "all"
   });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   // Mock data - thay thế bằng API call thực tế
   useEffect(() => {
     const loadTransactions = async () => {
       setLoading(true);
       try {
+        // Sync return status first (no need to wait for response)
+        userServices.syncReturnStatus().catch(err => console.error('Sync error:', err));
+        
         const data = await userServices.fetchTransactions();
         setTransactions(data.transactions);
         setFilteredTransactions(data.transactions);
@@ -75,13 +78,19 @@ export default function TransactionsPage() {
       filtered = filtered.filter(transaction => transaction.status === filters.status);
     }
 
-    // Payment method filter
-    if (filters.paymentMethod !== "all") {
-      filtered = filtered.filter(transaction => transaction.paymentMethod === filters.paymentMethod);
-    }
+    // NOTE: paymentMethod filter removed per new UX
+
+    // Always sort newest first
+    filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     setFilteredTransactions(filtered);
   }, [transactions, searchTerm, filters]);
+
+  // Pagination: compute displayed slice
+  const totalItems = filteredTransactions.length;
+  const startIdx = (page - 1) * limit;
+  const endIdx = startIdx + limit;
+  const displayedTransactions = filteredTransactions.slice(startIdx, endIdx);
 
   const handleExport = () => {
     // Export functionality
@@ -91,6 +100,9 @@ export default function TransactionsPage() {
   const handleRefresh = async () => {
     setLoading(true);
     try {
+      // Sync return status first (no need to wait for response)
+      userServices.syncReturnStatus().catch(err => console.error('Sync error:', err));
+      
       const data = await userServices.fetchTransactions();
       setTransactions(data);
       setFilteredTransactions(data);
@@ -183,43 +195,53 @@ export default function TransactionsPage() {
                 </SelectContent>
               </Select>
 
-              {/* Payment Method Filter */}
-              <Select value={filters.paymentMethod} onValueChange={(value) => setFilters({ ...filters, paymentMethod: value })}>
-                <SelectTrigger className="border-gray-200 focus:border-gray-900 focus:ring-gray-900">
-                  <SelectValue placeholder="Phương thức" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả phương thức</SelectItem>
-                  <SelectItem value="wallet">Ví điện tử</SelectItem>
-                  <SelectItem value="e_wallet">ZaloPay/Momo</SelectItem>
-                  <SelectItem value="bank_transfer">Chuyển khoản</SelectItem>
-                  <SelectItem value="credit_card">Thẻ tín dụng</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* (Payment method filter removed — sorting handled newest-first) */}
 
-              {/* Date Range */}
-              <Select value={filters.dateRange} onValueChange={(value) => setFilters({ ...filters, dateRange: value })}>
-                <SelectTrigger className="border-gray-200 focus:border-gray-900 focus:ring-gray-900">
-                  <SelectValue placeholder="Thời gian" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="today">Hôm nay</SelectItem>
-                  <SelectItem value="week">7 ngày qua</SelectItem>
-                  <SelectItem value="month">30 ngày qua</SelectItem>
-                  <SelectItem value="quarter">3 tháng qua</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Date range filter removed per request */}
             </div>
           </CardContent>
         </Card>
 
         {/* Transactions List */}
         <TransactionsList
-          transactions={filteredTransactions}
+          transactions={displayedTransactions}
           loading={loading}
           onSelectTransaction={setSelectedTransaction}
         />
+
+        {/* Pagination controls */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Hiển thị {Math.min(startIdx + 1, totalItems || 0)} - {Math.min(endIdx, totalItems || 0)} trên {totalItems}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+              <SelectTrigger className="w-28 border-gray-200 focus:border-gray-900 focus:ring-gray-900">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 / trang</SelectItem>
+                <SelectItem value="25">25 / trang</SelectItem>
+                <SelectItem value="50">50 / trang</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(Math.max(1, page - 1))}>
+                Trước
+              </Button>
+
+              <div className="px-3 py-1 border rounded text-sm text-gray-700">
+                {page} / {Math.max(1, Math.ceil((totalItems || 0) / limit))}
+              </div>
+
+              <Button size="sm" variant="outline" disabled={page >= Math.max(1, Math.ceil((totalItems || 0) / limit))} onClick={() => setPage(Math.min(Math.max(1, Math.ceil((totalItems || 0) / limit)), page + 1))}>
+                Sau
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Transaction Details Modal */}
         {selectedTransaction && (

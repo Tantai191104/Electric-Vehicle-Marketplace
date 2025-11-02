@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { FiDownload, FiRefreshCw, FiTrendingUp, FiGlobe } from "react-icons/fi";
+import { FiTrendingUp, FiGlobe } from "react-icons/fi";
 import { RevenueChart } from "./components/RevenueChart";
 import { TransactionChart } from "./components/TransactionChart";
 import { PlatformMetrics } from "./components/PlatformMetrics";
@@ -37,21 +36,6 @@ export default function DashboardPage() {
                                 <option value="90d">3 tháng qua</option>
                                 <option value="1y">1 năm qua</option>
                             </select>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-xl px-4 py-2.5 font-medium"
-                            >
-                                <FiDownload className="w-4 h-4" /> Xuất báo cáo kinh doanh
-                            </Button>
-
-                            <Button
-                                size="sm"
-                                className="gap-2 bg-gray-900 hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-4 py-2.5 font-medium"
-                            >
-                                <FiRefreshCw className="w-4 h-4" /> Làm mới
-                            </Button>
                         </div>
                     </div>
 
