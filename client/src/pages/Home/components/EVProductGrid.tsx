@@ -12,10 +12,7 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 export default function EVProductGrid() {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useVehicleProducts({
-    page: 1,
-    limit: 8
-  });
+  const { data, isLoading, error } = useVehicleProducts({ page: 1, limit: 8 });
   if (isLoading) {
     return (
       <section className="max-w-7xl mx-auto px-2 py-6">
@@ -51,6 +48,7 @@ export default function EVProductGrid() {
       </section>
     );
   }
+
   const products = (data?.products || []).slice(0, 8);
 
   return (

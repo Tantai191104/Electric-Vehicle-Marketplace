@@ -1,6 +1,7 @@
 import { FiUsers, FiShoppingBag, FiDollarSign, FiTrendingUp } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { adminServices, type MetricData } from "@/services/adminServices";
+import { formatVND } from "@/utils/formatVND";
 
 interface PlatformMetricsProps {
     timeRange?: string;
@@ -54,11 +55,11 @@ export const PlatformMetrics: React.FC<PlatformMetricsProps> = ({ timeRange }) =
         },
         {
             title: "Doanh thu",
-            value: `₫${((metricsData?.totalCommission ?? 0) / 1e6).toFixed(0)}M`,
-            change: `${metricsData?.percentageChanges?.commission ?? 0 >= 0 ? "+" : ""}${metricsData?.percentageChanges?.commission ?? 0}%`,
-            changeType: (metricsData?.percentageChanges?.commission ?? 0) >= 0 ? "increase" : "decrease",
+            value: formatVND(metricsData?.totalRevenue ?? 0),
+            change: `${metricsData?.percentageChanges?.revenue ?? 0 >= 0 ? "+" : ""}${metricsData?.percentageChanges?.revenue ?? 0}%`,
+            changeType: (metricsData?.percentageChanges?.revenue ?? 0) >= 0 ? "increase" : "decrease",
             icon: FiDollarSign,
-            description: "Phí giao dịch thu được",
+            description: "Tổng doanh thu từ giao dịch",
             color: "bg-purple-500"
         },
         {

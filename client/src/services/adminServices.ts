@@ -38,7 +38,10 @@ export const adminServices = {
     const response = await API.get("/admin/products/pending");
     return response.data.data;
   },
-  async fetchAllProducts(status?: string): Promise<{ data: Product[]; pagination: { page: number; limit: number; total: number; pages: number } }> {
+  async fetchAllProducts(status?: string): Promise<{
+    data: Product[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }> {
     const params = status ? { status } : {};
     const response = await API.get("/admin/products", { params });
     return response.data;

@@ -16,6 +16,7 @@ import { FiDollarSign } from "react-icons/fi";
 import { useRevenueData } from "@/hooks/useAdmin";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { formatVND } from "@/utils/formatVND";
 
 ChartJS.register(
   CategoryScale,
@@ -197,7 +198,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
             const revenueValue = context.parsed.y;
             const orderValue = orders?.[context.dataIndex] || 0;
             return [
-              `Doanh thu: ${revenueValue} triệu VNĐ`,
+              `Doanh thu: ${formatVND(revenueValue)} đ`,
               `Đơn hàng: ${orderValue} giao dịch`
             ];
           },
@@ -294,7 +295,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
           <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
             <p className="text-xs text-gray-600 font-medium mb-1">Tổng doanh thu</p>
             <p className="text-xl font-bold text-gray-900">
-              {totalRevenue}M VNĐ
+              {formatVND(totalRevenue)}
             </p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">

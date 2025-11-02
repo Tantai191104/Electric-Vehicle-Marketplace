@@ -53,6 +53,11 @@ export const productServices = {
   },
   async fetchProductById(id: string) {
     const response = await API.get(`/products/${id}`);
+    console.log("fetchProductById response:", response);
+    return response.data;
+  },
+  async updateProduct(id: string, data: Record<string, unknown>) {
+    const response = await API.put(`/products/${id}`, data);
     return response.data;
   },
   async createProduct(data: BatteryFormData | VehicleFormData) {
