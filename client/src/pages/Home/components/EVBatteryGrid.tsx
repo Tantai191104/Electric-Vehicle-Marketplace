@@ -10,12 +10,9 @@ import truncate from "@/utils/truncate";
 import { useNavigate } from "react-router-dom";
 
 export default function EVBatteryGrid() {
-  // Fetch battery products với limit 8
-  const { data, isLoading, error } = useBatteryProducts({
-    page: 1,
-    limit: 8
-  });
   const navigate = useNavigate();
+  const { data, isLoading, error } = useBatteryProducts({ page: 1, limit: 8 });
+
   // Loading state
   if (isLoading) {
     return (
@@ -33,7 +30,6 @@ export default function EVBatteryGrid() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <section className="max-w-7xl mx-auto px-2 py-8">
