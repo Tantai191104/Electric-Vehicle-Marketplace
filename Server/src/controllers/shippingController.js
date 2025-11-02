@@ -1,4 +1,4 @@
-import { ghnClient, getGhnHeaders } from "../config/ghn.js";
+import { ghnClient, getGhnHeaders, mapGhnStatusToSystemStatus } from "../config/ghn.js";
 import Product from "../models/Product.js";
 import { z } from "zod";
 import Order from "../models/Order.js";
@@ -408,6 +408,7 @@ export async function createShippingOrder(req, res) {
             method: 'GHN',
             trackingNumber: orderCode || null,
             carrier: 'GHN',
+            ghnShopId: process.env.GHN_SHOP_ID || null, // Store shop ID for future queries
           },
           shippingAddress: {
             fullName: b.to_name,
@@ -797,6 +798,90 @@ export async function syncReturnsAndRefunds(req, res) {
     return res.json({ success: true, results });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+}
+
+// Handle GHN webhook callback for order status updates
+export async function handleGhnWebhook(req, res) {
+  try {
+    const { order_code, status, current_status, reason } = req.body;
+    
+    if (!order_code) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing order_code in webhook payload' 
+      });
+    }
+
+    // Find order by tracking number (GHN order_code)
+    const order = await Order.findOne({ 
+      'shipping.trackingNumber': order_code,
+      'shipping.carrier': 'GHN'
+    });
+
+    if (!order) {
+      console.warn(`[GHN Webhook] Order not found for order_code: ${order_code}`);
+      // Return 200 to prevent GHN from retrying
+      return res.status(200).json({ 
+        success: false, 
+        message: 'Order not found' 
+      });
+    }
+
+    // Get GHN status (prefer current_status, fallback to status)
+    const ghnStatus = (current_status || status || '').toLowerCase();
+    
+    if (!ghnStatus) {
+      console.warn(`[GHN Webhook] No status provided for order_code: ${order_code}`);
+      return res.status(200).json({ 
+        success: false, 
+        message: 'No status in webhook' 
+      });
+    }
+
+    // Map GHN status to system status
+    const mappedStatus = mapGhnStatusToSystemStatus(ghnStatus) || order.status;
+    
+    if (mappedStatus === "delivered" && !order.shipping.actualDelivery) {
+      order.shipping.actualDelivery = new Date();
+    }
+
+    // Only update if status changed
+    const oldStatus = order.status;
+    if (mappedStatus !== order.status) {
+      order.status = mappedStatus;
+      
+      // Add to timeline
+      order.timeline.push({
+        status: mappedStatus,
+        description: `Tự động cập nhật từ GHN: ${ghnStatus}${reason ? ` - ${reason}` : ''}`,
+        timestamp: new Date(),
+      });
+
+      await order.save();
+      
+      console.log(`[GHN Webhook] Updated order ${order.orderNumber} (${order_code}): ${oldStatus} → ${mappedStatus} (GHN: ${ghnStatus})`);
+    } else {
+      console.log(`[GHN Webhook] Order ${order.orderNumber} (${order_code}) status unchanged: ${mappedStatus} (GHN: ${ghnStatus})`);
+    }
+
+    // Always return 200 to acknowledge receipt (even if order not found)
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Webhook processed',
+      order_code,
+      oldStatus,
+      newStatus: mappedStatus || order.status,
+      updated: mappedStatus !== oldStatus
+    });
+    
+  } catch (error) {
+    console.error('[GHN Webhook] Error:', error);
+    // Return 200 to prevent GHN from retrying on our errors
+    return res.status(200).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { adminServices } from "@/services/adminServices";
 import {
@@ -50,6 +50,16 @@ export default function OrderManage() {
             return matchesStatus && matchesShippingMethod;
         });
     }, [ordersData, statusFilter, shippingMethodFilter]);
+
+    // Update selectedOrder when ordersData changes (to reflect status updates)
+    useEffect(() => {
+        if (selectedOrder && ordersData.length > 0) {
+            const updatedOrder = ordersData.find(o => o._id === selectedOrder._id);
+            if (updatedOrder && updatedOrder.status !== selectedOrder.status) {
+                setSelectedOrder(updatedOrder);
+            }
+        }
+    }, [ordersData, selectedOrder?._id]);
 
     // Handle refresh
     const handleRefresh = useCallback(() => {
@@ -192,6 +202,8 @@ export default function OrderManage() {
                     order={selectedOrder}
                     isOpen={!!selectedOrder}
                     onClose={() => setSelectedOrder(null)}
+                    onRefresh={refetch}
+                    onOrderUpdated={(updatedOrder) => setSelectedOrder(updatedOrder)}
                 />
             </div>
         </div>

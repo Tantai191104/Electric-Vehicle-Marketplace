@@ -25,7 +25,8 @@ const orderSchema = new mongoose.Schema(
       trackingNumber: { type: String, default: null },
       carrier: { type: String, default: null },
       estimatedDelivery: { type: Date, default: null },
-      actualDelivery: { type: Date, default: null }
+      actualDelivery: { type: Date, default: null },
+      ghnShopId: { type: String, default: null } // Store GHN shop ID when order is created
     },
     
     shippingAddress: {
