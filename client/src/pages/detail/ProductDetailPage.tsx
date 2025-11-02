@@ -21,8 +21,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 interface ProductDetailPageProps {
     className?: string;
 }
-
-
 export default function ProductDetailPage({ className = "" }: ProductDetailPageProps) {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -40,6 +38,7 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
     if (!data?.product) return <NotFoundState onGoBack={() => navigate(-1)} />;
 
     const product = data.product;
+    const isOwner = user?._id === product.seller._id;
 
     const handleContact = async (): Promise<void> => {
         if (!user) {
@@ -175,6 +174,8 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                         isContactLoading={createConversation.isPending}
                         isInWishlist={product.isInWishlist || false}
                         category={product.category}
+                        isOwner={isOwner}
+                        onManage={() => navigate('/own/product')}
                         className="mb-5"
                     />
                     <ProductStats likes={product.likes} views={product.views} updatedAt={product.updatedAt} className="mb-4" />

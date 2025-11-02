@@ -62,10 +62,13 @@ export function ContractStep({
     }, [contractHtml, buyerSignature, onSignatureChange]);
 
     return (
-        <div>
-            <h3 className="font-semibold mb-2">Hợp đồng mua bán</h3>
+        <div className="w-full flex flex-col items-center">
+            <h3 className="font-semibold mb-2 self-start">Hợp đồng mua bán</h3>
             {contractHtml ? (
-                <div ref={previewRef}>
+                <div
+                    ref={previewRef}
+                    className="w-full flex justify-center"
+                >
                     <ContractPreview contractHtml={contractHtml} />
                 </div>
             ) : (

@@ -37,9 +37,6 @@ const SellerDropdown = () => (
       <Link to="own/product">
         <DropdownMenuItem>Quản lý tin</DropdownMenuItem>
       </Link>
-      <Link to="subscriptions">
-        <DropdownMenuItem>Gói Pro</DropdownMenuItem>
-      </Link>
     </DropdownMenuContent>
   </DropdownMenu>
 );

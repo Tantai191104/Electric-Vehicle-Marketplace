@@ -1,4 +1,4 @@
-import { FiZap, FiShoppingBag, FiFileText } from "react-icons/fi";
+import { FiZap, FiShoppingBag, FiFileText, FiSettings } from "react-icons/fi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 interface ActionButtonsProps {
@@ -12,6 +12,8 @@ interface ActionButtonsProps {
     isContractLoading?: boolean; // loading cho hợp đồng
     isInWishlist?: boolean;
     category?: "vehicle" | "battery";
+    isOwner?: boolean;
+    onManage?: () => void;
 }
 
 export function ActionButtons({
@@ -25,6 +27,8 @@ export function ActionButtons({
     isContractLoading = false,
     isInWishlist = false,
     category = "vehicle",
+    isOwner = false,
+    onManage,
 }: ActionButtonsProps) {
     const ButtonWithIcon = ({
         onClick,
@@ -68,6 +72,17 @@ export function ActionButtons({
             </button>
         );
     };
+
+    if (isOwner) {
+        // Nếu là sản phẩm của mình, ẩn các thao tác, chỉ hiển thị nút quản lý tin
+        return (
+            <div className={`flex flex-col gap-3 ${className}`}>
+                <ButtonWithIcon onClick={() => (onManage ? onManage() : undefined)} icon={<FiSettings className="w-4 h-4" />} type="secondary" fullWidth>
+                    Quản lý tin
+                </ButtonWithIcon>
+            </div>
+        );
+    }
 
     // Layout cho battery: Xem hợp đồng, Mua ngay, Liên hệ
     if (category === "battery") {

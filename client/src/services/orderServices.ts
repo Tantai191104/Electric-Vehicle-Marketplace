@@ -17,5 +17,9 @@ export const orderServices = {
   async createDepositOrder(data: DepositPayload) {
     const response = await API.post("/deposit/vehicle", data);
     return response.data;
+  },
+  async getDepositAmount() {
+    const response = await API.get("/deposit-amount");
+    return response.data;
   }
 };

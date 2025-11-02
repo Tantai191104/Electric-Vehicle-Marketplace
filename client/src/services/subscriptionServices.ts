@@ -17,9 +17,10 @@ export const subscriptionServices = {
     // fallback: return empty array
     return [];
   },
-  // fetch the current authenticated user's subscription
-  getMySubscription: async () => {
-    const resp = await API.get("/subscriptions/me");
+
+  // fetch current user's subscription usage summary
+  getSubscriptionUsage: async () => {
+    const resp = await API.get("/subscriptions/usage");
     return resp.data;
   },
 
