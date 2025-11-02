@@ -34,16 +34,22 @@ export function OrderDetailDialog({
   if (!order) return null;
 
   const getStatusBadge = (status: Order['status']) => {
-    const statusConfig = {
-      pending: { label: "Chờ xác nhận", variant: "secondary" as const },
-      confirmed: { label: "Đã xác nhận", variant: "default" as const },
-      shipping: { label: "Đang giao", variant: "outline" as const },
-      delivered: { label: "Đã giao", variant: "default" as const },
-      cancelled: { label: "Đã hủy", variant: "destructive" as const },
-      refunded: { label: "Đã hoàn tiền", variant: "secondary" as const },
+    type BadgeConfig = { label: string; variant: 'secondary' | 'default' | 'outline' | 'destructive' };
+    const statusConfig: Partial<Record<Order['status'], BadgeConfig>> = {
+      pending: { label: "Chờ xác nhận", variant: "secondary" },
+      confirmed: { label: "Đã xác nhận", variant: "default" },
+      shipping: { label: "Đang giao", variant: "outline" },
+      delivered: { label: "Đã giao", variant: "default" },
+      cancelled: { label: "Đã hủy", variant: "destructive" },
+      refunded: { label: "Đã hoàn tiền", variant: "secondary" },
+      delivered_fail: { label: "Giao thất bại", variant: "destructive" },
+      deposit_pending: { label: "Đang đặt cọc", variant: "secondary" },
+      deposit_confirmed: { label: "Đã đặt cọc", variant: "default" },
+      deposit_cancelled: { label: "Đã hủy đặt cọc", variant: "destructive" },
+      deposit_refunded: { label: "Hoàn tiền đặt cọc", variant: "secondary" },
     };
 
-    const config = statusConfig[status] || statusConfig.pending;
+    const config = statusConfig[status] ?? statusConfig['pending']!;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 

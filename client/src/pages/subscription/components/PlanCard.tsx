@@ -1,6 +1,19 @@
 import { motion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 import type { SubscriptionPlan } from "@/types/subscriptionTypes";
+import { subscriptionServices } from "@/services/subscriptionServices";
+import { toast } from "sonner";
+import { useState } from "react";
+import { useAuthStore } from "@/store/auth";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface PlanCardProps {
     plan: SubscriptionPlan;
@@ -21,8 +34,51 @@ export const PlanCard: React.FC<PlanCardProps> = ({
     onLeave,
     isCurrent = false,
 }) => {
-    // ✅ Xác định gói bình thường (miễn phí / mặc định)
     const isDefaultPlan = plan.price === 0 || plan.name.toLowerCase() === "basic";
+    const [loading, setLoading] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const updateUser = useAuthStore((state) => state.updateUser);
+    const currentBalance = useAuthStore((state) => state.user?.wallet?.balance || 0);
+
+    const handleConfirmPurchase = async () => {
+        if (loading) return;
+
+        setLoading(true);
+        setShowConfirm(false);
+        try {
+            const response = await subscriptionServices.purchaseSubscription(plan.id);
+
+            // Cập nhật số dư ví trong store
+            if (response?.newBalance !== undefined) {
+                updateUser({
+                    wallet: {
+                        balance: response.newBalance,
+                    }
+                });
+            } else {
+                // Nếu API không trả về newBalance, tự tính
+                updateUser({
+                    wallet: {
+                        balance: currentBalance - plan.price,
+                    }
+                });
+            }
+
+            toast.success("Đăng ký gói thành công!");
+            onSelect();
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } } };
+            const message = err?.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.";
+            toast.error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePurchase = () => {
+        if (isCurrent || isDefaultPlan || loading) return;
+        setShowConfirm(true);
+    };
 
     return (
         <motion.div
@@ -135,19 +191,21 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
                     {/* CTA Button */}
                     <motion.button
-                        onClick={onSelect}
-                        disabled={isCurrent || isDefaultPlan}
-                        className={`w-full bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm ${isCurrent || isDefaultPlan ? 'opacity-60 cursor-not-allowed' : ''
+                        onClick={handlePurchase}
+                        disabled={isCurrent || isDefaultPlan || loading}
+                        className={`w-full bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm ${isCurrent || isDefaultPlan || loading ? 'opacity-60 cursor-not-allowed' : ''
                             }`}
-                        whileHover={isCurrent || isDefaultPlan ? {} : { scale: 1.03 }}
-                        whileTap={isCurrent || isDefaultPlan ? {} : { scale: 0.98 }}
+                        whileHover={isCurrent || isDefaultPlan || loading ? {} : { scale: 1.03 }}
+                        whileTap={isCurrent || isDefaultPlan || loading ? {} : { scale: 0.98 }}
                     >
-                        {isCurrent || isDefaultPlan
-                            ? 'Gói đang sử dụng'
-                            : plan.price === 0
-                                ? 'Tạo tài khoản miễn phí'
-                                : 'Đăng kí ngay'}
-                        {!isCurrent && !isDefaultPlan && <FiArrowRight className="w-4 h-4" />}
+                        {loading
+                            ? 'Đang xử lý...'
+                            : isCurrent || isDefaultPlan
+                                ? 'Gói đang sử dụng'
+                                : plan.price === 0
+                                    ? 'Tạo tài khoản miễn phí'
+                                    : 'Đăng kí ngay'}
+                        {!isCurrent && !isDefaultPlan && !loading && <FiArrowRight className="w-4 h-4" />}
                     </motion.button>
                 </div>
 
@@ -222,6 +280,61 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     />
                 )}
             </motion.div>
+
+            {/* Confirm Dialog */}
+            <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận đăng ký gói {plan.name}</DialogTitle>
+                        <DialogDescription className="space-y-2 pt-2">
+                            <p>Bạn có chắc chắn muốn đăng ký gói <span className="font-semibold text-gray-900">{plan.name}</span>?</p>
+                            <div className="bg-gray-50 p-3 rounded-lg space-y-1 text-sm">
+                                <div className="flex justify-between">
+                                    <span>Giá gói:</span>
+                                    <span className="font-semibold text-emerald-600">
+                                        {plan.price.toLocaleString('vi-VN')} VNĐ
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Số dư hiện tại:</span>
+                                    <span className="font-semibold">
+                                        {currentBalance.toLocaleString('vi-VN')} VNĐ
+                                    </span>
+                                </div>
+                                <div className="flex justify-between border-t border-gray-200 pt-1 mt-1">
+                                    <span>Số dư sau khi đăng ký:</span>
+                                    <span className={`font-semibold ${currentBalance - plan.price < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                                        {(currentBalance - plan.price).toLocaleString('vi-VN')} VNĐ
+                                    </span>
+                                </div>
+                            </div>
+                            {currentBalance < plan.price && (
+                                <p className="text-red-600 text-sm font-medium">
+                                    ⚠️ Số dư không đủ. Vui lòng nạp thêm tiền vào ví.
+                                </p>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex-row gap-2 sm:justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowConfirm(false)}
+                            disabled={loading}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={handleConfirmPurchase}
+                            disabled={loading || currentBalance < plan.price}
+                            className="bg-gradient-to-r from-gray-900 to-emerald-700 hover:from-black hover:to-emerald-800"
+                        >
+                            {loading ? 'Đang xử lý...' : 'Xác nhận đăng ký'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </motion.div>
     );
 };

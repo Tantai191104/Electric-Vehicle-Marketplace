@@ -35,6 +35,12 @@ export const subscriptionServices = {
   deleteSubscription: async (id: string) => {
     return API.delete(`/admin/subscriptions/${id}`);
   },
+
+  // Purchase subscription plan (deduct from wallet)
+  purchaseSubscription: async (planId: string) => {
+    const resp = await API.post("/subscriptions/purchase", { planId });
+    return resp.data;
+  },
 };
 
 export default subscriptionServices;
