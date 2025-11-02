@@ -71,16 +71,18 @@ export default function UserTableHeader({
           </Select>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={() => {
-            setGlobalFilter("");
-            setStatusFilter("all");
-          }}
-          className="w-full sm:w-auto"
-        >
-          Xóa bộ lọc
-        </Button>
+        {(globalFilter !== "" || statusFilter !== "all") && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setGlobalFilter("");
+              setStatusFilter("all");
+            }}
+            className="w-full sm:w-auto"
+          >
+            Xóa bộ lọc
+          </Button>
+        )}
       </div>
     </div>
   );

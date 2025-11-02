@@ -101,6 +101,21 @@ export default function OrderTableHeader({
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {/* Clear Filters Button - Only show when filters are active */}
+                    {(globalFilter !== "" || statusFilter !== "all" || shippingMethodFilter !== "all") && (
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setGlobalFilter("");
+                                setStatusFilter("all");
+                                setShippingMethodFilter("all");
+                            }}
+                            className="w-full md:w-auto flex-shrink-0"
+                        >
+                            Xóa bộ lọc
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>
