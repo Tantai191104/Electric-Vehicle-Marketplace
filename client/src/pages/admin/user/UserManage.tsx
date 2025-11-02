@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,6 +8,8 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 
 import { getUserColumns } from "./components/UserColumns";
 import UserTableHeader from "./components/UserTableHeader";
@@ -16,6 +18,7 @@ import UserTablePagination from "./components/UserTablePagination";
 import { UserDetailDialog } from "./components/UserDetailDialog";
 import type { User } from "@/types/authType";
 import { useAdmin } from "@/hooks/useAdmin";
+import { adminServices } from "@/services/adminServices";
 
 export default function UserManage() {
   const [globalFilter, setGlobalFilter] = useState("");
@@ -34,6 +37,13 @@ export default function UserManage() {
     error
   } = usersQuery;
 
+  const queryClient = useQueryClient();
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPageIndex(0);
+  }, [statusFilter]);
+
   // Lọc chỉ user thường, loại bỏ admin
   const filteredUsers = useMemo(() => {
     if (!Array.isArray(userData)) return [];
@@ -50,17 +60,38 @@ export default function UserManage() {
     refetch();
   }, [refetch]);
 
-  // Callback ban user
-  const handleBanUser = useCallback(
-    (email: string, status: "inactive" | "active", reason: string) => {
-      console.log(`User: ${email}, New Status: ${status}, Reason: ${reason}`);
-      toast.success(`Đã cập nhật trạng thái người dùng: ${email}`, {
-        description: `Trạng thái mới: ${status === 'active' ? 'Hoạt động' : 'Vô hiệu hóa'}`,
+  // Mutation for updating user status
+  const updateUserStatusMutation = useMutation({
+    mutationFn: ({ userId, isActive, reason }: { userId: string; isActive: boolean; reason: string }) =>
+      adminServices.updateUserStatus(userId, isActive, reason),
+    onSuccess: (_, { userId, isActive }) => {
+      const user = userData.find((u) => u._id === userId);
+      toast.success(`Đã cập nhật trạng thái người dùng`, {
+        description: `${user?.name || user?.email} - ${isActive ? 'Đã kích hoạt' : 'Đã vô hiệu hóa'}`,
         duration: 3000,
       });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       refetch();
     },
-    [refetch]
+    onError: (error: AxiosError<{ message: string }>) => {
+      toast.error("❌ Có lỗi xảy ra khi cập nhật trạng thái", {
+        description: error?.response?.data?.message || "Vui lòng thử lại sau",
+        duration: 4000,
+      });
+    },
+  });
+
+  // Callback ban user
+  const handleBanUser = useCallback(
+    (userId: string, status: "inactive" | "active", reason: string) => {
+      const isActive = status === "active";
+      updateUserStatusMutation.mutate({
+        userId,
+        isActive,
+        reason,
+      });
+    },
+    [updateUserStatusMutation]
   );
 
   const columns = getUserColumns(
@@ -131,16 +162,18 @@ export default function UserManage() {
       />
 
       {/* Loading overlay */}
-      {isLoading && (
+      {(isLoading || updateUserStatusMutation.isPending) && (
         <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-xl">
           <div className="flex flex-col items-center space-y-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="text-gray-700 font-medium">Đang tải người dùng...</span>
+            <span className="text-gray-700 font-medium">
+              {updateUserStatusMutation.isPending ? "Đang cập nhật trạng thái..." : "Đang tải người dùng..."}
+            </span>
           </div>
         </div>
       )}
 
-      <div className={`flex-1 flex flex-col ${isLoading ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`flex-1 flex flex-col ${isLoading || updateUserStatusMutation.isPending ? "opacity-50 pointer-events-none" : ""}`}>
         <div className="flex-1">
           <UserTable table={table} columns={columns} />
         </div>
