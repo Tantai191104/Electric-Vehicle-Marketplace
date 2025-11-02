@@ -86,8 +86,22 @@ export const productServices = {
     const response = await API.delete(`/profile/wishlist/${productId}`);
     return response.data;
   },
-  async suggestPrice(data: BatteryFormData | VehicleFormData): Promise<{ suggestedPrice: number; analysis: string }> {
+  async suggestPrice(data: BatteryFormData | VehicleFormData): Promise<{
+    suggestedPrice: number;
+    priceRange: { low: number; recommended: number; high: number };
+    reasoning: { low: string; recommended: string; high: string };
+    marketAnalysis: string;
+    factors: string[];
+    tips: string[];
+    warnings: string[];
+    dataQuality: {
+      isConsistent: boolean;
+      detectedBrand: string;
+      detectedModel: string;
+      recommendation: string;
+    };
+  }> {
     const response = await API.post("/products/suggest-price", data);
-    return response.data;
+    return response.data.data || response.data;
   },
 };

@@ -100,6 +100,14 @@ const EditorPage: React.FC = () => {
   const [buyerSignatureDataUrl, setBuyerSignatureDataUrl] = useState<string | null>(null);
   const [createdProductId, setCreatedProductId] = useState<string | null>(null);
   const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
+  const [priceAnalysis, setPriceAnalysis] = useState<{
+    priceRange?: { low: number; recommended: number; high: number };
+    reasoning?: { low: string; recommended: string; high: string };
+    marketAnalysis?: string;
+    factors?: string[];
+    tips?: string[];
+    warnings?: string[];
+  } | null>(null);
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -127,13 +135,22 @@ const EditorPage: React.FC = () => {
 
     setIsLoadingPrice(true);
     try {
-      const response = await productServices.suggestPrice(form);
-      setSuggestedPrice(response.suggestedPrice);
+      const priceData = await productServices.suggestPrice(form);
       
-      // Auto-fill the suggested price
-      setForm({ ...form, price: response.suggestedPrice });
+      setSuggestedPrice(priceData.suggestedPrice);
+      setPriceAnalysis({
+        priceRange: priceData.priceRange,
+        reasoning: priceData.reasoning,
+        marketAnalysis: priceData.marketAnalysis,
+        factors: priceData.factors,
+        tips: priceData.tips,
+        warnings: priceData.warnings,
+      });
       
-      toast.success(`Gợi ý giá: ${response.suggestedPrice.toLocaleString('vi-VN')} ₫`);
+      // Auto-fill the recommended price
+      setForm({ ...form, price: priceData.priceRange?.recommended || priceData.suggestedPrice });
+      
+      toast.success(`Gợi ý giá: ${(priceData.priceRange?.recommended || priceData.suggestedPrice).toLocaleString('vi-VN')} ₫`);
     } catch (error) {
       console.error("Error getting price suggestion:", error);
       toast.error("Không thể lấy gợi ý giá. Vui lòng thử lại sau.");
@@ -331,6 +348,7 @@ const EditorPage: React.FC = () => {
                   onGetPriceSuggestion={handleGetPriceSuggestion}
                   isLoadingPrice={isLoadingPrice}
                   suggestedPrice={suggestedPrice}
+                  priceAnalysis={priceAnalysis}
                 />
 
                 {form.category === "vehicle" ? (
