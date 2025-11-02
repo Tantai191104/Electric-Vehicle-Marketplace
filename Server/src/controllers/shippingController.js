@@ -82,8 +82,6 @@ export async function calcShippingFee(req, res) {
     body.height = Math.min(Math.max(Number(body.height), 1), 200);
     body.weight = Math.min(Math.max(Number(body.weight), 1), 1600000);
 
-    // Debug: Log the request body being sent to GHN
-    console.log('GHN Fee Request Body:', JSON.stringify(body, null, 2));
 
     const resp = await ghnClient.post("/v2/shipping-order/fee", body, {
       headers,
@@ -214,11 +212,6 @@ export async function createShippingOrder(req, res) {
     const headers = getGhnHeaders();
     const b = parsed.data;
 
-    // Debug logging: raw request body to help diagnose address/ward issues
-    try {
-      console.log('[SHIPPING][ORDER][REQ] raw body =', JSON.stringify(req.body));
-      console.log('[SHIPPING][ORDER][REQ] parsed body =', JSON.stringify(b));
-    } catch {}
 
     // Resolve product info if provided to support wallet check and local order creation
     let productDoc = null;
@@ -305,26 +298,12 @@ export async function createShippingOrder(req, res) {
       items: b.items ?? [],
     };
 
-    // Extra debug for resolved sender
-    try {
-      console.log('[SHIPPING][ORDER][SENDER_RESOLVED]', {
-        from_name: body.from_name,
-        from_phone: body.from_phone,
-        from_address: body.from_address,
-        from_ward_name: body.from_ward_name,
-        from_district_name: body.from_district_name,
-        from_province_name: body.from_province_name,
-        from_ward_code: body.from_ward_code,
-        from_district_id: body.from_district_id,
-      });
-    } catch {}
 
     const resp = await ghnClient.post('/v2/shipping-order/create', body, {
       headers,
       responseType: 'text',
       transformResponse: [(x) => x],
     });
-    try { console.log('[SHIPPING][ORDER][GHN][BODY] =>', JSON.stringify(body)); } catch {}
     let payload;
     try {
       payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
@@ -859,10 +838,6 @@ export async function handleGhnWebhook(req, res) {
       });
 
       await order.save();
-      
-      console.log(`[GHN Webhook] Updated order ${order.orderNumber} (${order_code}): ${oldStatus} → ${mappedStatus} (GHN: ${ghnStatus})`);
-    } else {
-      console.log(`[GHN Webhook] Order ${order.orderNumber} (${order_code}) status unchanged: ${mappedStatus} (GHN: ${ghnStatus})`);
     }
 
     // Always return 200 to acknowledge receipt (even if order not found)

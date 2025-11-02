@@ -94,7 +94,7 @@ export default function OrderTableHeader({
                                 <SelectItem value="all">Tất cả trạng thái</SelectItem>
                                 <SelectItem value="pending">Chờ xác nhận</SelectItem>
                                 <SelectItem value="confirmed">Đã xác nhận</SelectItem>
-                                <SelectItem value="shipping">Đang giao</SelectItem>
+                                <SelectItem value="shipped">Đang giao hàng</SelectItem>
                                 <SelectItem value="delivered">Đã giao</SelectItem>
                                 <SelectItem value="cancelled">Đã hủy</SelectItem>
                                 <SelectItem value="refunded">Đã hoàn tiền</SelectItem>

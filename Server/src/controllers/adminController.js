@@ -1165,68 +1165,30 @@ export async function syncGhnOrderStatus(req, res) {
       const headers = getGhnHeaders(shopId);
       const trackingNumber = order.shipping.trackingNumber.trim();
       
-      console.log(`[Admin GHN Sync] Fetching order detail for tracking: ${trackingNumber}`);
-      console.log(`[Admin GHN Sync] Using shop ID: ${shopId} (from order: ${order.shipping?.ghnShopId ? 'yes' : 'no'})`);
-      
       const resp = await ghnClient.post(
         '/v2/shipping-order/detail', 
         { order_code: trackingNumber }, 
         { headers }
       );
       
-      console.log(`[Admin GHN Sync] GHN API response status: ${resp.status}`);
-      console.log(`[Admin GHN Sync] GHN API response data:`, JSON.stringify(resp.data, null, 2));
-      
       const ghnData = resp.data?.data || resp.data;
       const ghnStatus = ghnData?.status || ghnData?.current_status || '';
       
-      console.log(`[Admin GHN Sync] GHN status from API: "${ghnStatus}"`);
-      console.log(`[Admin GHN Sync] Order current status: "${order.status}"`);
-      
       if (!ghnStatus) {
-        console.warn(`[Admin GHN Sync] No status found in GHN response:`, ghnData);
+        console.warn(`[Admin GHN Sync] No status found in GHN response for tracking: ${trackingNumber}`);
       }
       
       const mappedStatus = mapGhnStatusToSystemStatus(ghnStatus);
-      console.log(`[Admin GHN Sync] Mapped status: "${mappedStatus}" (from GHN: "${ghnStatus}")`);
 
       const oldStatus = order.status;
       let updated = false;
 
       if (!mappedStatus) {
-        console.warn(`[Admin GHN Sync] Cannot map GHN status "${ghnStatus}" to system status`);
-      } else if (mappedStatus === order.status) {
-        console.log(`[Admin GHN Sync] Status unchanged: already "${mappedStatus}"`);
+        console.warn(`[Admin GHN Sync] Cannot map GHN status "${ghnStatus}" to system status for order ${order.orderNumber}`);
       }
 
       if (mappedStatus && mappedStatus !== order.status) {
-        console.log(`[Admin GHN Sync] Updating status: "${oldStatus}" → "${mappedStatus}"`);
-        
         try {
-          order.status = mappedStatus;
-          order.markModified('status'); // Explicitly mark status as modified
-          
-          if (mappedStatus === "delivered" && !order.shipping.actualDelivery) {
-            order.shipping.actualDelivery = new Date();
-            order.markModified('shipping');
-          }
-          
-          order.timeline.push({
-            status: mappedStatus,
-            description: `Admin đồng bộ trạng thái từ GHN: ${ghnStatus}`,
-            timestamp: new Date(),
-            updatedBy: req.user?.sub || req.user?.id
-          });
-          order.markModified('timeline');
-          
-          console.log(`[Admin GHN Sync] Saving order with status: "${order.status}"`);
-          console.log(`[Admin GHN Sync] Order before save:`, {
-            _id: order._id,
-            status: order.status,
-            isModified: order.isModified('status'),
-            isNew: order.isNew
-          });
-          
           // Use findByIdAndUpdate for more reliable status update
           // This bypasses pre-save hooks validation that might block status updates
           const savedOrder = await Order.findByIdAndUpdate(
@@ -1256,32 +1218,16 @@ export async function syncGhnOrderStatus(req, res) {
           
           // Update local order object to match saved order
           Object.assign(order, savedOrder.toObject());
-          console.log(`[Admin GHN Sync] Order saved. Saved status: "${savedOrder.status}"`);
-          console.log(`[Admin GHN Sync] Order after save:`, {
-            _id: savedOrder._id,
-            status: savedOrder.status
-          });
-          
           updated = true;
-          console.log(`[Admin GHN Sync] ✅ Status updated successfully: "${oldStatus}" → "${mappedStatus}"`);
         } catch (saveError) {
-          console.error(`[Admin GHN Sync] ❌ Error saving order:`, saveError);
-          console.error(`[Admin GHN Sync] Save error details:`, {
-            message: saveError.message,
-            name: saveError.name,
-            errors: saveError.errors,
-            stack: saveError.stack
-          });
+          console.error(`[Admin GHN Sync] Error saving order ${order.orderNumber}:`, saveError.message);
           // Continue even if save fails - will return error in response
         }
-      } else {
-        console.log(`[Admin GHN Sync] ⚠️ Status not updated. mappedStatus: "${mappedStatus}", current: "${order.status}"`);
       }
 
       // Reload order to get latest status from database
       await order.populate('buyerId sellerId productId');
       const refreshedOrder = await Order.findById(order._id);
-      console.log(`[Admin GHN Sync] Refreshed order status from DB: "${refreshedOrder?.status}"`);
 
       res.json({
         success: true,
@@ -1314,14 +1260,6 @@ export async function syncGhnOrderStatus(req, res) {
 
       // More specific error messages
       let errorMessage = 'Không thể kết nối với GHN API';
-      
-      console.log('[Admin GHN Sync] Error details:', {
-        code: ghnError.code,
-        message: ghnError.message,
-        responseStatus: ghnError.response?.status,
-        responseData: ghnError.response?.data,
-        stack: ghnError.stack
-      });
       
       if (ghnError.code === 'ECONNREFUSED') {
         errorMessage = 'GHN API từ chối kết nối. Kiểm tra GHN_BASE_URL và network.';

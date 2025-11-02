@@ -60,15 +60,6 @@ export function OrderDetailDialog({
       const result = await adminServices.syncGhnOrderStatus(order._id);
       lastSyncTime.current = Date.now();
       
-      console.log('[OrderDetailDialog] Sync result:', {
-        success: result.success,
-        updated: result.data?.updated,
-        oldStatus: result.data?.oldStatus,
-        newStatus: result.data?.newStatus,
-        ghnStatus: result.data?.ghnStatus,
-        mappedStatus: result.data?.mappedStatus,
-        currentStatus: result.data?.currentStatus,
-      });
       
       if (result.success && result.data?.updated) {
         if (!silent) {
@@ -87,17 +78,6 @@ export function OrderDetailDialog({
           onOrderUpdated({ ...order, status: result.data.newStatus as Order['status'] });
         }
       } else {
-        // Log why status wasn't updated
-        if (result.data) {
-          console.log('[OrderDetailDialog] Status not updated:', {
-            ghnStatus: result.data.ghnStatus,
-            mappedStatus: result.data.mappedStatus,
-            currentStatus: result.data.currentStatus,
-            oldStatus: result.data.oldStatus,
-            reason: result.data.mappedStatus === result.data.oldStatus ? 'Status already matched' : 'Cannot map GHN status',
-          });
-        }
-        
         // Only show info toast if not silent and status hasn't changed
         if (!silent) {
           if (result.data?.ghnStatus && result.data?.mappedStatus) {
@@ -126,9 +106,7 @@ export function OrderDetailDialog({
         }
       }
     } catch (error: any) {
-      console.error("Sync GHN error:", error);
-      console.error("Error response:", error?.response);
-      console.error("Error response data:", error?.response?.data);
+      console.error("[OrderDetailDialog] Sync GHN error:", error?.response?.data?.message || error.message);
       
       // Extract detailed error message
       const errorData = error?.response?.data;
@@ -214,10 +192,11 @@ export function OrderDetailDialog({
 
   const getStatusBadge = (status: Order['status']) => {
     type BadgeConfig = { label: string; variant: 'secondary' | 'default' | 'outline' | 'destructive' };
-    const statusConfig: Partial<Record<Order['status'], BadgeConfig>> = {
+    const statusConfig: Record<string, BadgeConfig> = {
       pending: { label: "Chờ xác nhận", variant: "secondary" },
       confirmed: { label: "Đã xác nhận", variant: "default" },
       shipping: { label: "Đang giao", variant: "outline" },
+      shipped: { label: "Đang giao hàng", variant: "outline" },
       delivered: { label: "Đã giao", variant: "default" },
       cancelled: { label: "Đã hủy", variant: "destructive" },
       refunded: { label: "Đã hoàn tiền", variant: "secondary" },
