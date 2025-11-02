@@ -1,7 +1,7 @@
 import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
-import { ghnClient, getGhnHeaders } from "../config/ghn.js";
+import { ghnClient, getGhnHeaders, mapGhnStatusToSystemStatus } from "../config/ghn.js";
 
 export async function getAdminStats(req, res) {
   try {
@@ -715,18 +715,15 @@ export async function getOrderById(req, res) {
         const headers = getGhnHeaders();
         const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code: order.shipping.trackingNumber }, { headers });
         const ghnData = resp.data?.data || resp.data;
-        // Map GHN status sang status hệ thống
-        let ghnStatus = (ghnData.status || ghnData.current_status || '').toLowerCase();
-        let mappedStatus = order.status; // fallback
-        if (["delivered", "completed", "st_delivered_success"].includes(ghnStatus)) mappedStatus = "delivered";
-        else if (["cancelled", "st_cancel"].includes(ghnStatus)) mappedStatus = "cancelled";
-        else if (["return_transporting", "returning", "return_sorting"].includes(ghnStatus)) mappedStatus = "refunded";
-        else if (["picking", "picked", "st_picked_success", "transporting", "sorting", "delivering"].includes(ghnStatus)) mappedStatus = "shipped";
-        else if (["pending", "ready_to_pick", "ready_to_ship"].includes(ghnStatus)) mappedStatus = "pending";
+        const ghnStatus = ghnData.status || ghnData.current_status || '';
+        const mappedStatus = mapGhnStatusToSystemStatus(ghnStatus);
 
-        if (mappedStatus !== order.status) {
+        if (mappedStatus && mappedStatus !== order.status) {
           order.status = mappedStatus;
-          order.timeline.push({ status: mappedStatus, description: `Tự động đồng bộ trạng thái từ GHN: ${ghnStatus}`, timestamp: new Date() });
+          if (mappedStatus === "delivered" && !order.shipping.actualDelivery) {
+            order.shipping.actualDelivery = new Date();
+          }
+          order.timeline.push({ status: mappedStatus, description: `Tự động đồng bộ trạng thái từ GHN: ${ghnStatus}`, timestamp: new Date(), updatedBy: req.user?.sub });
           await order.save();
         }
       } catch (e) {
@@ -1142,5 +1139,249 @@ export async function getPendingProducts(req, res) {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+}
+
+// Admin: Sync GHN status for a specific order
+export async function syncGhnOrderStatus(req, res) {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
+    if (!order.shipping || order.shipping.carrier !== 'GHN' || !order.shipping.trackingNumber) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Order is not using GHN shipping or missing tracking number' 
+      });
+    }
+
+    try {
+      // Use shop ID from order if available, otherwise fallback to env
+      const shopId = order.shipping?.ghnShopId || process.env.GHN_SHOP_ID;
+      const headers = getGhnHeaders(shopId);
+      const trackingNumber = order.shipping.trackingNumber.trim();
+      
+      const resp = await ghnClient.post(
+        '/v2/shipping-order/detail', 
+        { order_code: trackingNumber }, 
+        { headers }
+      );
+      
+      const ghnData = resp.data?.data || resp.data;
+      const ghnStatus = ghnData?.status || ghnData?.current_status || '';
+      
+      if (!ghnStatus) {
+        console.warn(`[Admin GHN Sync] No status found in GHN response for tracking: ${trackingNumber}`);
+      }
+      
+      const mappedStatus = mapGhnStatusToSystemStatus(ghnStatus);
+
+      const oldStatus = order.status;
+      let updated = false;
+
+      if (!mappedStatus) {
+        console.warn(`[Admin GHN Sync] Cannot map GHN status "${ghnStatus}" to system status for order ${order.orderNumber}`);
+      }
+
+      if (mappedStatus && mappedStatus !== order.status) {
+        try {
+          // Use findByIdAndUpdate for more reliable status update
+          // This bypasses pre-save hooks validation that might block status updates
+          const savedOrder = await Order.findByIdAndUpdate(
+            order._id,
+            {
+              status: mappedStatus,
+              $push: { timeline: {
+                status: mappedStatus,
+                description: `Admin đồng bộ trạng thái từ GHN: ${ghnStatus}`,
+                timestamp: new Date(),
+                updatedBy: req.user?.sub || req.user?.id
+              }},
+              ...(mappedStatus === "delivered" && !order.shipping.actualDelivery ? {
+                'shipping.actualDelivery': new Date()
+              } : {})
+            },
+            { 
+              new: true, 
+              runValidators: true,
+              setDefaultsOnInsert: false 
+            }
+          );
+          
+          if (!savedOrder) {
+            throw new Error('Failed to update order: order not found');
+          }
+          
+          // Update local order object to match saved order
+          Object.assign(order, savedOrder.toObject());
+          updated = true;
+        } catch (saveError) {
+          console.error(`[Admin GHN Sync] Error saving order ${order.orderNumber}:`, saveError.message);
+          // Continue even if save fails - will return error in response
+        }
+      }
+
+      // Reload order to get latest status from database
+      await order.populate('buyerId sellerId productId');
+      const refreshedOrder = await Order.findById(order._id);
+
+      res.json({
+        success: true,
+        message: updated ? 'Status updated successfully' : 'Status unchanged',
+        data: {
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          trackingNumber: order.shipping.trackingNumber,
+          oldStatus,
+          newStatus: refreshedOrder?.status || mappedStatus || order.status,
+          ghnStatus,
+          mappedStatus,
+          currentStatus: order.status,
+          ghnData,
+          updated
+        }
+      });
+    } catch (ghnError) {
+      console.error('[Admin GHN Sync] Error:', ghnError);
+      
+      // Extract detailed error info
+      const errorDetails = {
+        message: ghnError.message,
+        status: ghnError.response?.status,
+        statusText: ghnError.response?.statusText,
+        ghnResponse: ghnError.response?.data,
+        code: ghnError.code,
+        trackingNumber: order.shipping.trackingNumber
+      };
+
+      // More specific error messages
+      let errorMessage = 'Không thể kết nối với GHN API';
+      
+      if (ghnError.code === 'ECONNREFUSED') {
+        errorMessage = 'GHN API từ chối kết nối. Kiểm tra GHN_BASE_URL và network.';
+      } else if (ghnError.code === 'ETIMEDOUT' || ghnError.code === 'ECONNABORTED') {
+        errorMessage = 'GHN API timeout (quá 15 giây). Vui lòng thử lại sau.';
+      } else if (ghnError.code === 'ENOTFOUND' || ghnError.code === 'EAI_AGAIN') {
+        errorMessage = 'Không thể tìm thấy GHN API server. Kiểm tra GHN_BASE_URL.';
+      } else if (ghnError.response?.status === 401 || ghnError.response?.status === 403) {
+        errorMessage = 'Lỗi xác thực GHN. Vui lòng kiểm tra GHN_TOKEN và GHN_SHOP_ID.';
+      } else if (ghnError.response?.status === 404) {
+        errorMessage = `Không tìm thấy đơn hàng với tracking number: ${order.shipping.trackingNumber}`;
+      } else if (ghnError.response?.status === 500 || ghnError.response?.status === 502 || ghnError.response?.status === 503) {
+        errorMessage = `GHN API server error (${ghnError.response.status}). GHN có thể đang bảo trì.`;
+      } else if (ghnError.response?.data?.message) {
+        errorMessage = `GHN API: ${ghnError.response.data.message}`;
+      } else if (ghnError.response?.data?.code_message) {
+        errorMessage = `GHN API: ${ghnError.response.data.code_message}`;
+      } else if (ghnError.message) {
+        errorMessage = ghnError.message;
+      }
+
+      return res.status(502).json({
+        success: false,
+        error: 'Failed to fetch GHN status',
+        message: errorMessage,
+        details: errorDetails
+      });
+    }
+  } catch (error) {
+    console.error('[Admin GHN Sync] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+// Admin: Sync GHN status for multiple orders
+export async function syncGhnOrdersBulk(req, res) {
+  try {
+    const { orderIds, limit = 50 } = req.body;
+
+    let query = {
+      'shipping.carrier': 'GHN',
+      'shipping.trackingNumber': { $exists: true, $ne: null }
+    };
+
+    // If specific order IDs provided, filter by them
+    if (orderIds && Array.isArray(orderIds) && orderIds.length > 0) {
+      query._id = { $in: orderIds };
+    }
+
+    const orders = await Order.find(query).limit(parseInt(limit));
+    
+    if (orders.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No GHN orders found to sync',
+        results: []
+      });
+    }
+
+    const headers = getGhnHeaders();
+    const results = [];
+
+    for (const order of orders) {
+      try {
+        const resp = await ghnClient.post(
+          '/v2/shipping-order/detail',
+          { order_code: order.shipping.trackingNumber },
+          { headers }
+        );
+        const ghnData = resp.data?.data || resp.data;
+        const ghnStatus = ghnData.status || ghnData.current_status || '';
+        const mappedStatus = mapGhnStatusToSystemStatus(ghnStatus);
+
+        const oldStatus = order.status;
+        let updated = false;
+
+        if (mappedStatus && mappedStatus !== order.status) {
+          order.status = mappedStatus;
+          if (mappedStatus === "delivered" && !order.shipping.actualDelivery) {
+            order.shipping.actualDelivery = new Date();
+          }
+          order.timeline.push({
+            status: mappedStatus,
+            description: `Admin đồng bộ hàng loạt từ GHN: ${ghnStatus}`,
+            timestamp: new Date(),
+            updatedBy: req.user?.sub || req.user?.id
+          });
+          await order.save();
+          updated = true;
+        }
+
+        results.push({
+          orderId: order._id.toString(),
+          orderNumber: order.orderNumber,
+          trackingNumber: order.shipping.trackingNumber,
+          oldStatus,
+          newStatus: mappedStatus || order.status,
+          ghnStatus,
+          updated,
+          success: true
+        });
+      } catch (err) {
+        results.push({
+          orderId: order._id.toString(),
+          orderNumber: order.orderNumber,
+          trackingNumber: order.shipping.trackingNumber,
+          error: err.message,
+          success: false
+        });
+      }
+    }
+
+    const updatedCount = results.filter(r => r.updated).length;
+    res.json({
+      success: true,
+      message: `Synced ${orders.length} orders, ${updatedCount} updated`,
+      total: orders.length,
+      updated: updatedCount,
+      results
+    });
+  } catch (error) {
+    console.error('[Admin GHN Bulk Sync] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 }

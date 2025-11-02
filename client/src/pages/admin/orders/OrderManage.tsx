@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { adminServices } from "@/services/adminServices";
 import {
@@ -21,8 +21,8 @@ import { useOrders } from "@/hooks/useOrders";
 export default function OrderManage() {
     const [globalFilter, setGlobalFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
-    // Default to in-person as requested
-    const [shippingMethodFilter, setShippingMethodFilter] = useState("in-person");
+    // Default to all shipping methods
+    const [shippingMethodFilter, setShippingMethodFilter] = useState("all");
     // Default sort: newest first, then status order
     const [sorting, setSorting] = useState<SortingState>([
         { id: "createdAt", desc: true },
@@ -41,29 +41,57 @@ export default function OrderManage() {
         refetch
     } = ordersQuery;
 
-    // Filtered orders based on filters
+    // Filtered orders based on filters - matching system statuses
     const filteredOrders = useMemo(() => {
         if (!Array.isArray(ordersData)) return [];
         return ordersData.filter(order => {
-            // Normalize status for filter
-            const normalizedStatus = order.status?.toLowerCase();
+            // Normalize status for filter matching system enum
+            const orderStatus = order.status?.toLowerCase();
             let matchesStatus = false;
+            
             if (statusFilter === 'all') {
                 matchesStatus = true;
-            } else if (statusFilter === 'deposit') {
-                matchesStatus = normalizedStatus === 'deposit_pending';
-            } else if (statusFilter === 'pending') {
-                matchesStatus = normalizedStatus === 'pending' || normalizedStatus === 'deposit';
             } else {
-                matchesStatus = normalizedStatus === statusFilter.toLowerCase();
+                const filterStatus = statusFilter.toLowerCase();
+                
+                // Map filter values to actual system statuses
+                if (filterStatus === 'pending') {
+                    matchesStatus = orderStatus === 'pending' || orderStatus === 'deposit' || orderStatus === 'deposit_pending';
+                } else if (filterStatus === 'confirmed') {
+                    matchesStatus = orderStatus === 'confirmed' || orderStatus === 'deposit_confirmed';
+                } else if (filterStatus === 'shipping' || filterStatus === 'shipped') {
+                    // Match both "shipping" and "shipped" for GHN orders
+                    matchesStatus = orderStatus === 'shipping' || orderStatus === 'shipped';
+                } else if (filterStatus === 'delivered') {
+                    matchesStatus = orderStatus === 'delivered' || orderStatus === 'delivered_success';
+                } else if (filterStatus === 'cancelled') {
+                    matchesStatus = orderStatus === 'cancelled' || orderStatus === 'deposit_cancelled';
+                } else if (filterStatus === 'refunded') {
+                    matchesStatus = orderStatus === 'refunded' || orderStatus === 'deposit_refunded';
+                } else {
+                    // Exact match for other statuses
+                    matchesStatus = orderStatus === filterStatus;
+                }
             }
+            
             const matchesShippingMethod =
                 shippingMethodFilter === 'all' ||
                 (shippingMethodFilter === 'in-person' && (order.shipping?.method === 'in-person' || order.shipping?.method === 'in_person' || order.shipping?.method?.toLowerCase() === 'in person')) ||
                 (shippingMethodFilter === 'ghn' && (order.shipping?.method === 'ghn' || order.shipping?.method?.toLowerCase() === 'ghn'));
+            
             return matchesStatus && matchesShippingMethod;
         });
     }, [ordersData, statusFilter, shippingMethodFilter]);
+
+    // Update selectedOrder when ordersData changes (to reflect status updates)
+    useEffect(() => {
+        if (selectedOrder && ordersData.length > 0) {
+            const updatedOrder = ordersData.find(o => o._id === selectedOrder._id);
+            if (updatedOrder && updatedOrder.status !== selectedOrder.status) {
+                setSelectedOrder(updatedOrder);
+            }
+        }
+    }, [ordersData, selectedOrder?._id]);
 
     // Handle refresh
     const handleRefresh = useCallback(() => {
@@ -206,6 +234,8 @@ export default function OrderManage() {
                     order={selectedOrder}
                     isOpen={!!selectedOrder}
                     onClose={() => setSelectedOrder(null)}
+                    onRefresh={refetch}
+                    onOrderUpdated={(updatedOrder) => setSelectedOrder(updatedOrder)}
                 />
             </div>
         </div>

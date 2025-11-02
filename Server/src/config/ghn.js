@@ -21,9 +21,9 @@ export const ghnClient = axios.create({
   timeout: 15000,
 });
 
-export function getGhnHeaders() {
+export function getGhnHeaders(shopIdOverride = null) {
   const token = process.env.GHN_TOKEN;
-  const shopId = process.env.GHN_SHOP_ID;
+  const shopId = shopIdOverride || process.env.GHN_SHOP_ID;
   if (!token || !shopId) {
     throw new Error("Missing GHN_TOKEN or GHN_SHOP_ID in environment");
   }
@@ -40,4 +40,32 @@ export function getGhnHeaders() {
   };
 }
 
+/**
+ * Map GHN status to system order status
+ * @param {string} ghnStatus - GHN status code (e.g., "st_delivered_success", "picking")
+ * @returns {string|null} - System status ("delivered", "cancelled", "refunded", "shipped", "pending") or null if no mapping
+ */
+export function mapGhnStatusToSystemStatus(ghnStatus) {
+  if (!ghnStatus) return null;
+  const status = ghnStatus.toLowerCase().trim();
+  
+  // Delivered statuses
+  if (["delivered", "completed", "st_delivered_success", "delivered_success"].includes(status)) return "delivered";
+  
+  // Cancelled statuses - include "cancel" (without 'led')
+  if (["cancelled", "cancel", "st_cancel", "canceled"].includes(status)) return "cancelled";
+  
+  // Return/Refund statuses
+  if (["return_transporting", "returning", "return_sorting", "st_return_transporting", "return"].includes(status)) return "refunded";
+  
+  // Shipped/Shipping statuses
+  if (["picking", "picked", "st_picked_success", "transporting", "sorting", "delivering", "st_transporting", "shipping", "on_delivery"].includes(status)) return "shipped";
+  
+  // Pending statuses
+  if (["pending", "ready_to_pick", "ready_to_ship", "st_ready_to_pick", "preparing"].includes(status)) return "pending";
+  
+  // Log unmapped status for debugging
+  console.warn(`[GHN Status Mapping] Unmapped status: "${ghnStatus}"`);
+  return null;
+}
 

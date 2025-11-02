@@ -1,18 +1,25 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Info } from "lucide-react";
+import { Info, RefreshCw } from "lucide-react";
 import { formatVND } from "@/utils/formatVND";
 import type { Order } from "@/types/orderType";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { adminServices } from "@/services/adminServices";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface OrderDetailDialogProps {
   order: Order | null;
   isOpen: boolean;
   onClose: () => void;
+  onRefresh?: () => void;
+  onOrderUpdated?: (updatedOrder: Order) => void;
 }
 
 // Helper function to format date
@@ -30,15 +37,166 @@ export function OrderDetailDialog({
   order,
   isOpen,
   onClose,
+  onRefresh,
+  onOrderUpdated,
 }: OrderDetailDialogProps) {
+  const [isSyncing, setIsSyncing] = useState(false);
+  const queryClient = useQueryClient();
+  const lastSyncTime = useRef<number>(0);
+  const autoSyncInterval = useRef<NodeJS.Timeout | null>(null);
+  const hasAutoSynced = useRef(false);
+
+  // All hooks must be called before any early returns
+  const handleSyncGhn = useCallback(async (silent = false) => {
+    if (!order?.shipping?.trackingNumber || order?.shipping?.carrier !== 'GHN') {
+      if (!silent) {
+        toast.error("Đơn hàng này không sử dụng GHN hoặc chưa có tracking number");
+      }
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const result = await adminServices.syncGhnOrderStatus(order._id);
+      lastSyncTime.current = Date.now();
+      
+      
+      if (result.success && result.data?.updated) {
+        if (!silent) {
+          toast.success(`✅ Đã cập nhật: ${result.data.oldStatus} → ${result.data.newStatus}`, {
+            description: `GHN status: ${result.data.ghnStatus}`,
+          });
+        }
+        
+        // Refresh order data - force refetch to update list immediately
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        await queryClient.refetchQueries({ queryKey: ["orders"] }); // Force refetch
+        if (onRefresh) onRefresh();
+        
+        // Update order in dialog if new status available
+        if (result.data?.newStatus && order && onOrderUpdated) {
+          onOrderUpdated({ ...order, status: result.data.newStatus as Order['status'] });
+        }
+      } else {
+        // Only show info toast if not silent and status hasn't changed
+        if (!silent) {
+          if (result.data?.ghnStatus && result.data?.mappedStatus) {
+            if (result.data.mappedStatus === result.data.oldStatus) {
+              toast.info("Trạng thái đã đúng", {
+                description: `GHN: ${result.data.ghnStatus} → ${result.data.mappedStatus}`,
+              });
+            } else {
+              toast.warning("Không thể cập nhật trạng thái", {
+                description: `GHN: ${result.data.ghnStatus} → ${result.data.mappedStatus || 'null'}`,
+              });
+            }
+          }
+        }
+        
+        // Still refresh to show current status - force refetch
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        await queryClient.refetchQueries({ queryKey: ["orders"] }); // Force refetch
+        if (onRefresh) onRefresh();
+        
+        // Update order in dialog even if not updated (might have changed on server)
+        if (result.data?.newStatus && order && onOrderUpdated) {
+          onOrderUpdated({ ...order, status: result.data.newStatus as Order['status'] });
+        } else if (result.data?.currentStatus && order && onOrderUpdated) {
+          onOrderUpdated({ ...order, status: result.data.currentStatus as Order['status'] });
+        }
+      }
+    } catch (error: any) {
+      console.error("[OrderDetailDialog] Sync GHN error:", error?.response?.data?.message || error.message);
+      
+      // Extract detailed error message
+      const errorData = error?.response?.data;
+      const errorMessage = errorData?.message || errorData?.error || error.message || "Vui lòng thử lại sau";
+      const errorDetails = errorData?.details;
+      
+      // Show more specific error
+      let description = errorMessage;
+      
+      // Add status code info
+      if (error?.response?.status) {
+        description = `[${error.response.status}] ${description}`;
+      }
+      
+      // Add tracking number if available
+      if (errorDetails?.trackingNumber) {
+        description = `${description}\nTracking: ${errorDetails.trackingNumber}`;
+      } else if (order?.shipping?.trackingNumber) {
+        description = `${description}\nTracking: ${order.shipping.trackingNumber}`;
+      }
+      
+      // Add GHN response message
+      if (errorDetails?.ghnResponse?.message) {
+        description = `${description}\nGHN: ${errorDetails.ghnResponse.message}`;
+      } else if (errorDetails?.ghnResponse) {
+        description = `${description}\nGHN Response: ${JSON.stringify(errorDetails.ghnResponse)}`;
+      }
+      
+      // Add error code if available
+      if (errorDetails?.code) {
+        description = `${description}\nCode: ${errorDetails.code}`;
+      }
+      
+      toast.error("❌ Không thể đồng bộ với GHN", {
+        description: description,
+        duration: 7000, // Longer duration for detailed errors
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [order, queryClient, onRefresh]);
+
+  // Auto-sync when dialog opens (if GHN order)
+  useEffect(() => {
+    if (isOpen && order && order.shipping?.carrier === 'GHN' && order.shipping?.trackingNumber) {
+      // Only auto-sync if haven't synced recently (within last 30 seconds)
+      const now = Date.now();
+      const timeSinceLastSync = now - lastSyncTime.current;
+      
+      if (!hasAutoSynced.current && timeSinceLastSync > 30000) {
+        hasAutoSynced.current = true;
+        handleSyncGhn(true); // true = silent sync (no toast on success)
+      }
+    } else {
+      hasAutoSynced.current = false;
+    }
+
+    return () => {
+      hasAutoSynced.current = false;
+    };
+  }, [isOpen, order, handleSyncGhn]);
+
+  // Auto-refresh interval when dialog is open (every 60 seconds)
+  useEffect(() => {
+    if (isOpen && order && order.shipping?.carrier === 'GHN') {
+      autoSyncInterval.current = setInterval(() => {
+        if (order.shipping?.carrier === 'GHN' && order.shipping?.trackingNumber) {
+          handleSyncGhn(true); // Silent sync
+        }
+      }, 60000); // 60 seconds
+    }
+
+    return () => {
+      if (autoSyncInterval.current) {
+        clearInterval(autoSyncInterval.current);
+        autoSyncInterval.current = null;
+      }
+    };
+  }, [isOpen, order, handleSyncGhn]);
+
+  // Early return after all hooks
   if (!order) return null;
 
   const getStatusBadge = (status: Order['status']) => {
     type BadgeConfig = { label: string; variant: 'secondary' | 'default' | 'outline' | 'destructive' };
-    const statusConfig: Partial<Record<Order['status'], BadgeConfig>> = {
+    const statusConfig: Record<string, BadgeConfig> = {
       pending: { label: "Chờ xác nhận", variant: "secondary" },
       confirmed: { label: "Đã xác nhận", variant: "default" },
       shipping: { label: "Đang giao", variant: "outline" },
+      shipped: { label: "Đang giao hàng", variant: "outline" },
       delivered: { label: "Đã giao", variant: "default" },
       cancelled: { label: "Đã hủy", variant: "destructive" },
       refunded: { label: "Đã hoàn tiền", variant: "secondary" },
@@ -74,14 +232,34 @@ export function OrderDetailDialog({
           </DialogTitle>
           {/* GHN Notice */}
           {
-            order.shipping.method === 'GHN' && (
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
-                <Info className="h-4 w-4 text-blue-600" />
-                <div className="text-sm text-blue-800">
-                  <span className="font-medium">Đơn hàng Giao Hàng Nhanh (GHN)</span>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Đây là đơn hàng được quản lý bởi GHN. Admin chỉ có thể xem thông tin, không thể thay đổi trạng thái.
-                  </p>
+            order.shipping?.method === 'GHN' && (
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <Info className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <div className="text-sm text-blue-800 flex-1">
+                      <span className="font-medium">Đơn hàng Giao Hàng Nhanh (GHN)</span>
+                      <p className="text-xs text-blue-600 mt-1">
+                        Đơn hàng được quản lý bởi GHN. Bấm nút đồng bộ để cập nhật trạng thái mới nhất từ GHN.
+                      </p>
+                      {order.shipping?.trackingNumber && (
+                        <p className="text-xs text-blue-700 mt-1 font-mono">
+                          Tracking: {order.shipping.trackingNumber}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                    <Button
+                      onClick={() => handleSyncGhn(false)}
+                      disabled={isSyncing}
+                      size="sm"
+                      variant="outline"
+                      className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-100"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+                      {isSyncing ? "Đang đồng bộ..." : "Đồng bộ GHN"}
+                    </Button>
+                    <span className="text-xs text-blue-600">🔄 Tự động mỗi 60s</span>
                 </div>
               </div>
             )

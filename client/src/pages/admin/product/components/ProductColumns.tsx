@@ -123,11 +123,13 @@ export const getProductColumns = (
             case "active":
               return { label: "Hoạt động", color: "bg-green-100 text-green-800" };
             case "inactive":
-              return { label: "Tạm dừng", color: "bg-red-100 text-red-800" };
+              return { label: "Ngừng hoạt động", color: "bg-gray-100 text-gray-800" };
             case "pending":
               return { label: "Chờ duyệt", color: "bg-yellow-100 text-yellow-800" };
+            case "rejected":
+              return { label: "Bị từ chối", color: "bg-red-100 text-red-800" };
             case "sold":
-              return { label: "Đã bán", color: "bg-gray-100 text-gray-800" };
+              return { label: "Đã bán", color: "bg-blue-100 text-blue-800" };
             default:
               return { label: status, color: "bg-gray-100 text-gray-800" };
           }

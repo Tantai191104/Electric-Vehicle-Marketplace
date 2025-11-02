@@ -16,6 +16,8 @@ import {
   approveProduct,
   rejectProduct,
   getPendingProducts,
+  syncGhnOrderStatus,
+  syncGhnOrdersBulk,
 } from '../controllers/adminController.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { requireAdmin } from '../middlewares/authorize.js';
@@ -441,6 +443,8 @@ router.get('/admin/orders/summary', authenticate, requireAdmin, getOrdersSummary
 // User delete route removed - use /api/users/:id instead
 
 // Admin xét duyệt sản phẩm
+// IMPORTANT: Specific routes must be defined BEFORE general routes to avoid route conflicts
+// Order: /pending, /:id/approve, /:id/reject, /:id, then / (general)
 /**
  * @swagger
  * /admin/products/pending:
@@ -467,6 +471,86 @@ router.get('/admin/orders/summary', authenticate, requireAdmin, getOrdersSummary
  *         description: Danh sách sản phẩm chờ duyệt
  */
 router.get('/admin/products/pending', authenticate, requireAdmin, getPendingProducts);
+
+/**
+ * @swagger
+ * /admin/products:
+ *   get:
+ *     summary: Get all products with optional status filter (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Number of items per page
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive, pending, sold, rejected]
+ *         description: Filter by product status (leave empty to get all)
+ *     responses:
+ *       200:
+ *         description: List of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ */
+// IMPORTANT: /admin/products must be defined BEFORE /admin/products/:id to avoid route conflicts
+router.get('/admin/products', authenticate, requireAdmin, getAllProducts);
+
+/**
+ * @swagger
+ * /admin/products/{id}:
+ *   get:
+ *     summary: Get product by ID (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Product details
+ *       404:
+ *         description: Product not found
+ */
+router.get('/admin/products/:id', authenticate, requireAdmin, getProductById);
 
 /**
  * @swagger
@@ -832,5 +916,62 @@ router.put('/admin/users/:userId/violations/:violationId', authenticate, require
  *                             type: number
  */
 router.get('/admin/revenue', authenticate, requireAdmin, getPlatformRevenue);
+
+/**
+ * @swagger
+ * /admin/orders/{id}/sync-ghn:
+ *   post:
+ *     summary: Sync GHN status for a specific order (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: GHN status synced successfully
+ *       404:
+ *         description: Order not found
+ *       400:
+ *         description: Order is not using GHN
+ *       502:
+ *         description: Failed to fetch from GHN API
+ */
+router.post('/admin/orders/:id/sync-ghn', authenticate, requireAdmin, syncGhnOrderStatus);
+
+/**
+ * @swagger
+ * /admin/orders/sync-ghn/bulk:
+ *   post:
+ *     summary: Sync GHN status for multiple orders (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               orderIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Optional. Specific order IDs to sync. If omitted, syncs all GHN orders (up to limit)
+ *               limit:
+ *                 type: integer
+ *                 default: 50
+ *                 description: Maximum number of orders to sync
+ *     responses:
+ *       200:
+ *         description: Bulk sync results
+ */
+router.post('/admin/orders/sync-ghn/bulk', authenticate, requireAdmin, syncGhnOrdersBulk);
 
 export default router;
