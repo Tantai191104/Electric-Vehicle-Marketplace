@@ -59,20 +59,20 @@ export function OrderDetailDialog({
     try {
       const result = await adminServices.syncGhnOrderStatus(order._id);
       lastSyncTime.current = Date.now();
-      
-      
+
+
       if (result.success && result.data?.updated) {
         if (!silent) {
           toast.success(`✅ Đã cập nhật: ${result.data.oldStatus} → ${result.data.newStatus}`, {
             description: `GHN status: ${result.data.ghnStatus}`,
           });
         }
-        
+
         // Refresh order data - force refetch to update list immediately
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         await queryClient.refetchQueries({ queryKey: ["orders"] }); // Force refetch
         if (onRefresh) onRefresh();
-        
+
         // Update order in dialog if new status available
         if (result.data?.newStatus && order && onOrderUpdated) {
           onOrderUpdated({ ...order, status: result.data.newStatus as Order['status'] });
@@ -92,12 +92,12 @@ export function OrderDetailDialog({
             }
           }
         }
-        
+
         // Still refresh to show current status - force refetch
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         await queryClient.refetchQueries({ queryKey: ["orders"] }); // Force refetch
         if (onRefresh) onRefresh();
-        
+
         // Update order in dialog even if not updated (might have changed on server)
         if (result.data?.newStatus && order && onOrderUpdated) {
           onOrderUpdated({ ...order, status: result.data.newStatus as Order['status'] });
@@ -105,41 +105,53 @@ export function OrderDetailDialog({
           onOrderUpdated({ ...order, status: result.data.currentStatus as Order['status'] });
         }
       }
-    } catch (error: any) {
-      console.error("[OrderDetailDialog] Sync GHN error:", error?.response?.data?.message || error.message);
-      
+    } catch (error: unknown) {
+      const err = error as {
+        response?: {
+          data?: {
+            message?: string;
+            error?: string;
+            details?: Record<string, unknown>
+          };
+          status?: number
+        };
+        message?: string
+      };
+      console.error("[OrderDetailDialog] Sync GHN error:", err?.response?.data?.message || err?.message);
+
       // Extract detailed error message
-      const errorData = error?.response?.data;
-      const errorMessage = errorData?.message || errorData?.error || error.message || "Vui lòng thử lại sau";
+      const errorData = err?.response?.data;
+      const errorMessage = errorData?.message || errorData?.error || err.message || "Vui lòng thử lại sau";
       const errorDetails = errorData?.details;
-      
+
       // Show more specific error
       let description = errorMessage;
-      
+
       // Add status code info
-      if (error?.response?.status) {
-        description = `[${error.response.status}] ${description}`;
+      if (err?.response?.status) {
+        description = `[${err.response.status}] ${description}`;
       }
-      
+
       // Add tracking number if available
       if (errorDetails?.trackingNumber) {
         description = `${description}\nTracking: ${errorDetails.trackingNumber}`;
       } else if (order?.shipping?.trackingNumber) {
         description = `${description}\nTracking: ${order.shipping.trackingNumber}`;
       }
-      
+
       // Add GHN response message
-      if (errorDetails?.ghnResponse?.message) {
-        description = `${description}\nGHN: ${errorDetails.ghnResponse.message}`;
-      } else if (errorDetails?.ghnResponse) {
-        description = `${description}\nGHN Response: ${JSON.stringify(errorDetails.ghnResponse)}`;
+      const ghnResponse = errorDetails?.ghnResponse;
+      if (ghnResponse && typeof ghnResponse === 'object' && 'message' in ghnResponse) {
+        description = `${description}\nGHN: ${ghnResponse.message}`;
+      } else if (ghnResponse) {
+        description = `${description}\nGHN Response: ${JSON.stringify(ghnResponse)}`;
       }
-      
+
       // Add error code if available
       if (errorDetails?.code) {
         description = `${description}\nCode: ${errorDetails.code}`;
       }
-      
+
       toast.error("❌ Không thể đồng bộ với GHN", {
         description: description,
         duration: 7000, // Longer duration for detailed errors
@@ -147,7 +159,7 @@ export function OrderDetailDialog({
     } finally {
       setIsSyncing(false);
     }
-  }, [order, queryClient, onRefresh]);
+  }, [order, queryClient, onRefresh, onOrderUpdated]);
 
   // Auto-sync when dialog opens (if GHN order)
   useEffect(() => {
@@ -155,7 +167,7 @@ export function OrderDetailDialog({
       // Only auto-sync if haven't synced recently (within last 30 seconds)
       const now = Date.now();
       const timeSinceLastSync = now - lastSyncTime.current;
-      
+
       if (!hasAutoSynced.current && timeSinceLastSync > 30000) {
         hasAutoSynced.current = true;
         handleSyncGhn(true); // true = silent sync (no toast on success)
@@ -249,17 +261,17 @@ export function OrderDetailDialog({
                       )}
                     </div>
                   </div>
-                    <Button
-                      onClick={() => handleSyncGhn(false)}
-                      disabled={isSyncing}
-                      size="sm"
-                      variant="outline"
-                      className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-100"
-                    >
-                      <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
-                      {isSyncing ? "Đang đồng bộ..." : "Đồng bộ GHN"}
-                    </Button>
-                    <span className="text-xs text-blue-600">🔄 Tự động mỗi 60s</span>
+                  <Button
+                    onClick={() => handleSyncGhn(false)}
+                    disabled={isSyncing}
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+                    {isSyncing ? "Đang đồng bộ..." : "Đồng bộ GHN"}
+                  </Button>
+                  <span className="text-xs text-blue-600">🔄 Tự động mỗi 60s</span>
                 </div>
               </div>
             )
@@ -318,30 +330,30 @@ export function OrderDetailDialog({
                   <span className="text-gray-600">Số lượng:</span>
                   <span className="font-medium">{order.quantity}</span>
                 </div>
-                {order.shipping.method == 'GHN' && (
+                {order.shipping.method === 'GHN' && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Đơn giá:</span>
-                      <span className="font-medium">{formatVND(order.unitPrice)}</span>
+                      <span className="text-gray-600">Tạm tính:</span>
+                      <span className="font-medium">{formatVND(order.totalAmount)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Phí ship:</span>
+                    <div className="flex justify-between text-gray-500">
+                      <span className="text-gray-600">Phí vận chuyển:</span>
                       <span className="font-medium">{formatVND(order.shippingFee)}</span>
                     </div>
                     <div className="flex justify-between border-t pt-2">
-                      <span className="text-gray-600">Tổng tiền:</span>
-                      <span className="font-bold text-green-600">{formatVND(order.finalAmount)}</span>
+                      <span className="text-gray-900 font-semibold">Tổng thanh toán:</span>
+                      <span className="font-bold text-green-600">{formatVND(order.totalAmount)}</span>
                     </div>
                   </>
                 )}
-                {order.shipping.method != 'GHN' && (
+                {order.shipping.method !== 'GHN' && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tiền cọc:</span>
-                      <p className="font-bold">{formatVND(order.finalAmount)}</p>
+                      <span className="text-gray-600">Phí đặt cọc:</span>
+                      <span className="font-medium">{formatVND(order.finalAmount)}</span>
                     </div>
                     <div className="flex justify-between border-t pt-2">
-                      <span className="text-gray-600">Tổng tiền:</span>
+                      <span className="text-gray-900 font-semibold">Tổng thanh toán:</span>
                       <span className="font-bold text-green-600">{formatVND(order.finalAmount)}</span>
                     </div>
                   </>

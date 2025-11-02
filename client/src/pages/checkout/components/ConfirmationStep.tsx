@@ -30,12 +30,11 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
 }) => {
 
     const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
-    let subtotal = 0, shipping = 0, tax = 0, total = 0;
+    let subtotal = 0, shipping = 0, total = 0;
     const isVehicle = product.category === "vehicle";
     if (isVehicle) {
         subtotal = 0;
         shipping = depositAmount;
-        tax = 0;
         total = depositAmount;
     } else {
         const summary = calculateOrderSummary(
@@ -47,7 +46,6 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
         );
         subtotal = summary.subtotal;
         shipping = summary.shipping;
-        tax = summary.tax;
         total = summary.total;
     }
     const SummaryCard = ({
@@ -191,13 +189,6 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
                                         formatVND(shipping)
                                     )}
                                 </span>
-                            </div>
-                            <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
-                                <span className="text-gray-700 font-medium text-sm">
-                                    Thuế VAT
-                                    <span className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded ml-1">10%</span>
-                                </span>
-                                <span className="font-semibold text-gray-900">{formatVND(tax)}</span>
                             </div>
                             {discount > 0 && (
                                 <div className="flex justify-between items-center bg-green-50 px-2.5 py-2 rounded-md border border-green-100">

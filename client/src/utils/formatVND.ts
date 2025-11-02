@@ -22,8 +22,7 @@ export const calculateOrderSummary = (
   shipping: number = 0
 ): OrderSummaryData => {
   const subtotal = price * quantity;
-  const tax = subtotal * 0.1;
-  const total = subtotal + shipping + tax + paymentFee - discount;
-
+  const tax = 0; // Bỏ VAT
+  const total = subtotal + paymentFee - discount; // Không cộng phí vận chuyển
   return { subtotal, shipping, tax, paymentFee, discount, total };
 };

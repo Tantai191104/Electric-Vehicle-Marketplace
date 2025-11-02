@@ -86,4 +86,8 @@ export const productServices = {
     const response = await API.delete(`/profile/wishlist/${productId}`);
     return response.data;
   },
+  async suggestPrice(data: BatteryFormData | VehicleFormData): Promise<{ suggestedPrice: number; analysis: string }> {
+    const response = await API.post("/products/suggest-price", data);
+    return response.data;
+  },
 };
