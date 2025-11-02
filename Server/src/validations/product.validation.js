@@ -35,7 +35,7 @@ const motorcycleSpecsSchema = z.object({
 
 export const createProductValidation = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(200, "Title cannot exceed 200 characters"),
-  description: z.string().min(20, "Description must be at least 20 characters").max(2000, "Description cannot exceed 2000 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters").max(2000, "Description cannot exceed 2000 characters"),
   price: z.coerce.number().min(0, "Price cannot be negative"),
   category: z.enum(["vehicle", "battery", "motorcycle"], { message: "Invalid product category. Choose: vehicle (car), battery (battery), motorcycle (motorcycle)" }),
   brand: z.string().min(1, "Brand is required"),
@@ -75,5 +75,7 @@ export const getProductsValidation = z.object({
   search: z.string().optional(),
   seller: z.string().optional(),
   status: z.enum(["active", "sold", "inactive"], { message: "Invalid status" }).optional(),
-  isFeatured: z.coerce.boolean().optional()
+  isFeatured: z.coerce.boolean().optional(),
+  // Sort mode: 'priority' (default) or 'newest'
+  sort: z.enum(["priority", "newest"]).optional()
 });

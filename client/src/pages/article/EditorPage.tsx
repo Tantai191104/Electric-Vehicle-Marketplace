@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PostSuccessDialog from "./components/PostSuccessDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { VehicleFormData, BatteryFormData } from "@/types/productType";
@@ -87,6 +88,7 @@ const CATEGORY_LIST = [
 ];
 
 const EditorPage: React.FC = () => {
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [form, setForm] = useState<VehicleFormData | BatteryFormData | null>(null);
   const [showTypeDialog, setShowTypeDialog] = useState(true);
   const [images, setImages] = useState<string[]>([]);
@@ -123,11 +125,10 @@ const EditorPage: React.FC = () => {
 
       if (form?.category === "vehicle") {
         toast.success("Đăng tin xe điện thành công!");
+        setShowSuccessDialog(true);
       } else {
         toast.success("Đăng tin pin thành công! Chuyển sang tạo hợp đồng...");
-        // prepare contract HTML and open dialog for extra terms + signature
         setCreatedProductId(productId || null);
-        // navigate to full-page contract editor where user can sign on-screen
         navigate(`/contracts/edit/${productId}`);
       }
     } catch (error) {
@@ -196,7 +197,13 @@ const EditorPage: React.FC = () => {
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       <div className="relative z-10 flex justify-center">
         {/* Popup chọn loại sản phẩm */}
-        <Dialog open={showTypeDialog} onOpenChange={setShowTypeDialog}>
+        <Dialog
+          open={showTypeDialog}
+          onOpenChange={(open) => {
+            setShowTypeDialog(open);
+            if (!open && !form) setForm(initialBatteryData);
+          }}
+        >
           <DialogContent className="sm:max-w-md md:max-w-xl rounded-2xl p-0 overflow-hidden bg-white shadow-2xl">
             <div className="border-b px-6 py-4 bg-gray-50">
               <DialogHeader>
@@ -231,6 +238,27 @@ const EditorPage: React.FC = () => {
         {/* Layout cải tiến */}
         {form && (
           <div className="w-full max-w-7xl mx-auto">
+            {/* Dropdown to change category */}
+            <div className="flex justify-end mb-6">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-700">Danh mục:</span>
+                <select
+                  value={form.category}
+                  onChange={e => {
+                    const cat = e.target.value;
+                    if (cat === "vehicle") {
+                      setForm(initialVehicleData);
+                    } else {
+                      setForm(initialBatteryData);
+                    }
+                  }}
+                  className="rounded-xl border border-gray-300 px-4 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                >
+                  <option value="vehicle">Xe điện</option>
+                  <option value="battery">Pin xe điện</option>
+                </select>
+              </div>
+            </div>
             {/* Header với gradient đẹp */}
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-4 p-6 bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 rounded-3xl shadow-2xl">
@@ -427,6 +455,8 @@ const EditorPage: React.FC = () => {
             </Button>
           </div>
         )}
+
+        <PostSuccessDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
       </div>
     </div>
   );

@@ -10,7 +10,6 @@ import {
 import {
   FiMoreVertical,
   FiEdit,
-  FiTrash2,
   FiEye,
   FiEyeOff,
   FiHeart,
@@ -26,16 +25,12 @@ import { formatVND } from "@/utils/formatVND";
 interface Props {
   product: Product;
   onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
-  onToggleStatus: (product: Product) => void;
   onView: (product: Product) => void;
 }
 
 export const ProductCard: React.FC<Props> = ({
   product,
   onEdit,
-  onDelete,
-  onToggleStatus,
   onView
 }) => {
   const getStatusInfo = (status: string) => {
@@ -63,6 +58,12 @@ export const ProductCard: React.FC<Props> = ({
           label: "Đã bán",
           color: "bg-blue-100 text-blue-800 border-blue-200",
           icon: FiCheckCircle
+        };
+      case "rejected":
+        return {
+          label: "Bị từ chối",
+          color: "bg-red-100 text-red-800 border-red-200",
+          icon: FiXCircle
         };
       default:
         return {
@@ -124,36 +125,20 @@ export const ProductCard: React.FC<Props> = ({
                 <FiMoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => onView(product)}>
-                <FiEye className="w-4 h-4 mr-2" />
-                Xem chi tiết
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(product)}>
-                <FiEdit className="w-4 h-4 mr-2" />
-                Chỉnh sửa
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onToggleStatus(product)}>
-                {product.status === "active" ? (
-                  <>
-                    <FiEyeOff className="w-4 h-4 mr-2" />
-                    Ẩn tin
-                  </>
-                ) : (
-                  <>
-                    <FiEye className="w-4 h-4 mr-2" />
-                    Hiển thị tin
-                  </>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => onView(product)}>
+                  <FiEye className="w-4 h-4 mr-2" />
+                  Xem chi tiết
+                </DropdownMenuItem>
+
+                {/* Allow edit only when product is pending */}
+                {product.status === "pending" && (
+                  <DropdownMenuItem onClick={() => onEdit(product)}>
+                    <FiEdit className="w-4 h-4 mr-2" />
+                    Chỉnh sửa
+                  </DropdownMenuItem>
                 )}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onDelete(product)}
-                className="text-red-600 focus:text-red-600"
-              >
-                <FiTrash2 className="w-4 h-4 mr-2" />
-                Xóa tin
-              </DropdownMenuItem>
-            </DropdownMenuContent>
+              </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
@@ -191,12 +176,12 @@ export const ProductCard: React.FC<Props> = ({
         <div className="flex items-center gap-2 mb-3">
           <Badge variant="outline" className="text-xs">
             {product.category === "vehicle" ? "Xe điện" :
-             product.category === "battery" ? "Pin" :
-             product.category === "charger" ? "Sạc" : "Phụ kiện"}
+              product.category === "battery" ? "Pin" :
+                product.category === "charger" ? "Sạc" : "Phụ kiện"}
           </Badge>
           <Badge variant="outline" className="text-xs">
             {product.condition === "new" ? "Mới" :
-             product.condition === "used" ? "Đã sử dụng" : "Tân trang"}
+              product.condition === "used" ? "Đã sử dụng" : "Tân trang"}
           </Badge>
         </div>
 
@@ -205,17 +190,20 @@ export const ProductCard: React.FC<Props> = ({
           {product.description}
         </p>
 
-        {/* Action Buttons */}
+        {/* Action Buttons: only allow edit for pending products, view always */}
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit(product)}
-            className="flex-1"
-          >
-            <FiEdit className="w-4 h-4 mr-1" />
-            Sửa
-          </Button>
+          {product.status === "pending" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(product)}
+              className="flex-1"
+            >
+              <FiEdit className="w-4 h-4 mr-1" />
+              Sửa
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="sm"

@@ -42,7 +42,13 @@ export interface Order {
     | "shipping"
     | "delivered"
     | "cancelled"
-    | "refunded";
+    | "refunded"
+    | "delivered_fail"
+    | "deposit_pending"
+    | "deposit_confirmed"
+    | "deposit_cancelled"
+    | "deposit_refunded"
+    ;
 
   // Shipping info
   shipping: {

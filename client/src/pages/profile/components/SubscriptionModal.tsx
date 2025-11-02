@@ -11,9 +11,10 @@ import type { SubscriptionPlan } from '@/types/subscriptionTypes';
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  currentPlanKey?: string;
 }
 
-export default function SubscriptionModal({ open, onOpenChange }: Props) {
+export default function SubscriptionModal({ open, onOpenChange, currentPlanKey }: Props) {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -80,7 +81,6 @@ export default function SubscriptionModal({ open, onOpenChange }: Props) {
         <DialogHeader className="mb-2">
           <DialogTitle>Chọn gói thuê bao</DialogTitle>
         </DialogHeader>
-
         <div className="mt-3">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -90,17 +90,28 @@ export default function SubscriptionModal({ open, onOpenChange }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {plans.map((p) => (
-                <PlanCard
-                  key={p.id}
-                  plan={p}
-                  isSelected={selected === p.id}
-                  isHovered={hovered === p.id}
-                  onSelect={() => handleSelect(p.id)}
-                  onHover={() => setHovered(p.id)}
-                  onLeave={() => setHovered(null)}
-                />
-              ))}
+              {plans.map((p) => {
+                // Chuẩn hóa key để so sánh
+                const norm = (v: string | undefined) => (v ? v.toLowerCase().replace(/\s+/g, '') : '');
+                const currentKey = norm(currentPlanKey);
+                const isCurrent = currentKey && (
+                  norm(p.id) === currentKey ||
+                  norm(p.badge) === currentKey ||
+                  norm(p.name) === currentKey
+                );
+                return (
+                  <PlanCard
+                    key={p.id}
+                    plan={p}
+                    isSelected={selected === p.id}
+                    isHovered={hovered === p.id}
+                    isCurrent={!!isCurrent}
+                    onSelect={isCurrent ? () => { } : () => handleSelect(p.id)}
+                    onHover={() => setHovered(p.id)}
+                    onLeave={() => setHovered(null)}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

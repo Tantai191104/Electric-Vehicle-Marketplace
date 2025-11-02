@@ -267,4 +267,40 @@ export async function getContractPdf(req, res) {
   }
 }
 
+// Get final contract PDF URL by product id
+export async function getFinalContractByProduct(req, res) {
+  try {
+    const { id } = req.params; // product id
+    if (!id) return res.status(400).json({ error: "Missing product id" });
+
+    // Prefer signed contracts, latest first. Fallback to latest draft with draftPdfUrl if any
+    const signed = await Contract.findOne({ productId: id, status: 'signed' })
+      .sort({ signedAt: -1, updatedAt: -1, createdAt: -1 })
+      .lean();
+    const draft = !signed
+      ? await Contract.findOne({ productId: id })
+          .sort({ updatedAt: -1, createdAt: -1 })
+          .lean()
+      : null;
+
+    const chosen = signed || draft;
+    if (!chosen) return res.status(404).json({ error: "Contract not found" });
+
+    const pdfUrl = chosen.finalPdfUrl || chosen.draftPdfUrl || null;
+    if (!pdfUrl) return res.status(404).json({ error: "No PDF available" });
+
+    return res.json({
+      success: true,
+      data: {
+        contractId: String(chosen._id),
+        status: chosen.status,
+        pdfUrl,
+        signedAt: chosen.signedAt || null,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+}
+
 

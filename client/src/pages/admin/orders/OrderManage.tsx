@@ -23,7 +23,11 @@ export default function OrderManage() {
     const [statusFilter, setStatusFilter] = useState("all");
     // Default to in-person as requested
     const [shippingMethodFilter, setShippingMethodFilter] = useState("in-person");
-    const [sorting, setSorting] = useState<SortingState>([]);
+    // Default sort: newest first, then status order
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: "createdAt", desc: true },
+        { id: "status", desc: false }
+    ]);
     const [pageIndex, setPageIndex] = useState(0);
     const [pageSize, setPageSize] = useState(10);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -41,10 +45,20 @@ export default function OrderManage() {
     const filteredOrders = useMemo(() => {
         if (!Array.isArray(ordersData)) return [];
         return ordersData.filter(order => {
-            const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+            // Normalize status for filter
+            const normalizedStatus = order.status?.toLowerCase();
+            let matchesStatus = false;
+            if (statusFilter === 'all') {
+                matchesStatus = true;
+            } else if (statusFilter === 'deposit') {
+                matchesStatus = normalizedStatus === 'deposit_pending';
+            } else if (statusFilter === 'pending') {
+                matchesStatus = normalizedStatus === 'pending' || normalizedStatus === 'deposit';
+            } else {
+                matchesStatus = normalizedStatus === statusFilter.toLowerCase();
+            }
             const matchesShippingMethod =
                 shippingMethodFilter === 'all' ||
-                // normalize possible shipping.method values e.g. 'in-person', 'in_person', 'ghn', 'GHN'
                 (shippingMethodFilter === 'in-person' && (order.shipping?.method === 'in-person' || order.shipping?.method === 'in_person' || order.shipping?.method?.toLowerCase() === 'in person')) ||
                 (shippingMethodFilter === 'ghn' && (order.shipping?.method === 'ghn' || order.shipping?.method?.toLowerCase() === 'ghn'));
             return matchesStatus && matchesShippingMethod;

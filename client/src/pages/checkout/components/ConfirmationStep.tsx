@@ -13,6 +13,7 @@ interface ConfirmationStepProps {
     couponCode?: string;
     className?: string;
     shippingFee?: number;
+    depositAmount?: number;
 }
 
 export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
@@ -24,7 +25,8 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     discount = 0,
     couponCode = '',
     className = "",
-    shippingFee
+    shippingFee,
+    depositAmount = 500000
 }) => {
 
     const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
@@ -32,9 +34,9 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     const isVehicle = product.category === "vehicle";
     if (isVehicle) {
         subtotal = 0;
-        shipping = 500000;
+        shipping = depositAmount;
         tax = 0;
-        total = 500000;
+        total = depositAmount;
     } else {
         const summary = calculateOrderSummary(
             product.price,
@@ -216,7 +218,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
                         <>
                             <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
                                 <span className="text-gray-700 font-medium text-sm">Phí lên lịch hẹn</span>
-                                <span className="font-semibold text-blue-600">{formatVND(500000)}</span>
+                                <span className="font-semibold text-blue-600">{formatVND(depositAmount)}</span>
                             </div>
                         </>
                     )}

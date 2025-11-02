@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiShoppingBag, FiTruck, FiCreditCard, FiCheck, FiArrowLeft, FiUser } from "react-icons/fi";
+import { FiShoppingBag, FiTruck, FiCheck, FiArrowLeft, FiUser } from "react-icons/fi";
 import type { CheckoutStep } from "./components/CheckoutHeader";
 import { ConfirmationStep } from "./components/ConfirmationStep";
 import { ProductInfoStep } from "./components/ProductInfoStep";
 import { useAuthStore } from "@/store/auth";
 import { useProduct } from "@/hooks/useProduct";
-import { PaymentMethodStep, type PaymentMethod } from "./components/PaymentMethodStep";
+import type { PaymentMethod } from "./components/PaymentMethodStep";
 import { ShippingInfoStep, type ShippingInfo } from "./components/ShippingInfoStep";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -38,10 +38,11 @@ export default function CheckoutPage() {
 
     const { user, updateUser } = useAuthStore();
     const [currentStep, setCurrentStep] = useState(1);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("system_wallet");
+    const selectedPaymentMethod = "system_wallet"; // Always use system wallet
     const [isProcessing, setIsProcessing] = useState(false);
     const [discount] = useState(0);
     const [couponCode] = useState("");
+    const [depositAmount, setDepositAmount] = useState<number>(0);
 
     const { data: productData, isLoading: productLoading, error: productError } = useProduct(productId || "");
     const product = productData?.product;
@@ -76,19 +77,36 @@ export default function CheckoutPage() {
         }
     }, [productId, navigate]);
 
+    // Fetch deposit amount for vehicle category
+    useEffect(() => {
+        const fetchDepositAmount = async () => {
+            if (product?.category === "vehicle") {
+                try {
+                    const response = await orderServices.getDepositAmount();
+                    if (response.success && response.data?.amount) {
+                        setDepositAmount(response.data.amount);
+                    }
+                } catch (error) {
+                    console.error("Error fetching deposit amount:", error);
+                    // Fallback to default if API fails
+                    setDepositAmount(500000);
+                }
+            }
+        };
+        fetchDepositAmount();
+    }, [product?.category]);
+
     const steps: CheckoutStep[] = product?.category === "battery"
         ? [
             { id: 1, title: "Sản phẩm", icon: FiShoppingBag },
             { id: 2, title: "Thông tin giao hàng", icon: FiTruck },
             { id: 3, title: "Hợp đồng", icon: FiCheck },
-            { id: 4, title: "Phương thức thanh toán", icon: FiCreditCard },
-            { id: 5, title: "Xác nhận", icon: FiCheck }
+            { id: 4, title: "Xác nhận", icon: FiCheck }
         ]
         : [
             { id: 1, title: "Sản phẩm", icon: FiShoppingBag },
             { id: 2, title: "Thông tin giao dịch", icon: FiTruck },
-            { id: 3, title: "Phương thức thanh toán cọc", icon: FiCreditCard },
-            { id: 4, title: "Lên lịch hẹn", icon: FiCheck }
+            { id: 3, title: "Lên lịch hẹn", icon: FiCheck }
         ];
 
     const isStepValid = (step: number): boolean => {
@@ -113,8 +131,8 @@ export default function CheckoutPage() {
             const toastId = toast.loading("Đang xử lý thanh toán...");
             let totalAmount: number;
             if (product.category === "vehicle") {
-                // Chỉ lấy đúng 500,000, không lấy VAT hay gì thêm
-                totalAmount = 500000;
+                // Use deposit amount from API
+                totalAmount = depositAmount;
                 // Create deposit order for vehicle
                 const buyerAddress = [shippingInfo.houseNumber, shippingInfo.ward, shippingInfo.district, shippingInfo.city].filter(Boolean).join(", ");
                 const depositPayload = {
@@ -369,11 +387,6 @@ export default function CheckoutPage() {
                     );
                 case 4:
                     return (
-                        <PaymentMethodStep selectedMethod={selectedPaymentMethod} onMethodChange={setSelectedPaymentMethod} methods={paymentMethods} />
-                    );
-
-                case 5:
-                    return (
                         <div>
                             {contractPdf && contractId && (
                                 <ContractConfirmation contractPdf={contractPdf} contractId={contractId} />
@@ -388,6 +401,7 @@ export default function CheckoutPage() {
                                     discount={discount}
                                     couponCode={couponCode}
                                     shippingFee={shippingFee}
+                                    depositAmount={depositAmount}
                                 />
                             )}
                         </div>
@@ -403,9 +417,7 @@ export default function CheckoutPage() {
                     // Truyền category cho ShippingInfoStep
                     return <ShippingInfoStep shippingInfo={shippingInfo} onUpdate={setShippingInfo} category={product?.category} />;
                 case 3:
-                    return <PaymentMethodStep selectedMethod={selectedPaymentMethod} onMethodChange={setSelectedPaymentMethod} methods={paymentMethods} />;
-                case 4:
-                    return product ? <ConfirmationStep product={product} quantity={quantity} shippingInfo={shippingInfo} selectedPaymentMethod={selectedPaymentMethod} paymentMethods={paymentMethods} discount={discount} couponCode={couponCode} shippingFee={shippingFee} /> : null;
+                    return product ? <ConfirmationStep product={product} quantity={quantity} shippingInfo={shippingInfo} selectedPaymentMethod={selectedPaymentMethod} paymentMethods={paymentMethods} discount={discount} couponCode={couponCode} shippingFee={shippingFee} depositAmount={depositAmount} /> : null;
                 default:
                     return null;
             }
@@ -461,12 +473,11 @@ export default function CheckoutPage() {
                 </div>
             </div>
             <div className="py-6 max-w-7xl mx-auto px-4">
-                <div className={`mx-auto bg-white rounded-xl border shadow-sm ${product?.category === "battery" && currentStep === 4 ? "max-w-6xl" : "max-w-3xl"}`}>
+                <div className={`mx-auto bg-white rounded-xl border shadow-sm max-w-4xl`}>
                     <div className="px-6 py-4 border-b bg-gray-50/50 rounded-t-xl flex items-center gap-3">
                         {currentStep === 1 && <FiShoppingBag className="w-5 h-5 text-blue-600" />}
                         {currentStep === 2 && <FiUser className="w-5 h-5 text-blue-600" />}
-                        {currentStep === 3 && <FiCreditCard className="w-5 h-5 text-blue-600" />}
-                        {(currentStep === 4 || currentStep === 5) && <FiCheck className="w-5 h-5 text-green-600" />}
+                        {(currentStep === 3 || currentStep === 4) && <FiCheck className="w-5 h-5 text-green-600" />}
                         <h2 className="text-lg font-semibold text-gray-900">{steps.find(s => s.id === currentStep)?.title}</h2>
                         <span className="ml-auto text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">{currentStep}/{totalSteps}</span>
                     </div>

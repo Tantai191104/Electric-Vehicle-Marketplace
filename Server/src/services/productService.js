@@ -1,16 +1,30 @@
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import UserSubscription from "../models/UserSubscription.js";
+import mongoose from "mongoose";
 
 // Helper function to create aggregation pipeline for subscription-based sorting
-export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) {
+export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10, sortMode = "priority") {
   return [
     { $match: baseQuery },
+    // Join only ACTIVE user subscription for the seller
     {
       $lookup: {
         from: "usersubscriptions",
-        localField: "seller",
-        foreignField: "userId",
+        let: { sellerId: "$seller" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$userId", "$$sellerId"] },
+                  { $eq: ["$status", "active"] }
+                ]
+              }
+            }
+          },
+          { $project: { planKey: 1 } }
+        ],
         as: "sellerSubscription"
       }
     },
@@ -22,16 +36,45 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
             "free" // Default to free if no subscription found
           ]
         },
-        planPriority: {
-          $switch: {
-            branches: [
-              { case: { $eq: ["$sellerPlanKey", "pro"] }, then: 1 },
-              { case: { $eq: ["$sellerPlanKey", "trial"] }, then: 2 },
-              { case: { $eq: ["$sellerPlanKey", "free"] }, then: 3 }
-            ],
-            default: 3
-          }
-        }
+        // Compute subscription-derived priority level
+        subscriptionPriorityLevel: {
+          $cond: [ { $eq: ["$sellerPlanKey", "pro"] }, "high", "low" ]
+        },
+        // If product has manually set priority (high/medium), use it; otherwise fallback to subscription
+        effectivePriorityLevel: {
+          $cond: [
+            { $eq: [ { $ifNull: ["$priorityLevel", "low"] }, "high" ] },
+            "high",
+            "$subscriptionPriorityLevel"
+          ]
+        },
+        // Metadata for clients to understand where priority comes from
+        prioritySource: {
+          $cond: [
+            { $eq: [ { $ifNull: ["$priorityLevel", "low"] }, "high" ] },
+            "product",
+            {
+              $cond: [
+                { $ne: ["$subscriptionPriorityLevel", "low"] },
+                "subscription",
+                "default"
+              ]
+            }
+          ]
+        },
+        isPriorityBoosted: {
+          $cond: [
+            { $and: [
+              { $ne: [ "$effectivePriorityLevel", { $ifNull: ["$priorityLevel", "low"] } ] },
+              { $ne: [ "$effectivePriorityLevel", "low" ] }
+            ]},
+            true,
+            false
+          ]
+        },
+        // Numeric ranks for stable sorting (lower value sorts first)
+        priorityRank: { $cond: [ { $eq: [ "$effectivePriorityLevel", "high" ] }, 0, 1 ] },
+        planRank: { $cond: [ { $eq: ["$sellerPlanKey", "pro"] }, 0, 1 ] }
       }
     },
     {
@@ -39,35 +82,49 @@ export function createSubscriptionSortPipeline(baseQuery, skip = 0, limit = 10) 
         from: "users",
         localField: "seller",
         foreignField: "_id",
-        as: "seller"
+        as: "sellerData"
       }
     },
     {
       $addFields: {
-        seller: { $arrayElemAt: ["$seller", 0] }
+        seller: { $arrayElemAt: ["$sellerData", 0] }
       }
     },
+    // Override output field so clients see boosted priorityLevel
+    {
+      $addFields: {
+        // Map to binary high/low for response
+        priorityLevel: { $cond: [ { $eq: ["$effectivePriorityLevel", "high"] }, "high", "low" ] }
+      }
+    },
+    // Final sorting stage depends on sort mode (priority first, then newest)
+    ...(sortMode === "newest"
+      ? [ { $sort: { createdAt: -1 } } ]
+      : [
+          { $addFields: { priorityRank: { $cond: [ { $eq: ["$priorityLevel", "high"] }, 0, 1 ] } } },
+          { $sort: { priorityRank: 1, createdAt: -1 } }
+        ]
+    ),
+    { $skip: skip },
+    { $limit: limit },
     {
       $project: {
         sellerSubscription: 0,
         sellerPlanKey: 0,
-        planPriority: 0
+        planRank: 0,
+        sellerData: 0,
+        priorityRank: 0,
+        subscriptionPriorityLevel: 0,
+        effectivePriorityLevel: 0
       }
-    },
-    {
-      $sort: {
-        planPriority: 1, // Lower number = higher priority (pro=1, trial=2, free=3)
-        createdAt: -1   // Within same plan, newest first
-      }
-    },
-    { $skip: skip },
-    { $limit: limit }
+    }
   ];
 }
 
 // Helper function to format product with seller address
 function formatProductWithAddress(product) {
-  const productObj = product.toObject();
+  // Handle both Mongoose documents and plain objects from aggregate
+  const productObj = product.toObject ? product.toObject() : product;
   if (productObj.seller?.profile?.address) {
     productObj.seller.address = {
       houseNumber: productObj.seller.profile.address.houseNumber || null,
@@ -97,6 +154,12 @@ export async function createProductService(productData) {
       throw err;
     }
 
+    // Persist priority based on seller's active subscription (PRO -> high, otherwise low)
+    try {
+      const activeSub = await UserSubscription.findOne({ userId: productData.seller, status: "active" }).select("planKey");
+      productData.priorityLevel = activeSub?.planKey === "pro" ? "high" : "low";
+    } catch {}
+
     const product = await Product.create(productData);
     return product;
   } catch (error) {
@@ -104,7 +167,7 @@ export async function createProductService(productData) {
   }
 }
 
-export async function listProductsService(filters, page = 1, limit = 10) {
+export async function listProductsService(filters, page = 1, limit = 10, sortMode = "priority") {
   try {
     const skip = (page - 1) * limit;
     let query = {};
@@ -145,7 +208,7 @@ export async function listProductsService(filters, page = 1, limit = 10) {
     }
 
     // Use aggregation pipeline to join with UserSubscription and sort by subscription plan
-    const pipeline = createSubscriptionSortPipeline(query, skip, limit);
+    const pipeline = createSubscriptionSortPipeline(query, skip, limit, sortMode);
     const products = await Product.aggregate(pipeline);
     const total = await Product.countDocuments(query);
 
@@ -181,7 +244,26 @@ export async function getProductByIdService(productId) {
     if (!updated) {
       throw new Error("Product not found");
     }
-    return formatProductWithAddress(updated);
+    const product = formatProductWithAddress(updated);
+    // Boost priorityLevel in response based on seller's active subscription
+    try {
+      const activeSub = await UserSubscription.findOne({ userId: product.seller._id, status: "active" }).select("planKey");
+      if (activeSub?.planKey === "pro") {
+        product.priorityLevel = "high";
+        product.prioritySource = product.priorityLevel === "high" ? "product" : "subscription";
+        product.isPriorityBoosted = true;
+      } else if (activeSub?.planKey === "trial") {
+        // Only boost if product was low; preserve explicit higher setting
+        const wasHigh = product.priorityLevel === "high";
+        product.priorityLevel = wasHigh ? "high" : "medium";
+        product.prioritySource = wasHigh ? "product" : "subscription";
+        product.isPriorityBoosted = !wasHigh;
+      } else {
+        product.prioritySource = ["high", "medium"].includes(product.priorityLevel) ? "product" : "default";
+        product.isPriorityBoosted = false;
+      }
+    } catch {}
+    return product;
   } catch (error) {
     throw error;
   }
@@ -231,12 +313,14 @@ export async function deleteProductService(productId, userId) {
 export async function getUserProductsService(userId, page = 1, limit = 10) {
   try {
     const skip = (page - 1) * limit;
+    // Ensure we match ObjectId correctly when filtering by seller
+    const sellerObjectId = new mongoose.Types.ObjectId(String(userId));
     
     // Use aggregation pipeline for consistent sorting with other product listings
-    const pipeline = createSubscriptionSortPipeline({ seller: userId }, skip, limit);
+    const pipeline = createSubscriptionSortPipeline({ seller: sellerObjectId }, skip, limit);
     const [products, total] = await Promise.all([
       Product.aggregate(pipeline),
-      Product.countDocuments({ seller: userId })
+      Product.countDocuments({ seller: sellerObjectId })
     ]);
 
     // Format products to include seller address in a clean format

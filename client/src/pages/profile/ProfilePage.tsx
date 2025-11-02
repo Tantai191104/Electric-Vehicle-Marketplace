@@ -53,15 +53,18 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     const loadMyPlan = async () => {
       try {
-        const resp = await subscriptionServices.getMySubscription();
-        setMyPlan(resp || null);
+        const resp = await subscriptionServices.getSubscriptionUsage();
+        // resp.data là object chứa các trường planKey, planName, ...
+        if (resp && resp.data && resp.data.planKey) {
+          setMyPlan(resp.data);
+        } else {
+          setMyPlan({ planKey: 'free', planName: 'Gói CƠ BẢN (FREE)' });
+        }
       } catch (err) {
-        console.error("Failed to load my subscription", err);
-        // Default to a free plan when API fails or user has no plan
-        setMyPlan({ key: 'free', name: 'Gói CƠ BẢN (FREE)', priceVnd: 0 });
+        console.error("Failed to load subscription usage", err);
+        setMyPlan({ planKey: 'free', planName: 'Gói CƠ BẢN (FREE)' });
       }
     };
-
     loadMyPlan();
   }, []);
 
@@ -85,24 +88,35 @@ const ProfilePage: React.FC = () => {
             {/* Current subscription */}
             <div className="bg-white rounded-lg p-4 shadow-sm">
               {(() => {
-                const planObj = (myPlan && typeof myPlan === 'object') ? (myPlan as Record<string, unknown>) : { key: 'free', name: 'Gói CƠ BẢN (FREE)', priceVnd: 0 };
-                const planName = typeof planObj.name === 'string' ? planObj.name : 'Gói CƠ BẢN (FREE)';
-                const planKey = typeof planObj.key === 'string' ? planObj.key : 'free';
-                const planPrice = typeof planObj.priceVnd === 'number' ? planObj.priceVnd : 0;
-                const isFree = planKey === 'free' || planPrice === 0;
+                const planObj = (myPlan && typeof myPlan === 'object') ? (myPlan as Record<string, unknown>) : { planKey: 'free', planName: 'Gói CƠ BẢN (FREE)' };
+                const planName = typeof planObj.planName === 'string' ? planObj.planName : 'Gói CƠ BẢN (FREE)';
+                const planKey = typeof planObj.planKey === 'string' ? planObj.planKey : 'free';
+                const isPro = planKey === 'pro' || planName.toLowerCase().includes('pro');
+                const isFree = !isPro;
 
                 return (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm text-gray-500">Gói hiện tại</div>
+                  <div className={isPro
+                    ? "relative flex items-center justify-between bg-gradient-to-r from-yellow-400 via-orange-400 to-green-300 rounded-xl p-1 border-2 border-yellow-400 shadow-lg"
+                    : "flex items-center justify-between"
+                  }>
+                    <div className={isPro ? "p-4" : ""}>
+                      <div className={isPro ? "text-sm text-white drop-shadow" : "text-sm text-gray-500"}>Gói hiện tại</div>
                       <div className="flex items-center gap-2">
-                        <div className="font-semibold text-gray-800">{planName}</div>
+                        <div className={isPro ? "font-bold text-white text-lg flex items-center gap-2" : "font-semibold text-gray-800"}>
+                          {isPro && (
+                            <svg className="w-5 h-5 text-yellow-200 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.39 6.94H19l-5.18 3.76L15.82 18 10 14.27 4.18 18l1.99-5.3L1 8.94h6.61z" /></svg>
+                          )}
+                          {planName}
+                        </div>
+                        {isPro && (
+                          <span className="text-xs font-bold bg-gradient-to-r from-yellow-300 via-orange-300 to-green-200 text-yellow-900 px-2 py-1 rounded-full border border-yellow-300 shadow animate-pulse">PRO</span>
+                        )}
                         {isFree && (
                           <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Miễn phí</span>
                         )}
                       </div>
                     </div>
-                    <div>
+                    <div className={isPro ? "p-4" : ""}>
                       {isFree ? (
                         <button
                           onClick={() => setShowSubModal(true)}
@@ -111,7 +125,7 @@ const ProfilePage: React.FC = () => {
                           Nâng cấp
                         </button>
                       ) : (
-                        <span className="text-sm text-gray-500">Đang sử dụng</span>
+                        <span className="text-sm text-white font-semibold drop-shadow">Đang sử dụng</span>
                       )}
                     </div>
                   </div>
@@ -150,7 +164,11 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Address modal removed from this page - editing handled inside the profile form */}
-      <SubscriptionModal open={showSubModal} onOpenChange={setShowSubModal} />
+      <SubscriptionModal
+        open={showSubModal}
+        onOpenChange={setShowSubModal}
+        currentPlanKey={typeof myPlan === 'object' && myPlan && 'planKey' in myPlan ? (myPlan as { planKey?: string }).planKey : undefined}
+      />
     </div>
   );
 };

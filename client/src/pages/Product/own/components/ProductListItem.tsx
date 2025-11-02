@@ -10,7 +10,6 @@ import {
 import {
   FiMoreVertical,
   FiEdit,
-  FiTrash2,
   FiEye,
   FiEyeOff,
   FiHeart,
@@ -26,16 +25,12 @@ import { formatVND } from "@/utils/formatVND";
 interface Props {
   product: Product;
   onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
-  onToggleStatus: (product: Product) => void;
   onView: (product: Product) => void;
 }
 
 export const ProductListItem: React.FC<Props> = ({
   product,
   onEdit,
-  onDelete,
-  onToggleStatus,
   onView
 }) => {
   const getStatusInfo = (status: string) => {
@@ -63,6 +58,12 @@ export const ProductListItem: React.FC<Props> = ({
           label: "Đã bán",
           color: "bg-blue-100 text-blue-800 border-blue-200",
           icon: FiCheckCircle
+        };
+      case "rejected":
+        return {
+          label: "Bị từ chối",
+          color: "bg-red-100 text-red-800 border-red-200",
+          icon: FiXCircle
         };
       default:
         return {
@@ -106,7 +107,7 @@ export const ProductListItem: React.FC<Props> = ({
                   {formatVND(product.price)}
                 </p>
               </div>
-              
+
               <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                 {product.isFeatured && (
                   <Badge className="bg-yellow-400 text-yellow-900 flex items-center gap-1 text-xs">
@@ -137,16 +138,16 @@ export const ProductListItem: React.FC<Props> = ({
                     <span>{product.likes}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     {product.category === "vehicle" ? "Xe điện" :
-                     product.category === "battery" ? "Pin" :
-                     product.category === "charger" ? "Sạc" : "Phụ kiện"}
+                      product.category === "battery" ? "Pin" :
+                        product.category === "charger" ? "Sạc" : "Phụ kiện"}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
                     {product.condition === "new" ? "Mới" :
-                     product.condition === "used" ? "Đã sử dụng" : "Tân trang"}
+                      product.condition === "used" ? "Đã sử dụng" : "Tân trang"}
                   </Badge>
                 </div>
               </div>
@@ -168,30 +169,13 @@ export const ProductListItem: React.FC<Props> = ({
                       <FiEye className="w-4 h-4 mr-2" />
                       Xem chi tiết
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit(product)}>
-                      <FiEdit className="w-4 h-4 mr-2" />
-                      Chỉnh sửa
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onToggleStatus(product)}>
-                      {product.status === "active" ? (
-                        <>
-                          <FiEyeOff className="w-4 h-4 mr-2" />
-                          Ẩn tin
-                        </>
-                      ) : (
-                        <>
-                          <FiEye className="w-4 h-4 mr-2" />
-                          Hiển thị tin
-                        </>
-                      )}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => onDelete(product)}
-                      className="text-red-600 focus:text-red-600"
-                    >
-                      <FiTrash2 className="w-4 h-4 mr-2" />
-                      Xóa tin
-                    </DropdownMenuItem>
+                    {/* Allow edit only when pending; otherwise only view is available */}
+                    {product.status === "pending" && (
+                      <DropdownMenuItem onClick={() => onEdit(product)}>
+                        <FiEdit className="w-4 h-4 mr-2" />
+                        Chỉnh sửa
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

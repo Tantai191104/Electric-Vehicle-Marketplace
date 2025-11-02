@@ -96,7 +96,12 @@ export async function getProducts(req, res) {
       });
     }
 
-    const products = await listProductsService(result.data);
+    const products = await listProductsService(
+      result.data, 
+      req.query.page ? parseInt(req.query.page) : 1,
+      req.query.limit ? parseInt(req.query.limit) : 10,
+      result.data.sort || "priority"
+    );
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
