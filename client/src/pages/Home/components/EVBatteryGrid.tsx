@@ -9,6 +9,8 @@ import { BiErrorCircle } from "react-icons/bi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import { Crown, Battery, Zap } from "lucide-react";
+import { FiUser } from "react-icons/fi";
+import { TbWeight, TbBattery2, TbCalendarTime, TbRecycle } from "react-icons/tb";
 
 export default function EVBatteryGrid() {
   const navigate = useNavigate();
@@ -96,16 +98,15 @@ export default function EVBatteryGrid() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product: Product) => {
             const isHighPriority = product.priorityLevel === "high" || product.isPriorityBoosted === true;
-            
+
             return (
               <Card
                 onClick={() => navigate(`/detail/${product._id}`)}
                 key={product._id}
-                className={`group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-2xl ${
-                  isHighPriority 
-                    ? "border-2 border-blue-400 shadow-lg shadow-blue-200/50 ring-2 ring-blue-300/30" 
-                    : "border border-gray-200 hover:border-blue-300"
-                }`}
+                className={`group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-2xl ${isHighPriority
+                  ? "border-2 border-blue-400 shadow-lg shadow-blue-200/50 ring-2 ring-blue-300/30"
+                  : "border border-gray-200 hover:border-blue-300"
+                  }`}
               >
                 {/* Image */}
                 <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -115,7 +116,7 @@ export default function EVBatteryGrid() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     loading="lazy"
                   />
-                  
+
                   {/* Priority Badge */}
                   {isHighPriority && (
                     <div className="absolute top-3 right-3">
@@ -125,7 +126,7 @@ export default function EVBatteryGrid() {
                       </Badge>
                     </div>
                   )}
-                  
+
                   {/* Condition Badge */}
                   <div className="absolute top-3 left-3">
                     <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm border-0 shadow-sm">
@@ -141,28 +142,72 @@ export default function EVBatteryGrid() {
                     {product.title || `${product.brand} ${product.model}`}
                   </h3>
 
+                  {/* Brand & Model */}
+                  <div className="text-sm text-gray-600 mb-3">
+                    <span className="font-medium">{product.brand}</span>
+                    {product.model && <span> • {product.model}</span>}
+                  </div>
+
+                  {/* Description */}
+                  {product.description && (
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      {product.description}
+                    </p>
+                  )}
+
                   {/* Specs */}
                   <div className="space-y-1 mb-3 text-sm text-gray-600">
                     {product.specifications?.voltage && (
                       <div className="flex items-center gap-2">
                         <Zap className="w-3.5 h-3.5 text-cyan-500" />
-                        <span>{product.specifications.voltage}</span>
+                        <span>Điện áp: {product.specifications.voltage}V</span>
                       </div>
                     )}
                     {product.specifications?.capacity && (
                       <div className="flex items-center gap-2">
                         <Battery className="w-3.5 h-3.5 text-blue-500" />
-                        <span>{product.specifications.capacity}</span>
+                        <span>Dung lượng: {product.specifications.capacity}Ah</span>
+                      </div>
+                    )}
+                    {product.specifications?.weight && (
+                      <div className="flex items-center gap-2">
+                        <TbWeight className="w-3.5 h-3.5 text-gray-500" />
+                        <span>Khối lượng: {product.specifications.weight}kg</span>
+                      </div>
+                    )}
+                    {product.specifications?.batteryType && (
+                      <div className="flex items-center gap-2">
+                        <TbBattery2 className="w-3.5 h-3.5 text-green-500" />
+                        <span>Loại pin: {product.specifications.batteryType}</span>
+                      </div>
+                    )}
+                    {product.specifications?.warrantyPeriod && (
+                      <div className="flex items-center gap-2">
+                        <TbCalendarTime className="w-3.5 h-3.5 text-orange-500" />
+                        <span>Bảo hành: {product.specifications.warrantyPeriod} tháng</span>
+                      </div>
+                    )}
+                    {product.specifications?.cycleLife && (
+                      <div className="flex items-center gap-2">
+                        <TbRecycle className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Chu kỳ sạc: {product.specifications.cycleLife} lần</span>
                       </div>
                     )}
                   </div>
 
+                  {/* Seller Info */}
+                  {product.seller?.name && (
+                    <div className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+                      <FiUser className="w-3.5 h-3.5" />
+                      <span>Người bán: {product.seller.name}</span>
+                    </div>
+                  )}
+
                   {/* Price */}
-                  <div className={`text-xl font-bold ${
-                    isHighPriority 
-                      ? "bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent" 
-                      : "text-blue-600"
-                  }`}>
+                  <div className={`text-xl font-bold ${isHighPriority
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent"
+                    : "text-blue-600"
+                    }`}>
                     {formatNumberWithDots(product.price)} đ
                   </div>
                 </div>
