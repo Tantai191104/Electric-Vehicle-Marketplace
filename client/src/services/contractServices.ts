@@ -25,4 +25,16 @@ export const contractServices = {
 
     return response.data;
   },
+  async uploadContractToOrder(orderId: string, file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await API.post(`/deposit/${orderId}/upload-contract`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  },
 };

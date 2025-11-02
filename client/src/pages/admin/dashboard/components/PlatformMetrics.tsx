@@ -9,16 +9,29 @@ interface PlatformMetricsProps {
 
 export const PlatformMetrics: React.FC<PlatformMetricsProps> = ({ timeRange }) => {
     const [metricsData, setMetricsData] = useState<MetricData | null>(null);
+    const [subscriptionData, setSubscriptionData] = useState<{
+        totalRevenue: number;
+        totalPurchases: number;
+    } | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
                 setLoading(true);
-                const data = await adminServices.getPlatformMetrics(
-                    timeRange ? { range: timeRange } : undefined
-                );
-                setMetricsData(data);
+                const [metrics, subscription] = await Promise.all([
+                    adminServices.getPlatformMetrics(
+                        timeRange ? { range: timeRange } : undefined
+                    ),
+                    adminServices.getSubscriptionRevenue(
+                        timeRange ? { range: timeRange } : undefined
+                    )
+                ]);
+                setMetricsData(metrics);
+                setSubscriptionData({
+                    totalRevenue: subscription.summary.totalRevenue,
+                    totalPurchases: subscription.summary.totalPurchases,
+                });
             } catch (error) {
                 console.error("Failed to fetch metrics:", error);
             } finally {
@@ -33,6 +46,11 @@ export const PlatformMetrics: React.FC<PlatformMetricsProps> = ({ timeRange }) =
         return <div>Đang tải dữ liệu...</div>;
     }
 
+    // Tính doanh thu
+    const totalRevenue = metricsData?.totalRevenue ?? 0; // Đã bao gồm cả xe & pin + subscription
+    const subscriptionRevenue = subscriptionData?.totalRevenue ?? 0;
+    const orderRevenue = totalRevenue - subscriptionRevenue; // Doanh thu xe & pin = tổng - subscription
+
     // Dùng optional chaining và default value để tránh undefined
     const metrics = [
         {
@@ -42,7 +60,8 @@ export const PlatformMetrics: React.FC<PlatformMetricsProps> = ({ timeRange }) =
             changeType: (metricsData?.percentageChanges?.users ?? 0) >= 0 ? "increase" : "decrease",
             icon: FiUsers,
             description: "Người mua và người bán",
-            color: "bg-blue-500"
+            color: "bg-blue-500",
+            isRevenue: false
         },
         {
             title: "Tin đăng hoạt động",
@@ -51,25 +70,38 @@ export const PlatformMetrics: React.FC<PlatformMetricsProps> = ({ timeRange }) =
             changeType: (metricsData?.percentageChanges?.products ?? 0) >= 0 ? "increase" : "decrease",
             icon: FiShoppingBag,
             description: "Xe điện đang được bán",
-            color: "bg-green-500"
+            color: "bg-green-500",
+            isRevenue: false
         },
         {
-            title: "Doanh thu",
-            value: formatVND(metricsData?.totalRevenue ?? 0),
-            change: `${metricsData?.percentageChanges?.revenue ?? 0 >= 0 ? "+" : ""}${metricsData?.percentageChanges?.revenue ?? 0}%`,
-            changeType: (metricsData?.percentageChanges?.revenue ?? 0) >= 0 ? "increase" : "decrease",
+            title: "Tổng doanh thu",
+            value: formatVND(totalRevenue),
+            change: null,
+            changeType: "increase",
             icon: FiDollarSign,
-            description: "Tổng doanh thu từ giao dịch",
-            color: "bg-purple-500"
+            description: "Đặt cọc xe và đăng kí gói",
+            color: "bg-purple-500",
+            isRevenue: true,
+            details: {
+                orders: orderRevenue,
+                subscription: subscriptionRevenue,
+                subscriptionCount: subscriptionData?.totalPurchases ?? 0
+            }
         },
         {
             title: "Giao dịch thành công",
-            value: (metricsData?.totalOrders ?? 0).toLocaleString(),
-            change: `${metricsData?.percentageChanges?.orders ?? 0 >= 0 ? "+" : ""}${metricsData?.percentageChanges?.orders ?? 0}%`,
-            changeType: (metricsData?.percentageChanges?.orders ?? 0) >= 0 ? "increase" : "decrease",
+            value: ((metricsData?.totalOrders ?? 0) + (metricsData?.totalGHNOrders ?? 0)).toLocaleString(),
+            change: null,
+            changeType: "increase",
             icon: FiTrendingUp,
-            description: "Xe đã được bán thành công",
-            color: "bg-orange-500"
+            description: "Đơn đã hoàn thành",
+            color: "bg-orange-500",
+            isRevenue: false,
+            isTransaction: true,
+            transactionDetails: {
+                deposit: metricsData?.totalOrders ?? 0,
+                ghn: metricsData?.totalGHNOrders ?? 0
+            }
         }
     ];
 
@@ -81,18 +113,52 @@ export const PlatformMetrics: React.FC<PlatformMetricsProps> = ({ timeRange }) =
                         <div className={`w-12 h-12 ${metric.color} rounded-xl flex items-center justify-center shadow-lg`}>
                             <metric.icon className="w-6 h-6 text-white" />
                         </div>
-                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${metric.changeType === "increase"
-                            ? "bg-green-100 text-green-600"
-                            : "bg-red-100 text-red-600"
-                            }`}>
-                            {metric.change}
-                        </div>
+                        {metric.change && (
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${metric.changeType === "increase"
+                                ? "bg-green-100 text-green-600"
+                                : "bg-red-100 text-red-600"
+                                }`}>
+                                {metric.change}
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-1">
                         <h3 className="text-2xl font-bold text-gray-900">{metric.value}</h3>
                         <p className="text-sm font-medium text-gray-700">{metric.title}</p>
                         <p className="text-xs text-gray-500">{metric.description}</p>
+
+                        {/* Hiển thị chi tiết cho card doanh thu */}
+                        {metric.isRevenue && metric.details && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-600">Đặt cọc xe và giao dịch hoàn tất :</span>
+                                    <span className="font-semibold text-gray-900">{formatVND(metric.details.orders)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-600">Đăng kí gói:</span>
+                                    <span className="font-semibold text-gray-900">{formatVND(metric.details.subscription)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs pt-1">
+                                    <span className="text-indigo-600">Gói đã được đăng kí:</span>
+                                    <span className="font-semibold text-indigo-600">{metric.details.subscriptionCount} gói</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Hiển thị chi tiết cho card giao dịch */}
+                        {metric.isTransaction && metric.transactionDetails && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-600">Đơn DEPOSIT:</span>
+                                    <span className="font-semibold text-gray-900">{metric.transactionDetails.deposit} đơn</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-600">Đơn GHN:</span>
+                                    <span className="font-semibold text-gray-900">{metric.transactionDetails.ghn} đơn</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             ))}
