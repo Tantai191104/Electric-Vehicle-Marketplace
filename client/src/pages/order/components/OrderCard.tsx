@@ -293,34 +293,28 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
 
                 <div className="space-y-1 text-sm text-gray-700">
                   <div className="flex justify-between">
-                    <span>Giá sản phẩm:</span>
+                    <span>Tạm tính:</span>
                     <span>{formatNumberWithDots(order.totalAmount)} VNĐ</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-gray-600">
                     <span>Phí vận chuyển:</span>
                     <span>{formatNumberWithDots(order.shippingFee)} VNĐ</span>
                   </div>
-                  {order.commission > 0 && (
-                    <div className="flex justify-between">
-                      <span>Phí hoa hồng:</span>
-                      <span>{formatNumberWithDots(order.commission)} VNĐ</span>
-                    </div>
-                  )}
                 </div>
               )}
               {order.shipping.method !== "GHN" && (
                 <div className="space-y-1 text-sm text-gray-700">
                   <div className="flex justify-between">
-                    <span>Tiền cọc:</span>
+                    <span>Phí đặt cọc:</span>
                     <span>{formatNumberWithDots(order.finalAmount)} VNĐ</span>
                   </div>
                 </div>
               )}
               <Separator className="bg-gray-300" />
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-black">Tổng cộng:</span>
+                <span className="font-semibold text-black">Tổng thanh toán:</span>
                 <span className="text-xl font-bold text-black">
-                  {formatNumberWithDots(order.finalAmount)} VNĐ
+                  {formatNumberWithDots(order.shipping.method === "GHN" ? order.totalAmount : order.finalAmount)} VNĐ
                 </span>
               </div>
             </div>
@@ -363,15 +357,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
             <FiFileText className="w-4 h-4 mr-2" />
             Xem hợp đồng đã kí
           </Button>
-
-          {order.status === "delivered" && (
-            <Button
-              variant="outline"
-              className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-400 hover:text-white transition-all duration-200"
-            >
-              Đánh giá sản phẩm
-            </Button>
-          )}
 
           {/* Button for GHN orders with status delivered_fail */}
           {order.shipping?.method === "GHN" && order.status === "delivered_fail" && (
