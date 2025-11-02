@@ -1,4 +1,4 @@
-import { ghnClient, getGhnHeaders } from "../config/ghn.js";
+import { ghnClient, getGhnHeaders, mapGhnStatusToSystemStatus } from "../config/ghn.js";
 import Product from "../models/Product.js";
 import { z } from "zod";
 import Order from "../models/Order.js";
@@ -82,8 +82,6 @@ export async function calcShippingFee(req, res) {
     body.height = Math.min(Math.max(Number(body.height), 1), 200);
     body.weight = Math.min(Math.max(Number(body.weight), 1), 1600000);
 
-    // Debug: Log the request body being sent to GHN
-    console.log('GHN Fee Request Body:', JSON.stringify(body, null, 2));
 
     const resp = await ghnClient.post("/v2/shipping-order/fee", body, {
       headers,
@@ -214,11 +212,6 @@ export async function createShippingOrder(req, res) {
     const headers = getGhnHeaders();
     const b = parsed.data;
 
-    // Debug logging: raw request body to help diagnose address/ward issues
-    try {
-      console.log('[SHIPPING][ORDER][REQ] raw body =', JSON.stringify(req.body));
-      console.log('[SHIPPING][ORDER][REQ] parsed body =', JSON.stringify(b));
-    } catch {}
 
     // Resolve product info if provided to support wallet check and local order creation
     let productDoc = null;
@@ -305,26 +298,12 @@ export async function createShippingOrder(req, res) {
       items: b.items ?? [],
     };
 
-    // Extra debug for resolved sender
-    try {
-      console.log('[SHIPPING][ORDER][SENDER_RESOLVED]', {
-        from_name: body.from_name,
-        from_phone: body.from_phone,
-        from_address: body.from_address,
-        from_ward_name: body.from_ward_name,
-        from_district_name: body.from_district_name,
-        from_province_name: body.from_province_name,
-        from_ward_code: body.from_ward_code,
-        from_district_id: body.from_district_id,
-      });
-    } catch {}
 
     const resp = await ghnClient.post('/v2/shipping-order/create', body, {
       headers,
       responseType: 'text',
       transformResponse: [(x) => x],
     });
-    try { console.log('[SHIPPING][ORDER][GHN][BODY] =>', JSON.stringify(body)); } catch {}
     let payload;
     try {
       payload = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
@@ -408,6 +387,7 @@ export async function createShippingOrder(req, res) {
             method: 'GHN',
             trackingNumber: orderCode || null,
             carrier: 'GHN',
+            ghnShopId: process.env.GHN_SHOP_ID || null, // Store shop ID for future queries
           },
           shippingAddress: {
             fullName: b.to_name,
@@ -797,6 +777,86 @@ export async function syncReturnsAndRefunds(req, res) {
     return res.json({ success: true, results });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+}
+
+// Handle GHN webhook callback for order status updates
+export async function handleGhnWebhook(req, res) {
+  try {
+    const { order_code, status, current_status, reason } = req.body;
+    
+    if (!order_code) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing order_code in webhook payload' 
+      });
+    }
+
+    // Find order by tracking number (GHN order_code)
+    const order = await Order.findOne({ 
+      'shipping.trackingNumber': order_code,
+      'shipping.carrier': 'GHN'
+    });
+
+    if (!order) {
+      console.warn(`[GHN Webhook] Order not found for order_code: ${order_code}`);
+      // Return 200 to prevent GHN from retrying
+      return res.status(200).json({ 
+        success: false, 
+        message: 'Order not found' 
+      });
+    }
+
+    // Get GHN status (prefer current_status, fallback to status)
+    const ghnStatus = (current_status || status || '').toLowerCase();
+    
+    if (!ghnStatus) {
+      console.warn(`[GHN Webhook] No status provided for order_code: ${order_code}`);
+      return res.status(200).json({ 
+        success: false, 
+        message: 'No status in webhook' 
+      });
+    }
+
+    // Map GHN status to system status
+    const mappedStatus = mapGhnStatusToSystemStatus(ghnStatus) || order.status;
+    
+    if (mappedStatus === "delivered" && !order.shipping.actualDelivery) {
+      order.shipping.actualDelivery = new Date();
+    }
+
+    // Only update if status changed
+    const oldStatus = order.status;
+    if (mappedStatus !== order.status) {
+      order.status = mappedStatus;
+      
+      // Add to timeline
+      order.timeline.push({
+        status: mappedStatus,
+        description: `Tự động cập nhật từ GHN: ${ghnStatus}${reason ? ` - ${reason}` : ''}`,
+        timestamp: new Date(),
+      });
+
+      await order.save();
+    }
+
+    // Always return 200 to acknowledge receipt (even if order not found)
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Webhook processed',
+      order_code,
+      oldStatus,
+      newStatus: mappedStatus || order.status,
+      updated: mappedStatus !== oldStatus
+    });
+    
+  } catch (error) {
+    console.error('[GHN Webhook] Error:', error);
+    // Return 200 to prevent GHN from retrying on our errors
+    return res.status(200).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 }
 

@@ -7,24 +7,28 @@ import HomePage from "@/pages/Home/HomePage";
 import ProfilePage from "@/pages/profile/ProfilePage";
 import type { JSX } from "react";
 import StandardLayout from "@/layouts/StandardLayout";
+import ContractEditorPage from "@/pages/contract/ContractEditorPage";
 import CarProductList from "@/pages/Product/Car/CarProductList";
+import BatteryProductList from "@/pages/Product/Battery/BatteryProductList";
 import MotorbikeProductList from "@/pages/Product/Motorbike/MotorbikeProductList";
 import WalletTopupPage from "@/pages/zalopay/WalletTopupPage";
 import { ChatPage } from "@/pages/chat/ChatPage";
 import EditorPage from "@/pages/article/EditorPage";
+import SignContractPage from "@/pages/contract/SignContractPage";
 import ProductDetailPage from "@/pages/detail/ProductDetailPage";
 import OrderPage from "@/pages/order/OrderPage";
 import CheckoutPage from "@/pages/checkout/CheckoutPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import SubscriptionPage from "@/pages/subscription/SubscriptionPage";
 import AdminLayout from "@/layouts/AdminLayout";
 import UserManage from "@/pages/admin/user/UserManage";
 import ProductManage from "@/pages/admin/product/ProductManage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
+import SubscriptionManage from "@/pages/admin/subscriptions/SubscriptionManage";
 import TransactionsPage from "@/pages/transaction/TransactionsPage";
 import OwnProduct from "@/pages/Product/own/OwnProduct";
-import ContractPage from "@/pages/contract/ContractPage";
 import OrderManage from "@/pages/admin/orders/OrderManage";
+import DepositFeePage from "@/pages/admin/deposit/DepositFeePage";
+import ViolationManagePage from "@/pages/admin/violations/ViolationManagePage";
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
   animate: { opacity: 1, y: 0, scale: 1 },
@@ -68,6 +72,7 @@ export default function App() {
         </Route>
         <Route element={<StandardLayout />}>
           <Route path="/cars" element={animatePage(<CarProductList />)} />
+          <Route path="/batteries" element={animatePage(<BatteryProductList />)} />
           <Route path="/motorbikes" element={animatePage(<MotorbikeProductList />)} />
           <Route path="/detail/:id" element={animatePage(<ProductDetailPage />)} />
         </Route>
@@ -79,13 +84,13 @@ export default function App() {
 
           <Route element={<StandardLayout />}>
             <Route path="/articles/create" element={animatePage(<EditorPage />)} />
+            <Route path="/contracts/sign/:productId" element={animatePage(<SignContractPage />)} />
+            <Route path="/contracts/edit/:productId" element={animatePage(<ContractEditorPage />)} />
             <Route path="/profile" element={animatePage(<ProfilePage />)} />
             <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
             <Route path="/orders" element={animatePage(<OrderPage />)} />
-            <Route path="/subscriptions" element={animatePage(<SubscriptionPage />)} />
             <Route path="/transactions" element={animatePage(<TransactionsPage />)} />
             <Route path="/own/product" element={animatePage(<OwnProduct />)} />
-            <Route path="/contract" element={animatePage(<ContractPage />)} />
           </Route>
         </Route>
         <Route element={<ProtectedRoute role="admin" />}>
@@ -101,6 +106,9 @@ export default function App() {
             />
             <Route path="orders" element={animatePage(<OrderManage />)} />
             <Route path="products" element={animatePage(<ProductManage />)} />
+            <Route path="subscriptions" element={animatePage(<SubscriptionManage />)} />
+            <Route path="deposits" element={animatePage(<DepositFeePage />)} />
+            <Route path="violations" element={animatePage(<ViolationManagePage />)} />
           </Route>
         </Route>
       </Routes>

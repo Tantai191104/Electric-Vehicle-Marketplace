@@ -1,30 +1,26 @@
-import { motion } from "framer-motion";
-import { FiArrowRight } from "react-icons/fi";
+import { Mail, MessageCircle } from 'lucide-react';
 
 export const ContactSection: React.FC = () => {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2, duration: 0.6 }}
-            className="text-center mt-16"
-        >
-            <div className="bg-white rounded-lg p-8 border border-gray-200 inline-block">
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                    Cần hỗ trợ tùy chỉnh?
+        <div className="mt-20 text-center">
+            <div className="max-w-2xl mx-auto bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl p-12 border border-slate-200">
+                <h3 className="text-3xl font-bold text-slate-900 mb-4">
+                    Cần tư vấn thêm?
                 </h3>
-                <p className="text-gray-600 mb-6 max-w-md">
-                    Liên hệ với đội ngũ bán hàng để được tư vấn gói dịch vụ phù hợp nhất.
+                <p className="text-slate-600 text-lg mb-8 leading-relaxed">
+                    Đội ngũ của chúng tôi sẵn sàng hỗ trợ bạn tìm gói dịch vụ phù hợp nhất
                 </p>
-                <motion.button
-                    className="bg-gray-900 hover:bg-black text-white font-medium px-6 py-3 rounded-md transition-colors duration-200 flex items-center gap-2 mx-auto"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                >
-                    Liên hệ bán hàng
-                    <FiArrowRight className="w-4 h-4" />
-                </motion.button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                        <Mail className="w-5 h-5" />
+                        Gửi email
+                    </button>
+                    <button className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-900 font-semibold px-8 py-4 rounded-xl transition-all duration-200 border-2 border-slate-200 hover:border-slate-300">
+                        <MessageCircle className="w-5 h-5" />
+                        Chat ngay
+                    </button>
+                </div>
             </div>
-        </motion.div>
+        </div>
     );
 };

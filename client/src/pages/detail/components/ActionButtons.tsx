@@ -1,4 +1,4 @@
-import { FiZap, FiShoppingBag, FiFileText } from "react-icons/fi";
+import { FiZap, FiShoppingBag, FiFileText, FiSettings } from "react-icons/fi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 interface ActionButtonsProps {
@@ -12,6 +12,8 @@ interface ActionButtonsProps {
     isContractLoading?: boolean; // loading cho hợp đồng
     isInWishlist?: boolean;
     category?: "vehicle" | "battery";
+    isOwner?: boolean;
+    onManage?: () => void;
 }
 
 export function ActionButtons({
@@ -25,6 +27,8 @@ export function ActionButtons({
     isContractLoading = false,
     isInWishlist = false,
     category = "vehicle",
+    isOwner = false,
+    onManage,
 }: ActionButtonsProps) {
     const ButtonWithIcon = ({
         onClick,
@@ -69,10 +73,30 @@ export function ActionButtons({
         );
     };
 
-    // Layout cho battery
+    if (isOwner) {
+        // Nếu là sản phẩm của mình, ẩn các thao tác, chỉ hiển thị nút quản lý tin
+        return (
+            <div className={`flex flex-col gap-3 ${className}`}>
+                <ButtonWithIcon onClick={() => (onManage ? onManage() : undefined)} icon={<FiSettings className="w-4 h-4" />} type="secondary" fullWidth>
+                    Quản lý tin
+                </ButtonWithIcon>
+            </div>
+        );
+    }
+
+    // Layout cho battery: Xem hợp đồng, Mua ngay, Liên hệ
     if (category === "battery") {
         return (
             <div className={`flex flex-col gap-3 ${className}`}>
+                <ButtonWithIcon
+                    onClick={onContract!}
+                    isLoading={isContractLoading}
+                    icon={<FiFileText className="w-4 h-4" />}
+                    type="secondary"
+                    fullWidth
+                >
+                    {isContractLoading ? "Đang tải hợp đồng..." : "Xem hợp đồng"}
+                </ButtonWithIcon>
                 <ButtonWithIcon
                     onClick={onBuyNow!}
                     isLoading={isBuyNowLoading}
@@ -82,25 +106,22 @@ export function ActionButtons({
                 >
                     {isBuyNowLoading ? "Đang xử lý..." : "Mua ngay"}
                 </ButtonWithIcon>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <ButtonWithIcon
-                        onClick={onContact}
-                        isLoading={isContactLoading}
-                        icon={<FiZap className="w-4 h-4" />}
-                        type="primary"
-                        fullWidth
-                    >
-                        {isContactLoading ? "Đang tạo cuộc hội thoại..." : "Liên hệ người bán"}
-                    </ButtonWithIcon>
-                </div>
+                <ButtonWithIcon
+                    onClick={onContact}
+                    isLoading={isContactLoading}
+                    icon={<FiZap className="w-4 h-4" />}
+                    type="primary"
+                    fullWidth
+                >
+                    {isContactLoading ? "Đang tạo cuộc hội thoại..." : "Liên hệ người bán"}
+                </ButtonWithIcon>
             </div>
         );
     }
 
-    // Layout cho vehicle
+    // Layout cho vehicle: Liên hệ, Lên lịch hẹn (đặt cọc)
     return (
-        <div className={`flex flex-col sm:flex-row gap-3 ${className}`}>
+        <div className={`flex flex-col gap-3 ${className}`}>
             <ButtonWithIcon
                 onClick={onContact}
                 isLoading={isContactLoading}
@@ -108,17 +129,16 @@ export function ActionButtons({
                 type="primary"
                 fullWidth
             >
-                {isContactLoading ? "Đang tạo cuộc hội thoại..." : "Liên hệ mua ngay"}
+                {isContactLoading ? "Đang tạo cuộc hội thoại..." : "Liên hệ người bán"}
             </ButtonWithIcon>
-
             <ButtonWithIcon
                 onClick={onContract!}
                 isLoading={isContractLoading}
                 icon={<FiFileText className="w-4 h-4" />}
-                type="secondary"
+                type="ghost"
                 fullWidth
             >
-                {isContractLoading ? "Đang lên lịch hẹn..." : "Lên lịch hẹn"}
+                {isContractLoading ? "Đang xử lý..." : "Lên lịch hẹn (đặt cọc)"}
             </ButtonWithIcon>
         </div>
     );

@@ -20,10 +20,10 @@ interface Props {
   onSelectTransaction: (transaction: Transaction) => void;
 }
 
-export const TransactionsList: React.FC<Props> = ({ 
-  transactions, 
-  loading, 
-  onSelectTransaction 
+export const TransactionsList: React.FC<Props> = ({
+  transactions,
+  loading,
+  onSelectTransaction
 }) => {
   const getTypeInfo = (type: string) => {
     switch (type) {
@@ -100,15 +100,7 @@ export const TransactionsList: React.FC<Props> = ({
     }
   };
 
-  const getPaymentMethodLabel = (method: string) => {
-    switch (method) {
-      case "wallet": return "Ví điện tử";
-      case "e_wallet": return "ZaloPay/Momo";
-      case "bank_transfer": return "Chuyển khoản";
-      case "credit_card": return "Thẻ tín dụng";
-      default: return method;
-    }
-  };
+  // payment method label removed from UI per updated UX
 
   if (loading) {
     return (
@@ -145,8 +137,8 @@ export const TransactionsList: React.FC<Props> = ({
               const StatusIcon = statusInfo.icon;
 
               return (
-                <div 
-                  key={transaction._id} 
+                <div
+                  key={transaction._id}
                   className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => onSelectTransaction(transaction)}
                 >
@@ -174,18 +166,21 @@ export const TransactionsList: React.FC<Props> = ({
                               <StatusIcon className="w-3 h-3 mr-1" />
                               {statusInfo.label}
                             </Badge>
-                            <span className="text-xs text-gray-500">
-                              {getPaymentMethodLabel(transaction.paymentMethod)}
-                            </span>
+
+                            {/* Extra badge for purchase/payment transactions */}
+                            {transaction.type === "payment" && (
+                              <Badge className="text-xs bg-indigo-100 text-indigo-800 border-indigo-200">
+                                Mua hàng
+                              </Badge>
+                            )}
                           </div>
                         </div>
 
                         <div className="text-right flex-shrink-0 ml-4">
-                          <p className={`font-bold text-lg ${
-                            transaction.type === "deposit" || transaction.type === "refund" 
-                              ? "text-green-600" 
-                              : "text-red-600"
-                          }`}>
+                          <p className={`font-bold text-lg ${transaction.type === "deposit" || transaction.type === "refund"
+                            ? "text-green-600"
+                            : "text-red-600"
+                            }`}>
                             {transaction.type === "deposit" || transaction.type === "refund" ? "+" : "-"}
                             {new Intl.NumberFormat('vi-VN').format(transaction.amount)} VNĐ
                           </p>

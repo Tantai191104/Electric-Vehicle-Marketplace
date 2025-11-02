@@ -115,7 +115,7 @@ const UserDropdown = () => {
                   </span>
                 </div>
                 <Link to="/wallet/recharge">
-                  <Button className="w-full bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500">
+                  <Button className="w-full bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 mt-2">
                     Nạp ngay
                   </Button>
                 </Link>
@@ -135,18 +135,24 @@ const UserDropdown = () => {
                 </Link>
                 <Link to="/own/product">
                   <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
-                    <FaStore /> Tin của tôi
+                    <FaCarSide /> Tin của tôi
                   </DropdownMenuItem>
                 </Link>
-                <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
-                  <FaSearch /> Tìm kiếm đã lưu
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
-                  <AiOutlineClockCircle /> Lịch sử xem tin
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
-                  <AiOutlineStar /> Đánh giá từ tôi
-                </DropdownMenuItem>
+                <Link to="/search/saved">
+                  <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
+                    <FaSearch /> Tìm kiếm đã lưu
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/history/viewed">
+                  <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
+                    <AiOutlineClockCircle /> Lịch sử xem tin
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/reviews">
+                  <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
+                    <AiOutlineStar /> Đánh giá từ tôi
+                  </DropdownMenuItem>
+                </Link>
               </div>
             </div>
 
@@ -156,24 +162,34 @@ const UserDropdown = () => {
                 Dịch vụ trả phí
               </div>
               <div className="flex flex-col gap-2">
-                <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
-                  <FaGift /> Đồng Tốt
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
-                  <FaGift /> Gói PRO
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
-                  <FaGift /> Kênh Đối Tác
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
-                  <AiOutlineClockCircle /> Lịch sử giao dịch
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
-                  <FaStore /> Cửa hàng / chuyên trang
-                  <span className="ml-auto bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">
-                    Tạo ngay
-                  </span>
-                </DropdownMenuItem>
+                <Link to="/wallet">
+                  <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
+                    <FaGift /> Đồng Tốt
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/subscription">
+                  <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
+                    <AiOutlineStar /> Gói PRO
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/partner">
+                  <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
+                    <FaStore /> Kênh Đối Tác
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="transactions">
+                  <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
+                    <AiOutlineClockCircle /> Lịch sử giao dịch
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/store">
+                  <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
+                    <FaStore /> Cửa hàng / chuyên trang
+                    <span className="ml-auto bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">
+                      Tạo ngay
+                    </span>
+                  </DropdownMenuItem>
+                </Link>
               </div>
             </div>
 
@@ -183,12 +199,16 @@ const UserDropdown = () => {
                 Ưu đãi
               </div>
               <div className="flex flex-col gap-2">
-                <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
-                  <FaGift /> Chợ Tốt ưu đãi
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
-                  <FaGift /> Ưu đãi của tôi
-                </DropdownMenuItem>
+                <Link to="/promotions">
+                  <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
+                    <FaGift /> Chợ Tốt ưu đãi
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/my-promotions">
+                  <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
+                    <FaGift /> Ưu đãi của tôi
+                  </DropdownMenuItem>
+                </Link>
               </div>
             </div>
 
@@ -198,9 +218,11 @@ const UserDropdown = () => {
                 Khác
               </div>
               <div className="flex flex-col gap-2">
-                <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
-                  <AiOutlineSetting /> Cài đặt tài khoản
-                </DropdownMenuItem>
+                <Link to="/settings">
+                  <DropdownMenuItem className="flex items-center gap-3 hover:bg-yellow-50 rounded-md">
+                    <AiOutlineSetting /> Cài đặt tài khoản
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="flex items-center gap-3 text-red-600 hover:bg-red-50 rounded-md cursor-pointer"

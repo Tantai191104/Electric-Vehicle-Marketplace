@@ -2,11 +2,46 @@ import express from "express";
 import { authenticate } from "../middlewares/authenticate.js";
 import { requirePurchasePermission } from "../middlewares/checkPurchasePermission.js";
 import { preventSelfPurchase } from "../middlewares/checkOwnership.js";
-import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShippingOrder, returnShippingOrder, syncReturnsAndRefunds } from "../controllers/shippingController.js";
+import { calcShippingFee, createShippingOrder, getShippingOrderDetail, cancelShippingOrder, returnShippingOrder, syncReturnsAndRefunds, handleGhnWebhook } from "../controllers/shippingController.js";
 
 const router = express.Router();
 
-// Apply authentication to all routes
+// Webhook endpoint - must be before authentication middleware (GHN calls from external server)
+/**
+ * @swagger
+ * /shipping/webhook/ghn:
+ *   post:
+ *     summary: GHN webhook callback for order status updates (no authentication required)
+ *     tags: [Shipping]
+ *     description: Endpoint for GHN to send order status updates. Updates local order status automatically.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               order_code:
+ *                 type: string
+ *                 description: GHN order code (tracking number)
+ *               status:
+ *                 type: string
+ *                 description: GHN status code
+ *               current_status:
+ *                 type: string
+ *                 description: Current GHN status
+ *               reason:
+ *                 type: string
+ *                 description: Optional reason for status change
+ *     responses:
+ *       200:
+ *         description: Webhook processed successfully
+ *       400:
+ *         description: Invalid webhook payload
+ */
+router.post("/shipping/webhook/ghn", handleGhnWebhook);
+
+// Apply authentication to all other routes
 router.use(authenticate);
 
 /**

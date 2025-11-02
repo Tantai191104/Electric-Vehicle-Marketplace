@@ -15,11 +15,10 @@ import StickySearchBar from "../header/StickySearchBar";
 import { IoCartOutline } from "react-icons/io5";
 import { useAuthStore } from "@/store/auth";
 
+// Navigation: scroll to product or battery sections on home
 const navLinks = [
-  { label: "Chợ Tốt", href: "#" },
-  { label: "Xe cộ", href: "#" },
-  { label: "Bất động sản", href: "#" },
-  { label: "Việc làm", href: "#" },
+  { label: "Ô tô", target: "cars" },
+  { label: "Pin", target: "batteries" },
 ];
 
 const Header: React.FC = () => {
@@ -53,7 +52,7 @@ const Header: React.FC = () => {
               className="w-7 h-7 md:w-8 md:h-8 rounded-full mr-1 md:mr-2"
             />
             <span className="font-bold text-base md:text-lg text-yellow-900 tracking-wide truncate">
-              chợTỐT
+              EV Marketplace
             </span>
           </div>
           <SellerDropdown />
@@ -64,7 +63,11 @@ const Header: React.FC = () => {
             {navLinks.map((item) => (
               <a
                 key={item.label}
-                href={item.href}
+                href={`#${item.target}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(item.target)?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="text-yellow-900 font-semibold text-sm tracking-wide px-3 py-1 rounded-lg hover:bg-white/30 hover:text-yellow-800 transition"
               >
                 {item.label}

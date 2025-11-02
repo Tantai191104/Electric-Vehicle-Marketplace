@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Link } from "react-router-dom";
 
 const SellerDropdown = () => (
   <DropdownMenu modal={false}>
@@ -33,9 +34,9 @@ const SellerDropdown = () => (
     <DropdownMenuContent
       className="w-48 bg-white shadow-lg border border-gray-300 rounded-md relative"
     >
-      <DropdownMenuItem>Quản lý tin</DropdownMenuItem>
-      <DropdownMenuItem>Gói Pro</DropdownMenuItem>
-      <DropdownMenuItem>Dành cho đối tác</DropdownMenuItem>
+      <Link to="own/product">
+        <DropdownMenuItem>Quản lý tin</DropdownMenuItem>
+      </Link>
     </DropdownMenuContent>
   </DropdownMenu>
 );

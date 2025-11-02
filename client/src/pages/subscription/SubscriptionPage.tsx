@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiStar, FiZap, FiShield, FiFrown } from "react-icons/fi";
+import { FiStar, FiZap, FiShield } from "react-icons/fi";
 import { useAuthStore } from "@/store/auth";
-
+import { subscriptionServices } from "@/services/subscriptionServices";
+import { toast } from 'sonner';
+import PlanCardSkeleton from './components/PlanCardSkeleton';
 import type { SubscriptionPlan } from "@/types/subscriptionTypes";
 import { PageHeader } from "./components/PageHeader";
 import { PlanCard } from "./components/PlanCard";
@@ -16,95 +18,79 @@ export default function SubscriptionPage() {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
 
-    const subscriptionPlans: SubscriptionPlan[] = [
-        {
-            id: "basic",
-            name: "Free",
-            icon: <FiShield className="w-6 h-6" />,
-            price: 0,
-            duration: "miễn phí",
-            color: "gray",
-            features: [
-                "3 bài đăng/tháng",
-                "Hỗ trợ cơ bản",
-                "Ưu tiên thấp",
-                "Không tin nổi bật"
-            ],
-            suitable: "Dành cho người dùng cá nhân"
-        },
-        {
-            id: "standard",
-            name: "Standard",
-            icon: <FiStar className="w-6 h-6" />,
-            price: 99000,
-            duration: "tháng",
-            color: "blue",
-            features: [
-                "15 bài đăng/tháng",
-                "2 tin nổi bật/tháng",
-                "Hiển thị trang chủ 1 ngày",
-                "Thống kê cơ bản",
-                "Hỗ trợ email"
-            ],
-            bonuses: [
-                "Hiển thị ở trang chủ 1 ngày"
-            ],
-            suitable: "Dành cho người bán thường xuyên"
-        },
-        {
-            id: "pro",
-            name: "Pro",
-            icon: <FiZap className="w-6 h-6" />,
-            price: 299000,
-            duration: "tháng",
-            color: "emerald",
-            badge: "PRO",
-            popular: true,
-            features: [
-                "50 bài đăng/tháng",
-                "10 tin nổi bật/tháng",
-                "Hiển thị trang chủ 3 ngày",
-                "Badge PRO nổi bật",
-                "Thống kê chi tiết",
-                "Hỗ trợ ưu tiên",
-                "API tích hợp"
-            ],
-            bonuses: [
-                "Hiển thị ở trang chủ 3 ngày",
-                "Badge 'PRO' trên profile",
-                "Thống kê chi tiết"
-            ],
-            suitable: "Dành cho đại lý và cửa hàng"
-        },
-        {
-            id: "enterprise",
-            name: "Enterprise",
-            icon: <FiFrown className="w-6 h-6" />,
-            price: 1299000,
-            duration: "tháng",
-            color: "purple",
-            badge: "VIP",
-            recommended: true,
-            features: [
-                "Không giới hạn bài đăng",
-                "Không giới hạn tin nổi bật",
-                "Banner quảng cáo riêng",
-                "Badge VIP kim cương",
-                "Báo cáo doanh thu chi tiết",
-                "Quản lý tài khoản riêng",
-                "Hỗ trợ 24/7",
-                "Tích hợp CRM"
-            ],
-            bonuses: [
-                "Banner quảng cáo riêng",
-                "Badge 'VIP' nổi bật",
-                "Hỗ trợ 24/7",
-                "Tích hợp hệ thống quản lý",
-                "Báo cáo doanh thu chi tiết"
-            ],
-            suitable: "Dành cho doanh nghiệp lớn"
-        }
-    ];
+    const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+            try {
+                const data = await subscriptionServices.getActiveSubscriptions();
+                // Map server shape to SubscriptionPlan conservatively
+                const raw = Array.isArray(data) ? data : [];
+                type ServerSubscription = {
+                    _id?: string;
+                    id?: string;
+                    key?: string;
+                    name?: string;
+                    description?: string;
+                    priceVnd?: number;
+                    price?: number;
+                    billingCycle?: string;
+                    duration?: string;
+                    quotas?: { maxListingsPerCycle?: number };
+                    features?: { aiAssist?: boolean; priorityBoost?: boolean };
+                };
+
+                type ServerQuotas = {
+                    maxHighlightsPerCycle?: number;
+                    maxListingsPerCycle?: number;
+                    aiUsagePerCycle?: number;
+                    highlightHoursPerListing?: number;
+                    cooldownDaysBetweenListings?: number;
+                };
+                type ServerFeaturesObj = {
+                    aiAssist?: boolean;
+                    priorityBoost?: boolean;
+                    manualReviewBypass?: boolean;
+                    supportLevel?: string;
+                };
+
+                const mapped = raw.map((sRaw: unknown) => {
+                    const s = sRaw as ServerSubscription & { quotas?: ServerQuotas; features?: ServerFeaturesObj };
+                    return {
+                        id: s._id ?? s.id ?? s.key ?? String(s.name),
+                        name: s.name ?? 'Gói',
+                        icon: s.key === 'pro' ? <FiZap className="w-6 h-6" /> : s.key === 'standard' ? <FiStar className="w-6 h-6" /> : <FiShield className="w-6 h-6" />,
+                        price: s.priceVnd ?? s.price ?? 0,
+                        duration: s.billingCycle ?? s.duration ?? 'tháng',
+                        color: s.key === 'pro' ? 'emerald' : s.key === 'standard' ? 'blue' : 'gray',
+                        badge: s.key === 'pro' ? 'PRO' : undefined,
+                        // keep a simple features list for fallback display
+                        features: [
+                            ...(s.quotas?.maxListingsPerCycle ? [`${s.quotas.maxListingsPerCycle} bài đăng/chu kỳ`] : []),
+                            ...(s.features?.aiAssist ? ['AI Assist'] : []),
+                            ...(s.features?.priorityBoost ? ['Priority Boost'] : []),
+                        ],
+                        bonuses: [],
+                        suitable: s.description ?? '',
+                        popular: s.key === 'pro',
+                        // structured/server fields for PlanCard to render
+                        quotas: s.quotas,
+                        featuresObj: s.features,
+                    } as SubscriptionPlan;
+                });
+                if (mounted) setSubscriptionPlans(mapped);
+            } catch (err) {
+                console.error('Failed to load subscription plans', err);
+                toast.error('Không thể tải danh sách gói. Vui lòng thử lại sau.');
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+        load();
+        return () => { mounted = false; };
+    }, []);
 
     const handleSelectPlan = (planId: string) => {
         if (!user) {
@@ -139,7 +125,10 @@ export default function SubscriptionPage() {
                         animate="visible"
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
                     >
-                        {subscriptionPlans.map((plan) => (
+                        {loading && Array.from({ length: 4 }).map((_, i) => (
+                            <PlanCardSkeleton key={`sk-${i}`} />
+                        ))}
+                        {!loading && subscriptionPlans.map((plan) => (
                             <PlanCard
                                 key={plan.id}
                                 plan={plan}

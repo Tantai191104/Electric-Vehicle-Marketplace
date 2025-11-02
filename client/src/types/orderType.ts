@@ -1,7 +1,12 @@
 export interface Order {
+  // Meeting info for deposit orders
+  meetingInfo?: {
+    location: string;
+    time: string;
+  };
   _id: string;
   orderNumber: string;
-  
+
   // User info (populated objects)
   buyerId: {
     _id: string;
@@ -15,7 +20,7 @@ export interface Order {
     email: string;
     phone: string;
   };
-  
+
   // Product info (populated object)
   productId: {
     _id: string;
@@ -23,7 +28,7 @@ export interface Order {
     price: number;
     images: string[];
   };
-  
+
   // Order details
   quantity: number;
   unitPrice: number;
@@ -31,8 +36,21 @@ export interface Order {
   shippingFee: number;
   commission: number;
   finalAmount: number;
-  status: 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'cancelled' | 'refunded';
-  
+  status:
+    | "pending"
+    | "confirmed"
+    | "shipping"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+    | "refunded"
+    | "delivered_fail"
+    | "deposit_pending"
+    | "deposit_confirmed"
+    | "deposit_cancelled"
+    | "deposit_refunded"
+    ;
+
   // Shipping info
   shipping: {
     method: string;
@@ -41,7 +59,7 @@ export interface Order {
     estimatedDelivery: string | null;
     actualDelivery: string | null;
   };
-  
+
   shippingAddress: {
     fullName: string;
     phone: string;
@@ -50,15 +68,15 @@ export interface Order {
     province: string;
     zipCode: string | null;
   };
-  
+
   // Payment info
   payment: {
-    method: 'wallet' | 'vnpay' | 'zalopay' | 'cod' | 'bank_transfer';
-    status: 'pending' | 'paid' | 'refunded' | 'failed';
+    method: "wallet" | "vnpay" | "zalopay" | "cod" | "bank_transfer";
+    status: "pending" | "paid" | "refunded" | "failed";
     transactionId: string;
     paidAt: string;
   };
-  
+
   // Contract info
   contract: {
     contractId: string;
@@ -66,7 +84,7 @@ export interface Order {
     signedAt: string;
     contractNumber: string | null;
   };
-  
+
   // Timeline
   timeline: Array<{
     status: string;
@@ -75,11 +93,11 @@ export interface Order {
     _id: string;
     timestamp: string;
   }>;
-  
+
   // Additional info
   notes: string | null;
   adminNotes: string | null;
-  
+
   // Timestamps
   createdAt: string;
   updatedAt: string;

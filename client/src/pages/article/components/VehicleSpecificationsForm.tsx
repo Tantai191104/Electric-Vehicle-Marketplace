@@ -39,6 +39,14 @@ const VEHICLE_SPEC_UNITS: Record<keyof VehicleSpecifications, string> = {
 
 // Options cho dropdown xe điện
 const VEHICLE_SPEC_OPTIONS: Partial<Record<keyof VehicleSpecifications, string[]>> = {
+    compatibility: [
+        "VinFast Station",
+        "Tesla Supercharger",
+        "EVN Station",
+        "Charge+",
+        "ABB Station",
+        "Khác"
+    ],
     batteryCapacity: ["3.5", "5.0", "7.5", "10.0", "15.0", "20.0"],
     chargingTime: ["2-3", "4-5", "6-7", "8-10", "12+"],
     power: ["1000", "1500", "2000", "2500", "3000"],
@@ -85,8 +93,13 @@ const VehicleSpecificationsForm: React.FC<Props> = ({ form, setForm }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {Object.keys(form.specifications).map((key) => {
                     const typedKey = key as keyof VehicleSpecifications;
-                    const options = VEHICLE_SPEC_OPTIONS[typedKey];
+                    let options = VEHICLE_SPEC_OPTIONS[typedKey];
                     const isCustom = customFields[typedKey];
+
+                    // For compatibility, always use dropdown
+                    if (typedKey === "compatibility") {
+                        options = VEHICLE_SPEC_OPTIONS.compatibility;
+                    }
 
                     return (
                         <div key={key} className="space-y-2">
@@ -105,7 +118,6 @@ const VehicleSpecificationsForm: React.FC<Props> = ({ form, setForm }) => {
                                                 {opt} {VEHICLE_SPEC_UNITS[typedKey]}
                                             </SelectItem>
                                         ))}
-                                        <SelectItem value="Khác" className="rounded-lg hover:bg-yellow-50">Khác</SelectItem>
                                     </SelectContent>
                                 </Select>
                             ) : (

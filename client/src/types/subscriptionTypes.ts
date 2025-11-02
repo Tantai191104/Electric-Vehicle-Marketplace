@@ -11,6 +11,20 @@ export type SubscriptionPlan = {
   suitable: string;
   popular?: boolean;
   recommended?: boolean;
+  // Optional fields mapped from server
+  quotas?: {
+    maxHighlightsPerCycle?: number;
+    maxListingsPerCycle?: number;
+    aiUsagePerCycle?: number;
+    highlightHoursPerListing?: number;
+    cooldownDaysBetweenListings?: number;
+  };
+  featuresObj?: {
+    aiAssist?: boolean;
+    priorityBoost?: boolean;
+    manualReviewBypass?: boolean;
+    supportLevel?: string;
+  };
 };
 
 export type TempUpgrade = {

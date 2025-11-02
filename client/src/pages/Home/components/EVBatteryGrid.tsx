@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useProducts } from "@/hooks/useProduct";
+import { useBatteryProducts } from "@/hooks/useProduct";
 import { formatNumberWithDots } from "@/utils/numberFormatter";
 import { getConditionLabel } from "@/utils/productHelper";
 import type { Product } from "@/types/productType";
@@ -11,10 +11,9 @@ import { useNavigate } from "react-router-dom";
 
 export default function EVBatteryGrid() {
   // Fetch battery products với limit 8
-  const { data, isLoading, error } = useProducts({
+  const { data, isLoading, error } = useBatteryProducts({
     page: 1,
-    limit: 8,
-    category: "battery"
+    limit: 8
   });
   const navigate = useNavigate();
   // Loading state
@@ -28,7 +27,7 @@ export default function EVBatteryGrid() {
         </div>
         <div className="text-center py-12">
           <AiOutlineLoading3Quarters className="w-8 h-8 mx-auto mb-4 text-yellow-500 animate-spin" />
-          <p className="text-gray-600">Đang tải phụ kiện...</p>
+          <p className="text-gray-600">Đang tải pin điện...</p>
         </div>
       </section>
     );
@@ -40,7 +39,7 @@ export default function EVBatteryGrid() {
       <section className="max-w-7xl mx-auto px-2 py-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-yellow-900">
-            Phụ kiện xe điện nổi bật
+            Pin xe điện cũ
           </h2>
         </div>
         <div className="text-center py-12">
@@ -59,7 +58,7 @@ export default function EVBatteryGrid() {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-2xl font-bold text-yellow-900">
-            Phụ kiện xe điện nổi bật
+            Pin xe điện cũ
           </h2>
           <p className="text-sm text-gray-600 mt-1">
             Hiển thị {products.length} sản phẩm pin xe điện
@@ -67,6 +66,7 @@ export default function EVBatteryGrid() {
         </div>
         <Button
           variant="outline"
+          onClick={() => navigate("/batteries")}
           className="rounded-full border-black text-black font-semibold px-6 py-2 hover:bg-black hover:text-white transition"
         >
           Xem thêm &rarr;

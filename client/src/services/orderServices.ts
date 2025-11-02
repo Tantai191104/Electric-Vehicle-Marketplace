@@ -11,11 +11,15 @@ export const orderServices = {
     return response.data;
   },
   async cancelOrder(order_code: string) {
-    const response = await API.post(`/shipping/cancel`, { order_code });
+    const response = await API.post(`/shipping/order/cancel`, { order_code });
     return response.data;
   } ,
   async createDepositOrder(data: DepositPayload) {
     const response = await API.post("/deposit/vehicle", data);
+    return response.data;
+  },
+  async getDepositAmount() {
+    const response = await API.get("/deposit-amount");
     return response.data;
   }
 };

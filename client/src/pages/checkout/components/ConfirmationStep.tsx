@@ -13,6 +13,7 @@ interface ConfirmationStepProps {
     couponCode?: string;
     className?: string;
     shippingFee?: number;
+    depositAmount?: number;
 }
 
 export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
@@ -24,7 +25,8 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     discount = 0,
     couponCode = '',
     className = "",
-    shippingFee
+    shippingFee,
+    depositAmount = 500000
 }) => {
 
     const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
@@ -32,9 +34,9 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
     const isVehicle = product.category === "vehicle";
     if (isVehicle) {
         subtotal = 0;
-        shipping = 500000;
+        shipping = depositAmount;
         tax = 0;
-        total = 500000;
+        total = depositAmount;
     } else {
         const summary = calculateOrderSummary(
             product.price,
@@ -101,34 +103,49 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
                 </div>
             </SummaryCard>
 
-            {/* Shipping Info Summary */}
-            <SummaryCard title="Thông tin giao hàng">
+            {/* Info Summary: giao hàng hoặc lịch hẹn */}
+            <SummaryCard title={isVehicle ? "Thông tin lịch hẹn" : "Thông tin giao hàng"}>
                 <div className="space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div className="bg-gray-50 rounded-md p-2.5">
-                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Người nhận</div>
-                            <div className="font-semibold text-gray-900">{shippingInfo.fullName}</div>
+                    {isVehicle ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="bg-blue-50 border border-blue-100 rounded-md p-2.5">
+                                <div className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Địa điểm nhận xe</div>
+                                <div className="font-semibold text-gray-900">{shippingInfo.city}</div>
+                            </div>
+                            <div className="bg-blue-50 border border-blue-100 rounded-md p-2.5">
+                                <div className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Thời gian hẹn nhận xe</div>
+                                <div className="font-semibold text-gray-900">{shippingInfo.note || "Chưa nhập thời gian hẹn"}</div>
+                            </div>
                         </div>
-                        <div className="bg-gray-50 rounded-md p-2.5">
-                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Điện thoại</div>
-                            <div className="font-semibold text-blue-600">{shippingInfo.phone}</div>
-                        </div>
-                    </div>
-                    <div className="bg-gray-50 rounded-md p-2.5">
-                        <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email</div>
-                        <div className="font-medium text-gray-700">{shippingInfo.email}</div>
-                    </div>
-                    <div className="bg-blue-50 border border-blue-100 rounded-md p-2.5">
-                        <div className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Địa chỉ giao hàng</div>
-                        <div className="font-semibold text-gray-900">
-                            {shippingInfo.houseNumber}, {shippingInfo.ward}, {shippingInfo.district}, {shippingInfo.city}
-                        </div>
-                    </div>
-                    {shippingInfo.note && (
-                        <div className="bg-yellow-50 border border-yellow-100 rounded-md p-2.5">
-                            <div className="text-xs font-medium text-yellow-600 uppercase tracking-wide mb-1">Ghi chú</div>
-                            <div className="font-medium text-gray-700">{shippingInfo.note}</div>
-                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div className="bg-gray-50 rounded-md p-2.5">
+                                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Người nhận</div>
+                                    <div className="font-semibold text-gray-900">{shippingInfo.fullName}</div>
+                                </div>
+                                <div className="bg-gray-50 rounded-md p-2.5">
+                                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Điện thoại</div>
+                                    <div className="font-semibold text-blue-600">{shippingInfo.phone}</div>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 rounded-md p-2.5">
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email</div>
+                                <div className="font-medium text-gray-700">{shippingInfo.email}</div>
+                            </div>
+                            <div className="bg-blue-50 border border-blue-100 rounded-md p-2.5">
+                                <div className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Địa chỉ giao hàng</div>
+                                <div className="font-semibold text-gray-900">
+                                    {shippingInfo.houseNumber}, {shippingInfo.ward}, {shippingInfo.district}, {shippingInfo.city}
+                                </div>
+                            </div>
+                            {shippingInfo.note && (
+                                <div className="bg-yellow-50 border border-yellow-100 rounded-md p-2.5">
+                                    <div className="text-xs font-medium text-yellow-600 uppercase tracking-wide mb-1">Ghi chú</div>
+                                    <div className="font-medium text-gray-700">{shippingInfo.note}</div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </SummaryCard>
@@ -201,7 +218,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
                         <>
                             <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
                                 <span className="text-gray-700 font-medium text-sm">Phí lên lịch hẹn</span>
-                                <span className="font-semibold text-blue-600">{formatVND(500000)}</span>
+                                <span className="font-semibold text-blue-600">{formatVND(depositAmount)}</span>
                             </div>
                         </>
                     )}
