@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
+import WalletTransaction from '../models/WalletTransaction.js';
 import { ghnClient, getGhnHeaders, mapGhnStatusToSystemStatus } from "../config/ghn.js";
 
 export async function getAdminStats(req, res) {
@@ -35,12 +36,24 @@ export async function getAdminStats(req, res) {
           previousFromDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
           break;
         case '3m':
-          fromDate = new Date(now.setMonth(now.getMonth() - 3));
-          previousFromDate = new Date(now.setMonth(now.getMonth() - 3));
+          // Fix: Tạo date object mới thay vì mutate now
+          const threeMonthsAgo = new Date(now);
+          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+          fromDate = threeMonthsAgo;
+          
+          const sixMonthsAgo = new Date(now);
+          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+          previousFromDate = sixMonthsAgo;
           break;
         case '1y':
-          fromDate = new Date(now.setFullYear(now.getFullYear() - 1));
-          previousFromDate = new Date(now.setFullYear(now.getFullYear() - 1));
+          // Fix: Tạo date object mới thay vì mutate now
+          const oneYearAgo = new Date(now);
+          oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+          fromDate = oneYearAgo;
+          
+          const twoYearsAgo = new Date(now);
+          twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+          previousFromDate = twoYearsAgo;
           break;
         default:
           fromDate = null;
@@ -55,9 +68,8 @@ export async function getAdminStats(req, res) {
 
     const [
       // Current period stats
-      totalUsers,
-      totalActiveProducts, // Tổng số products hiện có
-      totalProductsCreated, // Số products được tạo trong khoảng thời gian
+      totalUsers, // Số users mới tạo hoặc tổng số users nếu không có filter
+      totalProducts, // Số products mới tạo hoặc tổng số products nếu không có filter
       totalOrders,
       totalRevenue,
       totalCommission,
@@ -74,43 +86,76 @@ export async function getAdminStats(req, res) {
       recentOrders,
       recentUsers,
     ] = await Promise.all([
-      // Current period
-      User.countDocuments({ isActive: true }),
-      Product.countDocuments({ status: 'active' }), // Tổng số products active
-      Product.countDocuments({
-        status: 'active',
-        ...(Object.keys(currentDateFilter).length > 0
-          ? { createdAt: currentDateFilter }
-          : {}),
-      }), // Products được tạo trong khoảng thời gian
-      Order.countDocuments({
-        status: { $in: ['delivered', 'confirmed'] },
-        ...(Object.keys(currentDateFilter).length > 0
-          ? { createdAt: currentDateFilter }
-          : {}),
+      // Current period - Users
+      // Nếu có filter thời gian: đếm users MỚI TẠO trong khoảng thời gian
+      // Nếu không có filter: đếm TỔNG SỐ users active hiện tại
+      Object.keys(currentDateFilter).length > 0
+        ? User.countDocuments({
+            isActive: true,
+            createdAt: currentDateFilter,
+          })
+        : User.countDocuments({ isActive: true }),
+      
+      // Current period - Products  
+      // Nếu có filter thời gian: đếm products MỚI TẠO trong khoảng thời gian
+      // Nếu không có filter: đếm TỔNG SỐ products active hiện tại
+      Object.keys(currentDateFilter).length > 0
+        ? Product.countDocuments({
+            status: 'active',
+            createdAt: currentDateFilter,
+          })
+        : Product.countDocuments({ status: 'active' }),
+      
+      // Orders trong khoảng thời gian - Đếm orders thành công (confirmed + delivered + deposit)
+      Object.keys(currentDateFilter).length > 0
+        ? Order.countDocuments({
+            status: { $in: ['confirmed', 'delivered', 'deposit'] },
+            createdAt: currentDateFilter,
+          })
+        : Order.countDocuments({
+            status: { $in: ['confirmed', 'delivered', 'deposit'] },
+          }),
+      
+      // Revenue trong khoảng thời gian
+      // Doanh thu = Order confirmed (deposit đã xác nhận) + Subscription purchases
+      Promise.all([
+        // Revenue từ orders confirmed (không tính GHN delivered)
+        Order.aggregate([
+          {
+            $match: {
+              status: 'confirmed', // Chỉ tính deposit confirmed
+              ...(Object.keys(currentDateFilter).length > 0
+                ? { createdAt: currentDateFilter }
+                : {}),
+            },
+          },
+          { $group: { _id: null, total: { $sum: '$finalAmount' } } },
+        ]),
+        // Revenue từ subscription purchases
+        WalletTransaction.aggregate([
+          {
+            $match: {
+              type: 'purchase',
+              reference: { $regex: '^subscription:' }, // Chỉ subscription
+              status: 'completed',
+              ...(Object.keys(currentDateFilter).length > 0
+                ? { createdAt: currentDateFilter }
+                : {}),
+            },
+          },
+          { $group: { _id: null, total: { $sum: '$amount' } } },
+        ]),
+      ]).then(([orderRevenue, subscriptionRevenue]) => {
+        const orderTotal = orderRevenue[0]?.total || 0;
+        const subscriptionTotal = subscriptionRevenue[0]?.total || 0;
+        return [{ total: orderTotal + subscriptionTotal }];
       }),
-      Order.aggregate([
-        {
-          $match: {
-            status: { $in: ['delivered', 'confirmed'] },
-            ...(Object.keys(currentDateFilter).length > 0
-              ? { createdAt: currentDateFilter }
-              : {}),
-          },
-        },
-        { $group: { _id: null, total: { $sum: '$finalAmount' } } },
-      ]),
-      Order.aggregate([
-        {
-          $match: {
-            status: { $in: ['delivered', 'confirmed'] },
-            ...(Object.keys(currentDateFilter).length > 0
-              ? { createdAt: currentDateFilter }
-              : {}),
-          },
-        },
-        { $group: { _id: null, total: { $sum: '$commission' } } },
-      ]),
+      
+      // Commission trong khoảng thời gian - KHÔNG tính commission vì không có GHN
+      // (Commission chỉ áp dụng cho GHN orders nhưng GHN không tính vào doanh thu)
+      Promise.resolve([{ total: 0 }]),
+      
+      // Pending violations
       User.countDocuments({
         isActive: true,
         $or: [
@@ -119,51 +164,65 @@ export async function getAdminStats(req, res) {
         ],
       }),
 
-      // Previous period for comparison
+      // Previous period - Users mới tạo trong previous period
       Object.keys(previousDateFilter).length > 0
         ? User.countDocuments({
             isActive: true,
             createdAt: previousDateFilter,
           })
         : Promise.resolve(0),
+      
+      // Previous period - Products mới tạo trong previous period
       Object.keys(previousDateFilter).length > 0
         ? Product.countDocuments({
             status: 'active',
             createdAt: previousDateFilter,
           })
         : Promise.resolve(0),
+      
+      // Previous period - Orders thành công (confirmed + delivered + deposit)
       Object.keys(previousDateFilter).length > 0
         ? Order.countDocuments({
-            status: { $in: ['delivered', 'confirmed'] },
+            status: { $in: ['confirmed', 'delivered', 'deposit'] },
             createdAt: previousDateFilter,
           })
         : Promise.resolve(0),
+      
+      // Previous period - Revenue (orders + subscriptions)
       Object.keys(previousDateFilter).length > 0
-        ? Order.aggregate([
-            {
-              $match: {
-                status: { $in: ['delivered', 'confirmed'] },
-                createdAt: previousDateFilter,
+        ? Promise.all([
+            Order.aggregate([
+              {
+                $match: {
+                  status: 'confirmed',
+                  createdAt: previousDateFilter,
+                },
               },
-            },
-            { $group: { _id: null, total: { $sum: '$finalAmount' } } },
-          ])
-        : Promise.resolve([]),
-      Object.keys(previousDateFilter).length > 0
-        ? Order.aggregate([
-            {
-              $match: {
-                status: { $in: ['delivered', 'confirmed'] },
-                createdAt: previousDateFilter,
+              { $group: { _id: null, total: { $sum: '$finalAmount' } } },
+            ]),
+            WalletTransaction.aggregate([
+              {
+                $match: {
+                  type: 'purchase',
+                  reference: { $regex: '^subscription:' },
+                  status: 'completed',
+                  createdAt: previousDateFilter,
+                },
               },
-            },
-            { $group: { _id: null, total: { $sum: '$commission' } } },
-          ])
+              { $group: { _id: null, total: { $sum: '$amount' } } },
+            ]),
+          ]).then(([orderRevenue, subscriptionRevenue]) => {
+            const orderTotal = orderRevenue[0]?.total || 0;
+            const subscriptionTotal = subscriptionRevenue[0]?.total || 0;
+            return [{ total: orderTotal + subscriptionTotal }];
+          })
         : Promise.resolve([]),
+      
+      // Previous period - Commission (không có)
+      Promise.resolve([{ total: 0 }]),
 
-      // Recent data
+      // Recent orders (lấy TẤT CẢ orders bao gồm cả GHN)
       Order.find({
-        status: { $in: ['delivered', 'confirmed'] },
         ...(Object.keys(currentDateFilter).length > 0
           ? { createdAt: currentDateFilter }
           : {}),
@@ -172,7 +231,10 @@ export async function getAdminStats(req, res) {
         .populate('sellerId', 'name email')
         .populate('productId', 'title price')
         .sort({ createdAt: -1 })
-        .limit(5),
+        .limit(5)
+        .lean(), // Thêm lean() để tối ưu performance
+      
+      // Recent users (chỉ lấy trong current period nếu có filter)
       User.find({
         isActive: true,
         ...(Object.keys(currentDateFilter).length > 0
@@ -181,7 +243,8 @@ export async function getAdminStats(req, res) {
       })
         .select('name email role createdAt')
         .sort({ createdAt: -1 })
-        .limit(5),
+        .limit(5)
+        .lean(), // Thêm lean() để tối ưu performance
     ]);
 
     // Calculate percentage changes
@@ -199,7 +262,7 @@ export async function getAdminStats(req, res) {
       success: true,
       data: {
         totalUsers,
-        totalProducts: totalActiveProducts, // Hiển thị tổng số products active
+        totalProducts, // Hiển thị số products (mới tạo hoặc tổng số)
         totalOrders,
         totalRevenue: currentRevenueValue,
         totalCommission: currentCommissionValue,
@@ -213,10 +276,7 @@ export async function getAdminStats(req, res) {
             ) / 100,
           products:
             Math.round(
-              calculatePercentageChange(
-                totalProductsCreated,
-                previousProducts
-              ) * 100
+              calculatePercentageChange(totalProducts, previousProducts) * 100
             ) / 100,
           orders:
             Math.round(
@@ -251,30 +311,104 @@ export async function getSystemStats(req, res) {
   try {
     const [usersByRole, productsByCategory, ordersByStatus, revenueByMonth] =
       await Promise.all([
+        // Users by role
         User.aggregate([
           { $match: { isActive: true } },
           { $group: { _id: '$role', count: { $sum: 1 } } },
+          { $sort: { count: -1 } }, // Thêm sort để consistent output
         ]),
+        
+        // Products by category
         Product.aggregate([
           { $match: { status: 'active' } },
           { $group: { _id: '$category', count: { $sum: 1 } } },
+          { $sort: { count: -1 } }, // Thêm sort
         ]),
-        Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+        
+        // Orders by status
         Order.aggregate([
-          { $match: { status: { $in: ['delivered', 'confirmed'] } } },
-          {
-            $group: {
-              _id: {
-                year: { $year: '$createdAt' },
-                month: { $month: '$createdAt' },
-              },
-              revenue: { $sum: '$finalAmount' },
-              count: { $sum: 1 },
-            },
-          },
-          { $sort: { '_id.year': 1, '_id.month': 1 } },
-          { $limit: 12 },
+          { $group: { _id: '$status', count: { $sum: 1 } } },
+          { $sort: { count: -1 } }, // Thêm sort
         ]),
+        
+        // Revenue by month (12 tháng gần nhất)
+        // Tính từ orders confirmed + subscription purchases
+        Promise.all([
+          // Revenue từ orders
+          Order.aggregate([
+            { 
+              $match: { 
+                status: 'confirmed',
+                createdAt: { $gte: new Date(new Date().setMonth(new Date().getMonth() - 12)) }
+              } 
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: '$createdAt' },
+                  month: { $month: '$createdAt' },
+                },
+                revenue: { $sum: '$finalAmount' },
+                count: { $sum: 1 },
+              },
+            },
+          ]),
+          // Revenue từ subscriptions
+          WalletTransaction.aggregate([
+            {
+              $match: {
+                type: 'purchase',
+                reference: { $regex: '^subscription:' },
+                status: 'completed',
+                createdAt: { $gte: new Date(new Date().setMonth(new Date().getMonth() - 12)) }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: '$createdAt' },
+                  month: { $month: '$createdAt' },
+                },
+                revenue: { $sum: '$amount' },
+                count: { $sum: 1 },
+              },
+            },
+          ]),
+        ]).then(([orderData, subscriptionData]) => {
+          // Merge data từ orders và subscriptions
+          const mergedMap = new Map();
+          
+          orderData.forEach(item => {
+            const key = `${item._id.year}-${item._id.month}`;
+            mergedMap.set(key, {
+              _id: item._id,
+              revenue: item.revenue,
+              commission: 0, // Không có commission
+              count: item.count,
+            });
+          });
+          
+          subscriptionData.forEach(item => {
+            const key = `${item._id.year}-${item._id.month}`;
+            if (mergedMap.has(key)) {
+              const existing = mergedMap.get(key);
+              existing.revenue += item.revenue;
+              existing.count += item.count;
+            } else {
+              mergedMap.set(key, {
+                _id: item._id,
+                revenue: item.revenue,
+                commission: 0,
+                count: item.count,
+              });
+            }
+          });
+          
+          return Array.from(mergedMap.values()).sort((a, b) => {
+            if (a._id.year !== b._id.year) return a._id.year - b._id.year;
+            return a._id.month - b._id.month;
+          });
+        }),
       ]);
 
     res.json({
@@ -287,7 +421,11 @@ export async function getSystemStats(req, res) {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('getSystemStats error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 }
 
@@ -328,7 +466,71 @@ export async function getOrdersSummary(req, res) {
       fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
-    // Aggregate orders theo status - sử dụng đúng enum từ Order model
+    const aggregateResults = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: fromDate, $lte: toDate },
+        },
+      },
+      {
+        $facet: {
+          // Group theo status
+          byStatus: [
+            {
+              $group: {
+                _id: '$status',
+                count: { $sum: 1 },
+              },
+            },
+          ],
+          // Tính tổng value từ confirmed orders
+          orderRevenue: [
+            {
+              $match: {
+                status: 'confirmed',
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                totalValue: { $sum: '$finalAmount' },
+                totalOrders: { $sum: 1 },
+              },
+            },
+          ],
+        },
+      },
+    ]);
+
+    // Lấy subscription revenue
+    const subscriptionRevenue = await WalletTransaction.aggregate([
+      {
+        $match: {
+          type: 'purchase',
+          reference: { $regex: '^subscription:' },
+          status: 'completed',
+          createdAt: { $gte: fromDate, $lte: toDate },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalValue: { $sum: '$amount' },
+          totalCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const orders = aggregateResults[0]?.byStatus || [];
+    const orderRevenueResult = aggregateResults[0]?.orderRevenue || [];
+    const subscriptionRevenueResult = subscriptionRevenue[0] || { totalValue: 0, totalCount: 0 };
+
+    // Tính tổng revenue từ cả orders và subscriptions
+    const orderRevenueValue = orderRevenueResult[0]?.totalValue || 0;
+    const subscriptionRevenueValue = subscriptionRevenueResult.totalValue || 0;
+    const totalValue = orderRevenueValue + subscriptionRevenueValue;
+
+    // Định nghĩa tất cả status có thể có
     const statuses = [
       'pending',
       'confirmed',
@@ -336,48 +538,23 @@ export async function getOrdersSummary(req, res) {
       'delivered',
       'cancelled',
       'refunded',
+      'deposit', // Thêm deposit status
     ];
-    const [orders, totalValueResult] = await Promise.all([
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: { $gte: fromDate, $lte: toDate },
-          },
-        },
-        {
-          $group: {
-            _id: '$status',
-            count: { $sum: 1 },
-          },
-        },
-      ]),
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: { $gte: fromDate, $lte: toDate },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            totalValue: { $sum: '$finalAmount' },
-            totalOrders: { $sum: 1 },
-          },
-        },
-      ]),
-    ]);
 
-    // map ra tất cả status, nếu không có status nào vẫn giữ 0
+    // Map ra tất cả status, nếu không có status nào vẫn giữ 0
     const result = {};
     statuses.forEach((status) => {
       const found = orders.find((o) => o._id === status);
       result[status] = found ? found.count : 0;
     });
 
-    // tính tổng và tỷ lệ thành công (delivered = thành công)
+    // Tính tổng và tỷ lệ thành công
+    // Thành công = confirmed (deposit đã xác nhận) + delivered (GHN đã giao) + deposit (chờ xác nhận)
     const total = Object.values(result).reduce((sum, val) => sum + val, 0);
-    const successRate = total > 0 ? (result['delivered'] / total) * 100 : 0;
-    const totalValue = totalValueResult[0]?.totalValue || 0;
+    const successfulOrders = result['confirmed'] + result['delivered'] + result['deposit'];
+    const successRate = total > 0 
+      ? (successfulOrders / total) * 100 
+      : 0;
 
     res.json({
       success: true,
@@ -389,6 +566,7 @@ export async function getOrdersSummary(req, res) {
           'Đã giao',
           'Đã hủy',
           'Đã hoàn tiền',
+          'Đặt cọc', // Thêm category cho deposit
         ],
         values: [
           result['pending'],
@@ -397,10 +575,11 @@ export async function getOrdersSummary(req, res) {
           result['delivered'],
           result['cancelled'],
           result['refunded'],
+          result['deposit'], // Thêm value cho deposit
         ],
         total,
-        totalValue: totalValue,
-        successRate: successRate.toFixed(1),
+        totalValue,
+        successRate: parseFloat(successRate.toFixed(1)),
         statusBreakdown: {
           pending: result['pending'],
           confirmed: result['confirmed'],
@@ -408,6 +587,7 @@ export async function getOrdersSummary(req, res) {
           delivered: result['delivered'],
           cancelled: result['cancelled'],
           refunded: result['refunded'],
+          deposit: result['deposit'], // Thêm deposit vào breakdown
         },
       },
     });
@@ -436,7 +616,8 @@ export async function getAllUsers(req, res) {
         .select('-password -wallet')
         .sort({ createdAt: -1 })
         .skip(parseInt(skip))
-        .limit(parseInt(limit)),
+        .limit(parseInt(limit))
+        .lean(), // Thêm lean() cho performance
       User.countDocuments(query),
     ]);
 
@@ -574,7 +755,8 @@ export async function getAllProducts(req, res) {
         .populate('seller', 'name email')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(parseInt(limit))
+        .lean(), // Thêm lean() cho performance
       Product.countDocuments(query),
     ]);
 
@@ -589,7 +771,11 @@ export async function getAllProducts(req, res) {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('getAllProducts error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 }
 
@@ -679,7 +865,8 @@ export async function getAllOrders(req, res) {
         .populate('productId', 'title price images')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(parseInt(limit))
+        .lean(), // Thêm lean() cho performance
       Order.countDocuments(query),
     ]);
 
@@ -694,7 +881,11 @@ export async function getAllOrders(req, res) {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('getAllOrders error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 }
 
@@ -920,7 +1111,6 @@ export async function handleViolation(req, res) {
 export async function getPlatformRevenue(req, res) {
   try {
     const { startDate, endDate } = req.query;
-    const matchQuery = { status: { $in: ['delivered', 'confirmed'] } };
 
     // Nếu không có startDate/endDate thì lấy mặc định từ đầu năm đến nay
     const now = new Date();
@@ -933,23 +1123,85 @@ export async function getPlatformRevenue(req, res) {
     const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
     const endMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0);
 
-    matchQuery.createdAt = { $gte: startMonth, $lte: endMonth };
+    const dateFilter = { $gte: startMonth, $lte: endMonth };
 
-    // Aggregate doanh thu theo tháng
-    const monthlyData = await Order.aggregate([
-      { $match: matchQuery },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' },
+    // Aggregate doanh thu theo tháng từ orders và subscriptions
+    const [orderMonthlyData, subscriptionMonthlyData] = await Promise.all([
+      // Revenue từ orders confirmed
+      Order.aggregate([
+        {
+          $match: {
+            status: 'confirmed',
+            createdAt: dateFilter,
           },
-          totalRevenue: { $sum: '$finalAmount' },
-          totalOrders: { $sum: 1 },
         },
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' },
+            },
+            totalRevenue: { $sum: '$finalAmount' },
+            totalOrders: { $sum: 1 },
+          },
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
+      ]),
+      // Revenue từ subscriptions
+      WalletTransaction.aggregate([
+        {
+          $match: {
+            type: 'purchase',
+            reference: { $regex: '^subscription:' },
+            status: 'completed',
+            createdAt: dateFilter,
+          },
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' },
+            },
+            totalRevenue: { $sum: '$amount' },
+            totalOrders: { $sum: 1 },
+          },
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
+      ]),
     ]);
+
+    // Merge data từ orders và subscriptions
+    const monthlyDataMap = new Map();
+    
+    orderMonthlyData.forEach(item => {
+      const key = `${item._id.year}-${item._id.month}`;
+      monthlyDataMap.set(key, {
+        _id: item._id,
+        totalRevenue: item.totalRevenue,
+        totalOrders: item.totalOrders,
+      });
+    });
+    
+    subscriptionMonthlyData.forEach(item => {
+      const key = `${item._id.year}-${item._id.month}`;
+      if (monthlyDataMap.has(key)) {
+        const existing = monthlyDataMap.get(key);
+        existing.totalRevenue += item.totalRevenue;
+        existing.totalOrders += item.totalOrders;
+      } else {
+        monthlyDataMap.set(key, {
+          _id: item._id,
+          totalRevenue: item.totalRevenue,
+          totalOrders: item.totalOrders,
+        });
+      }
+    });
+
+    const monthlyData = Array.from(monthlyDataMap.values()).sort((a, b) => {
+      if (a._id.year !== b._id.year) return a._id.year - b._id.year;
+      return a._id.month - b._id.month;
+    });
 
     // ✅ Tạo danh sách các tháng giữa start và end (đảm bảo đủ tháng)
     const months = [];
@@ -993,22 +1245,53 @@ export async function getPlatformRevenue(req, res) {
           : '+0%';
     }
 
-    // ✅ Tổng hợp summary
-    const summaryAgg = await Order.aggregate([
-      { $match: matchQuery },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: '$finalAmount' },
-          totalOrders: { $sum: 1 },
-          avgOrderValue: { $avg: '$finalAmount' },
+    // ✅ Tổng hợp summary từ orders và subscriptions
+    const [orderSummary, subscriptionSummary] = await Promise.all([
+      Order.aggregate([
+        {
+          $match: {
+            status: 'confirmed',
+            createdAt: dateFilter,
+          },
         },
-      },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$finalAmount' },
+            totalOrders: { $sum: 1 },
+            avgOrderValue: { $avg: '$finalAmount' },
+          },
+        },
+      ]),
+      WalletTransaction.aggregate([
+        {
+          $match: {
+            type: 'purchase',
+            reference: { $regex: '^subscription:' },
+            status: 'completed',
+            createdAt: dateFilter,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$amount' },
+            totalOrders: { $sum: 1 },
+            avgOrderValue: { $avg: '$amount' },
+          },
+        },
+      ]),
     ]);
-    const summary = summaryAgg[0] || {
-      totalRevenue: 0,
-      totalOrders: 0,
-      avgOrderValue: 0,
+
+    const orderSum = orderSummary[0] || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
+    const subscriptionSum = subscriptionSummary[0] || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
+
+    const summary = {
+      totalRevenue: orderSum.totalRevenue + subscriptionSum.totalRevenue,
+      totalOrders: orderSum.totalOrders + subscriptionSum.totalOrders,
+      avgOrderValue: orderSum.totalOrders + subscriptionSum.totalOrders > 0
+        ? (orderSum.totalRevenue + subscriptionSum.totalRevenue) / (orderSum.totalOrders + subscriptionSum.totalOrders)
+        : 0,
     };
 
     res.json({
@@ -1022,7 +1305,7 @@ export async function getPlatformRevenue(req, res) {
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error('getPlatformRevenue error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 }
@@ -1123,7 +1406,8 @@ export async function getPendingProducts(req, res) {
         .populate('seller', 'name email')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(parseInt(limit))
+        .lean(), // Thêm lean() cho performance
       Product.countDocuments({ status: 'pending' }),
     ]);
 
@@ -1138,7 +1422,11 @@ export async function getPendingProducts(req, res) {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('getPendingProducts error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 }
 

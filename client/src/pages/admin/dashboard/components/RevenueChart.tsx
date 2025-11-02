@@ -198,7 +198,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
             const revenueValue = context.parsed.y;
             const orderValue = orders?.[context.dataIndex] || 0;
             return [
-              `Doanh thu: ${revenueValue} triệu VNĐ`,
+              `Doanh thu: ${formatVND(revenueValue)} đ`,
               `Đơn hàng: ${orderValue} giao dịch`
             ];
           },

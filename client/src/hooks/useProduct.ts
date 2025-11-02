@@ -32,7 +32,7 @@ export const useVehicleProducts = (
 ) => {
   return useQuery({
     queryKey: ["products", "vehicles", filters],
-    queryFn: () => productServices.fetchVehicleProducts(filters),
+    queryFn: () => productServices.fetchProducts({ ...filters, category: "vehicle" }),
   });
 };
 
@@ -42,7 +42,7 @@ export const useBatteryProducts = (
 ) => {
   return useQuery({
     queryKey: ["products", "batteries", filters],
-    queryFn: () => productServices.fetchBatteryProducts(filters),
+    queryFn: () => productServices.fetchProducts({ ...filters, category: "battery" }),
   });
 };
 
