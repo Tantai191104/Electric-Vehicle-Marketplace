@@ -109,8 +109,8 @@ const router = express.Router();
  *                     pages:
  *                       type: integer
  */
-// Guest, User, Admin can view products (GET /products) - Guest chỉ xem danh sách
-router.get("/products", optionalAuth, getProducts);
+// Public endpoint - no authentication required
+router.get("/products", getProducts);
 
 /**
  * @swagger
@@ -178,7 +178,7 @@ router.get("/products", optionalAuth, getProducts);
  *                     pages:
  *                       type: integer
  */
-router.get("/products/vehicles", optionalAuth, getVehicles);
+router.get("/products/vehicles", getVehicles);
 
 /**
  * @swagger
@@ -246,7 +246,7 @@ router.get("/products/vehicles", optionalAuth, getVehicles);
  *                     pages:
  *                       type: integer
  */
-router.get("/products/batteries", optionalAuth, getBatteries);
+router.get("/products/batteries", getBatteries);
 
 /**
  * @swagger
@@ -314,7 +314,7 @@ router.get("/products/batteries", optionalAuth, getBatteries);
  *                     pages:
  *                       type: integer
  */
-router.get("/products/motorcycles", optionalAuth, getMotorcycles);
+router.get("/products/motorcycles", getMotorcycles);
 
 /**
  * @swagger
@@ -345,7 +345,7 @@ router.get("/products/motorcycles", optionalAuth, getMotorcycles);
  *       404:
  *         description: Product not found
  */
-router.get("/products/:id", optionalAuth, getProductById);
+router.get("/products/:id", getProductById);
 
 // Routes below require authentication
 
