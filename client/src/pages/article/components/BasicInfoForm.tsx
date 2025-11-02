@@ -14,6 +14,14 @@ interface Props {
     onGetPriceSuggestion?: () => void;
     isLoadingPrice?: boolean;
     suggestedPrice?: number | null;
+    priceAnalysis?: {
+        priceRange?: { low: number; recommended: number; high: number };
+        reasoning?: { low: string; recommended: string; high: string };
+        marketAnalysis?: string;
+        factors?: string[];
+        tips?: string[];
+        warnings?: string[];
+    } | null;
 }
 
 // Brand và model cho xe điện
@@ -38,7 +46,7 @@ const BATTERY_BRAND_MODELS: Record<string, string[]> = {
     Gotion: ["LiFePO4", "NCM", "NCA"],
 };
 
-const BasicInfoForm: React.FC<Props> = ({ form, setForm, onGetPriceSuggestion, isLoadingPrice, suggestedPrice }) => {
+const BasicInfoForm: React.FC<Props> = ({ form, setForm, onGetPriceSuggestion, isLoadingPrice, suggestedPrice, priceAnalysis }) => {
     const [modelOptions, setModelOptions] = useState<string[]>([]);
     const [customBrand, setCustomBrand] = useState(false);
     const [customModel, setCustomModel] = useState(false);
@@ -347,11 +355,111 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm, onGetPriceSuggestion, i
                             </Button>
                         )}
                     </div>
-                    {suggestedPrice && (
-                        <div className="mt-2 p-3 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
-                            <p className="text-sm text-gray-700">
-                                <span className="font-semibold text-purple-700">💡 Gợi ý từ AI:</span> {formatNumberWithDots(suggestedPrice)} VNĐ
-                            </p>
+                    {suggestedPrice && priceAnalysis && (
+                        <div className="mt-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl space-y-4">
+                            {/* Price Range */}
+                            {priceAnalysis.priceRange && (
+                                <div>
+                                    <p className="text-sm font-semibold text-purple-700 mb-2 flex items-center gap-2">
+                                        <Sparkles className="w-4 h-4" />
+                                        Khoảng giá gợi ý (Nhấn để chọn)
+                                    </p>
+                                    <div className="grid grid-cols-3 gap-3 text-sm">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleChange("price", priceAnalysis.priceRange!.low)}
+                                            className={`p-3 rounded-lg border-2 transition-all cursor-pointer text-left ${form.price === priceAnalysis.priceRange.low
+                                                    ? "bg-gradient-to-br from-purple-500 to-pink-500 border-purple-600 text-white shadow-lg scale-105"
+                                                    : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
+                                                }`}
+                                        >
+                                            <div className={`text-xs mb-1 ${form.price === priceAnalysis.priceRange.low ? "text-purple-100" : "text-gray-500"}`}>
+                                                Giá thấp
+                                            </div>
+                                            <div className="font-bold">{formatNumberWithDots(priceAnalysis.priceRange.low)} ₫</div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleChange("price", priceAnalysis.priceRange!.recommended)}
+                                            className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${form.price === priceAnalysis.priceRange.recommended
+                                                    ? "bg-gradient-to-br from-purple-500 to-pink-500 border-purple-600 text-white shadow-lg scale-105"
+                                                    : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
+                                                }`}
+                                        >
+                                            <div className={`text-xs mb-1 ${form.price === priceAnalysis.priceRange.recommended ? "text-purple-100" : "text-gray-500"}`}>
+                                                Khuyến nghị
+                                            </div>
+                                            <div className="font-bold">{formatNumberWithDots(priceAnalysis.priceRange.recommended)} ₫</div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleChange("price", priceAnalysis.priceRange!.high)}
+                                            className={`p-3 rounded-lg border-2 transition-all cursor-pointer text-left ${form.price === priceAnalysis.priceRange.high
+                                                    ? "bg-gradient-to-br from-purple-500 to-pink-500 border-purple-600 text-white shadow-lg scale-105"
+                                                    : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
+                                                }`}
+                                        >
+                                            <div className={`text-xs mb-1 ${form.price === priceAnalysis.priceRange.high ? "text-purple-100" : "text-gray-500"}`}>
+                                                Giá cao
+                                            </div>
+                                            <div className="font-bold">{formatNumberWithDots(priceAnalysis.priceRange.high)} ₫</div>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Market Analysis */}
+                            {priceAnalysis.marketAnalysis && (
+                                <div className="bg-white p-3 rounded-lg border border-purple-100">
+                                    <p className="text-xs font-semibold text-purple-700 mb-1">� Phân tích thị trường</p>
+                                    <p className="text-xs text-gray-600 leading-relaxed">{priceAnalysis.marketAnalysis}</p>
+                                </div>
+                            )}
+
+                            {/* Warnings */}
+                            {priceAnalysis.warnings && priceAnalysis.warnings.length > 0 && (
+                                <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                                    <p className="text-xs font-semibold text-orange-700 mb-2">⚠️ Lưu ý quan trọng</p>
+                                    <ul className="space-y-1">
+                                        {priceAnalysis.warnings.map((warning, idx) => (
+                                            <li key={idx} className="text-xs text-orange-600 flex items-start gap-1">
+                                                <span className="mt-0.5">•</span>
+                                                <span>{warning}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Tips */}
+                            {priceAnalysis.tips && priceAnalysis.tips.length > 0 && (
+                                <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                    <p className="text-xs font-semibold text-green-700 mb-2">💡 Gợi ý để bán nhanh hơn</p>
+                                    <ul className="space-y-1">
+                                        {priceAnalysis.tips.map((tip, idx) => (
+                                            <li key={idx} className="text-xs text-green-600 flex items-start gap-1">
+                                                <span className="mt-0.5">•</span>
+                                                <span>{tip}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Factors */}
+                            {priceAnalysis.factors && priceAnalysis.factors.length > 0 && (
+                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                    <p className="text-xs font-semibold text-blue-700 mb-2">📌 Yếu tố ảnh hưởng giá</p>
+                                    <ul className="space-y-1">
+                                        {priceAnalysis.factors.map((factor, idx) => (
+                                            <li key={idx} className="text-xs text-blue-600 flex items-start gap-1">
+                                                <span className="mt-0.5">•</span>
+                                                <span>{factor}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
