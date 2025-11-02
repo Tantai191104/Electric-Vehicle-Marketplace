@@ -40,7 +40,12 @@ export default function ProductTablePagination({
                     Sau
                 </Button>
                 <span className="text-sm text-gray-600">
-                    Trang {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+                    Trang {table.getState().pagination.pageIndex + 1} / {Math.max(1, table.getPageCount())}
+                    {table.getPageCount() > 0 && (
+                        <span className="text-gray-500 ml-1">
+                            ({table.getRowModel().rows.length} sản phẩm trên trang này)
+                        </span>
+                    )}
                 </span>
             </div>
             <div className="flex items-center gap-2">
@@ -48,14 +53,17 @@ export default function ProductTablePagination({
                 <Select
                     value={pageSize.toString()}
                     onValueChange={(val) => {
-                        setPageSize(Number(val));
+                        const newPageSize = Number(val);
+                        setPageSize(newPageSize);
+                        table.setPageSize(newPageSize);
                         table.setPageIndex(0);
                     }}
+                    disabled={false}
                 >
-                    <SelectTrigger className="w-20">
-                        <SelectValue />
+                    <SelectTrigger className="w-20" disabled={false}>
+                        <SelectValue placeholder={pageSize.toString()} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[100]">
                         {[5, 10, 20, 50].map((size) => (
                             <SelectItem key={size} value={size.toString()}>
                                 {size}
@@ -64,7 +72,7 @@ export default function ProductTablePagination({
                     </SelectContent>
                 </Select>
                 <span className="text-sm text-gray-600">
-                    Tổng: {table.getCoreRowModel().rows.length} sản phẩm
+                    Hiển thị {table.getRowModel().rows.length} / {table.getCoreRowModel().rows.length} sản phẩm
                 </span>
             </div>
         </div>

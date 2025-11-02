@@ -111,6 +111,9 @@ export type Product = {
   isFeatured: boolean;
   views: number;
   likes: number;
+  priorityLevel?: "low" | "medium" | "high";
+  prioritySource?: "product" | "subscription" | "payment";
+  isPriorityBoosted?: boolean;
   createdAt: string;
   updatedAt: string;
   __v?: number;

@@ -17,7 +17,7 @@ import {
   FiCheckCircle,
   FiClock,
   FiXCircle,
-  FiStar
+  FiStar,
 } from "react-icons/fi";
 import type { Product } from "@/types/productType";
 import { formatVND } from "@/utils/formatVND";

@@ -13,7 +13,7 @@ const StickySearchBar: React.FC = () => (
         </Button>
         <div className="flex items-center bg-white rounded-full px-2 py-1 md:px-3 shadow min-w-0">
           <img src="/vite.svg" alt="Logo" className="w-6 h-6 md:w-7 md:h-7 rounded-full mr-1" />
-          <span className="font-bold text-sm md:text-base text-yellow-900 truncate">chợTỐT</span>
+          <span className="font-bold text-sm md:text-base text-yellow-900 truncate">EV Marketplace</span>
         </div>
         <SellerDropdown />
       </div>

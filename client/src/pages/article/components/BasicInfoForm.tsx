@@ -5,11 +5,15 @@ import { Label } from "@/components/ui/label";
 import type { VehicleFormData, BatteryFormData } from "@/types/productType";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatNumberWithDots } from "@/utils/numberFormatter";
-import { Car, BatteryCharging } from "lucide-react";
+import { Car, BatteryCharging, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
     form: VehicleFormData | BatteryFormData;
     setForm: React.Dispatch<React.SetStateAction<VehicleFormData | BatteryFormData | null>>;
+    onGetPriceSuggestion?: () => void;
+    isLoadingPrice?: boolean;
+    suggestedPrice?: number | null;
 }
 
 // Brand và model cho xe điện
@@ -34,7 +38,7 @@ const BATTERY_BRAND_MODELS: Record<string, string[]> = {
     Gotion: ["LiFePO4", "NCM", "NCA"],
 };
 
-const BasicInfoForm: React.FC<Props> = ({ form, setForm }) => {
+const BasicInfoForm: React.FC<Props> = ({ form, setForm, onGetPriceSuggestion, isLoadingPrice, suggestedPrice }) => {
     const [modelOptions, setModelOptions] = useState<string[]>([]);
     const [customBrand, setCustomBrand] = useState(false);
     const [customModel, setCustomModel] = useState(false);
@@ -318,18 +322,38 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm }) => {
 
                 <div className="md:col-span-2 space-y-2">
                     <Label className="text-sm font-semibold text-gray-800">Giá (VNĐ)</Label>
-                    <div className="relative">
-                        <Input
-                            type="text"
-                            value={form.price ? formatNumberWithDots(form.price) : ""}
-                            onChange={(e) => handleChange("price", Number(e.target.value.replace(/\./g, "")))}
-                            placeholder="Nhập giá sản phẩm"
-                            className={`${inputClass} pl-12`}
-                        />
-                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                            VNĐ
+                    <div className="flex gap-3">
+                        <div className="relative flex-1">
+                            <Input
+                                type="text"
+                                value={form.price ? formatNumberWithDots(form.price) : ""}
+                                onChange={(e) => handleChange("price", Number(e.target.value.replace(/\./g, "")))}
+                                placeholder="Nhập giá sản phẩm"
+                                className={`${inputClass} pl-12`}
+                            />
+                            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
+                                VNĐ
+                            </div>
                         </div>
+                        {onGetPriceSuggestion && (
+                            <Button
+                                type="button"
+                                onClick={onGetPriceSuggestion}
+                                disabled={isLoadingPrice}
+                                className="h-12 px-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                            >
+                                <Sparkles className="w-5 h-5" />
+                                {isLoadingPrice ? "Đang phân tích..." : "Gợi ý giá AI"}
+                            </Button>
+                        )}
                     </div>
+                    {suggestedPrice && (
+                        <div className="mt-2 p-3 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                                <span className="font-semibold text-purple-700">💡 Gợi ý từ AI:</span> {formatNumberWithDots(suggestedPrice)} VNĐ
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

@@ -122,4 +122,15 @@ export const adminServices = {
     const response = await API.post(`/admin/orders/${orderId}/sync-ghn`);
     return response.data;
   },
+  async updateUserStatus(
+    userId: string,
+    isActive: boolean,
+    reason?: string
+  ): Promise<User> {
+    const response = await API.put(`/users/${userId}`, {
+      isActive,
+      ...(reason && { banReason: reason }),
+    });
+    return response.data;
+  },
 };

@@ -99,6 +99,8 @@ const EditorPage: React.FC = () => {
   const [sellerSignatureDataUrl, setSellerSignatureDataUrl] = useState<string | null>(null);
   const [buyerSignatureDataUrl, setBuyerSignatureDataUrl] = useState<string | null>(null);
   const [createdProductId, setCreatedProductId] = useState<string | null>(null);
+  const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
+  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -109,6 +111,35 @@ const EditorPage: React.FC = () => {
       setForm(initialBatteryData);
     }
     setShowTypeDialog(false);
+  };
+
+  const handleGetPriceSuggestion = async () => {
+    if (!form) return;
+    
+    // Validate required fields
+    const requiredFields = ['title', 'brand', 'model', 'year'];
+    const missingFields = requiredFields.filter(field => !form[field as keyof typeof form]);
+    
+    if (missingFields.length > 0) {
+      toast.error("Vui lòng điền đầy đủ thông tin cơ bản (Tiêu đề, Thương hiệu, Model, Năm) để nhận gợi ý giá");
+      return;
+    }
+
+    setIsLoadingPrice(true);
+    try {
+      const response = await productServices.suggestPrice(form);
+      setSuggestedPrice(response.suggestedPrice);
+      
+      // Auto-fill the suggested price
+      setForm({ ...form, price: response.suggestedPrice });
+      
+      toast.success(`Gợi ý giá: ${response.suggestedPrice.toLocaleString('vi-VN')} ₫`);
+    } catch (error) {
+      console.error("Error getting price suggestion:", error);
+      toast.error("Không thể lấy gợi ý giá. Vui lòng thử lại sau.");
+    } finally {
+      setIsLoadingPrice(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -294,7 +325,13 @@ const EditorPage: React.FC = () => {
 
               {/* Cột phải: Forms */}
               <div className="lg:w-2/3 w-full space-y-8">
-                <BasicInfoForm form={form} setForm={setForm} />
+                <BasicInfoForm 
+                  form={form} 
+                  setForm={setForm}
+                  onGetPriceSuggestion={handleGetPriceSuggestion}
+                  isLoadingPrice={isLoadingPrice}
+                  suggestedPrice={suggestedPrice}
+                />
 
                 {form.category === "vehicle" ? (
                   <VehicleSpecificationsForm form={form as VehicleFormData} setForm={setForm as React.Dispatch<React.SetStateAction<VehicleFormData>>} />
