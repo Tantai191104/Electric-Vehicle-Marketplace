@@ -41,11 +41,6 @@ export default function OrderManage() {
         refetch
     } = ordersQuery;
 
-    // Reset to first page when filters change
-    useEffect(() => {
-        setPageIndex(0);
-    }, [statusFilter, shippingMethodFilter]);
-
     // Filtered orders based on filters - matching system statuses
     const filteredOrders = useMemo(() => {
         if (!Array.isArray(ordersData)) return [];

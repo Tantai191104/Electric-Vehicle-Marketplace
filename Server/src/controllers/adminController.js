@@ -2,7 +2,11 @@ import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import WalletTransaction from '../models/WalletTransaction.js';
-import { ghnClient, getGhnHeaders, mapGhnStatusToSystemStatus } from "../config/ghn.js";
+import {
+  ghnClient,
+  getGhnHeaders,
+  mapGhnStatusToSystemStatus,
+} from '../config/ghn.js';
 
 export async function getAdminStats(req, res) {
   try {
@@ -40,7 +44,7 @@ export async function getAdminStats(req, res) {
           const threeMonthsAgo = new Date(now);
           threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
           fromDate = threeMonthsAgo;
-          
+
           const sixMonthsAgo = new Date(now);
           sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
           previousFromDate = sixMonthsAgo;
@@ -50,7 +54,7 @@ export async function getAdminStats(req, res) {
           const oneYearAgo = new Date(now);
           oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
           fromDate = oneYearAgo;
-          
+
           const twoYearsAgo = new Date(now);
           twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
           previousFromDate = twoYearsAgo;
@@ -71,6 +75,7 @@ export async function getAdminStats(req, res) {
       totalUsers, // Số users mới tạo hoặc tổng số users nếu không có filter
       totalProducts, // Số products mới tạo hoặc tổng số products nếu không có filter
       totalOrders,
+      totalGHNOrders, // Số đơn GHN (không có orderNumber chứa "DEPOSIT")
       totalRevenue,
       totalCommission,
       pendingViolations,
@@ -79,6 +84,7 @@ export async function getAdminStats(req, res) {
       previousUsers,
       previousProducts,
       previousOrders,
+      previousGHNOrders, // Số đơn GHN trong previous period
       previousRevenue,
       previousCommission,
 
@@ -95,8 +101,8 @@ export async function getAdminStats(req, res) {
             createdAt: currentDateFilter,
           })
         : User.countDocuments({ isActive: true }),
-      
-      // Current period - Products  
+
+      // Current period - Products
       // Nếu có filter thời gian: đếm products MỚI TẠO trong khoảng thời gian
       // Nếu không có filter: đếm TỔNG SỐ products active hiện tại
       Object.keys(currentDateFilter).length > 0
@@ -105,25 +111,40 @@ export async function getAdminStats(req, res) {
             createdAt: currentDateFilter,
           })
         : Product.countDocuments({ status: 'active' }),
-      
-      // Orders trong khoảng thời gian - Đếm orders thành công (confirmed + delivered + deposit)
+
+      // Orders hoàn thành trong khoảng thời gian - Chỉ đếm delivered (đơn đã hoàn tất)
       Object.keys(currentDateFilter).length > 0
         ? Order.countDocuments({
-            status: { $in: ['confirmed', 'delivered', 'deposit'] },
+            orderNumber: { $regex: 'DEPOSIT', $options: 'i' },
+            status: 'delivered',
             createdAt: currentDateFilter,
           })
         : Order.countDocuments({
-            status: { $in: ['confirmed', 'delivered', 'deposit'] },
+            orderNumber: { $regex: 'DEPOSIT', $options: 'i' },
+            status: 'delivered',
           }),
-      
+
+      // Đơn GHN (không có orderNumber chứa "DEPOSIT")
+      Object.keys(currentDateFilter).length > 0
+        ? Order.countDocuments({
+            orderNumber: { $not: { $regex: 'DEPOSIT', $options: 'i' } },
+            status: 'delivered',
+            createdAt: currentDateFilter,
+          })
+        : Order.countDocuments({
+            orderNumber: { $not: { $regex: 'DEPOSIT', $options: 'i' } },
+            status: 'delivered',
+          }),
+
       // Revenue trong khoảng thời gian
-      // Doanh thu = Order confirmed (deposit đã xác nhận) + Subscription purchases
+      // Doanh thu = Đơn deposit delivered (orderNumber chứa "DEPOSIT" + status delivered) + Subscription purchases
       Promise.all([
-        // Revenue từ orders confirmed (không tính GHN delivered)
+        // Revenue từ đơn deposit có orderNumber chứa "DEPOSIT" và status delivered
         Order.aggregate([
           {
             $match: {
-              status: 'confirmed', // Chỉ tính deposit confirmed
+              orderNumber: { $regex: 'DEPOSIT', $options: 'i' }, // OrderNumber chứa "DEPOSIT"
+              status: 'delivered', // Status delivered (hoàn thành)
               ...(Object.keys(currentDateFilter).length > 0
                 ? { createdAt: currentDateFilter }
                 : {}),
@@ -150,11 +171,11 @@ export async function getAdminStats(req, res) {
         const subscriptionTotal = subscriptionRevenue[0]?.total || 0;
         return [{ total: orderTotal + subscriptionTotal }];
       }),
-      
+
       // Commission trong khoảng thời gian - KHÔNG tính commission vì không có GHN
       // (Commission chỉ áp dụng cho GHN orders nhưng GHN không tính vào doanh thu)
       Promise.resolve([{ total: 0 }]),
-      
+
       // Pending violations
       User.countDocuments({
         isActive: true,
@@ -171,7 +192,7 @@ export async function getAdminStats(req, res) {
             createdAt: previousDateFilter,
           })
         : Promise.resolve(0),
-      
+
       // Previous period - Products mới tạo trong previous period
       Object.keys(previousDateFilter).length > 0
         ? Product.countDocuments({
@@ -179,22 +200,33 @@ export async function getAdminStats(req, res) {
             createdAt: previousDateFilter,
           })
         : Promise.resolve(0),
-      
-      // Previous period - Orders thành công (confirmed + delivered + deposit)
+
+      // Previous period - Orders hoàn thành (chỉ delivered, có orderNumber chứa "DEPOSIT")
       Object.keys(previousDateFilter).length > 0
         ? Order.countDocuments({
-            status: { $in: ['confirmed', 'delivered', 'deposit'] },
+            orderNumber: { $regex: 'DEPOSIT', $options: 'i' },
+            status: 'delivered',
             createdAt: previousDateFilter,
           })
         : Promise.resolve(0),
-      
+
+      // Previous period - Đơn GHN (không có orderNumber chứa "DEPOSIT")
+      Object.keys(previousDateFilter).length > 0
+        ? Order.countDocuments({
+            orderNumber: { $not: { $regex: 'DEPOSIT', $options: 'i' } },
+            status: 'delivered',
+            createdAt: previousDateFilter,
+          })
+        : Promise.resolve(0),
+
       // Previous period - Revenue (orders + subscriptions)
       Object.keys(previousDateFilter).length > 0
         ? Promise.all([
             Order.aggregate([
               {
                 $match: {
-                  status: 'confirmed',
+                  orderNumber: { $regex: 'DEPOSIT', $options: 'i' },
+                  status: 'delivered',
                   createdAt: previousDateFilter,
                 },
               },
@@ -217,7 +249,7 @@ export async function getAdminStats(req, res) {
             return [{ total: orderTotal + subscriptionTotal }];
           })
         : Promise.resolve([]),
-      
+
       // Previous period - Commission (không có)
       Promise.resolve([{ total: 0 }]),
 
@@ -233,7 +265,7 @@ export async function getAdminStats(req, res) {
         .sort({ createdAt: -1 })
         .limit(5)
         .lean(), // Thêm lean() để tối ưu performance
-      
+
       // Recent users (chỉ lấy trong current period nếu có filter)
       User.find({
         isActive: true,
@@ -258,12 +290,17 @@ export async function getAdminStats(req, res) {
     const previousRevenueValue = previousRevenue[0]?.total || 0;
     const previousCommissionValue = previousCommission[0]?.total || 0;
 
+    // Tính tổng số đơn (DEPOSIT + GHN) để so sánh phần trăm
+    const totalAllOrders = totalOrders + totalGHNOrders;
+    const previousAllOrders = previousOrders + previousGHNOrders;
+
     res.json({
       success: true,
       data: {
         totalUsers,
         totalProducts, // Hiển thị số products (mới tạo hoặc tổng số)
         totalOrders,
+        totalGHNOrders, // Số đơn GHN (không có DEPOSIT)
         totalRevenue: currentRevenueValue,
         totalCommission: currentCommissionValue,
         pendingViolations,
@@ -280,7 +317,7 @@ export async function getAdminStats(req, res) {
             ) / 100,
           orders:
             Math.round(
-              calculatePercentageChange(totalOrders, previousOrders) * 100
+              calculatePercentageChange(totalAllOrders, previousAllOrders) * 100
             ) / 100,
           revenue:
             Math.round(
@@ -315,100 +352,45 @@ export async function getSystemStats(req, res) {
         User.aggregate([
           { $match: { isActive: true } },
           { $group: { _id: '$role', count: { $sum: 1 } } },
-          { $sort: { count: -1 } }, // Thêm sort để consistent output
+          { $sort: { count: -1 } },
         ]),
-        
+
         // Products by category
         Product.aggregate([
           { $match: { status: 'active' } },
           { $group: { _id: '$category', count: { $sum: 1 } } },
-          { $sort: { count: -1 } }, // Thêm sort
+          { $sort: { count: -1 } },
         ]),
-        
+
         // Orders by status
         Order.aggregate([
           { $group: { _id: '$status', count: { $sum: 1 } } },
-          { $sort: { count: -1 } }, // Thêm sort
+          { $sort: { count: -1 } },
         ]),
-        
-        // Revenue by month (12 tháng gần nhất)
-        // Tính từ orders confirmed + subscription purchases
-        Promise.all([
-          // Revenue từ orders
-          Order.aggregate([
-            { 
-              $match: { 
-                status: 'confirmed',
-                createdAt: { $gte: new Date(new Date().setMonth(new Date().getMonth() - 12)) }
-              } 
-            },
-            {
-              $group: {
-                _id: {
-                  year: { $year: '$createdAt' },
-                  month: { $month: '$createdAt' },
-                },
-                revenue: { $sum: '$finalAmount' },
-                count: { $sum: 1 },
+
+        // Revenue by month (12 tháng gần nhất) — chỉ tính từ đơn deposit delivered (orderNumber chứa "DEPOSIT")
+        Order.aggregate([
+          {
+            $match: {
+              orderNumber: { $regex: 'DEPOSIT', $options: 'i' },
+              status: 'delivered',
+              createdAt: {
+                $gte: new Date(new Date().setMonth(new Date().getMonth() - 12)),
               },
             },
-          ]),
-          // Revenue từ subscriptions
-          WalletTransaction.aggregate([
-            {
-              $match: {
-                type: 'purchase',
-                reference: { $regex: '^subscription:' },
-                status: 'completed',
-                createdAt: { $gte: new Date(new Date().setMonth(new Date().getMonth() - 12)) }
-              }
-            },
-            {
-              $group: {
-                _id: {
-                  year: { $year: '$createdAt' },
-                  month: { $month: '$createdAt' },
-                },
-                revenue: { $sum: '$amount' },
-                count: { $sum: 1 },
+          },
+          {
+            $group: {
+              _id: {
+                year: { $year: '$createdAt' },
+                month: { $month: '$createdAt' },
               },
+              revenue: { $sum: '$finalAmount' },
+              count: { $sum: 1 },
             },
-          ]),
-        ]).then(([orderData, subscriptionData]) => {
-          // Merge data từ orders và subscriptions
-          const mergedMap = new Map();
-          
-          orderData.forEach(item => {
-            const key = `${item._id.year}-${item._id.month}`;
-            mergedMap.set(key, {
-              _id: item._id,
-              revenue: item.revenue,
-              commission: 0, // Không có commission
-              count: item.count,
-            });
-          });
-          
-          subscriptionData.forEach(item => {
-            const key = `${item._id.year}-${item._id.month}`;
-            if (mergedMap.has(key)) {
-              const existing = mergedMap.get(key);
-              existing.revenue += item.revenue;
-              existing.count += item.count;
-            } else {
-              mergedMap.set(key, {
-                _id: item._id,
-                revenue: item.revenue,
-                commission: 0,
-                count: item.count,
-              });
-            }
-          });
-          
-          return Array.from(mergedMap.values()).sort((a, b) => {
-            if (a._id.year !== b._id.year) return a._id.year - b._id.year;
-            return a._id.month - b._id.month;
-          });
-        }),
+          },
+          { $sort: { '_id.year': 1, '_id.month': 1 } },
+        ]),
       ]);
 
     res.json({
@@ -422,9 +404,9 @@ export async function getSystemStats(req, res) {
     });
   } catch (error) {
     console.error('getSystemStats error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message 
+      error: error.message,
     });
   }
 }
@@ -483,11 +465,12 @@ export async function getOrdersSummary(req, res) {
               },
             },
           ],
-          // Tính tổng value từ confirmed orders
+          // Tính tổng value từ đơn deposit delivered (orderNumber chứa "DEPOSIT")
           orderRevenue: [
             {
               $match: {
-                status: 'confirmed',
+                orderNumber: { $regex: 'DEPOSIT', $options: 'i' },
+                status: 'delivered',
               },
             },
             {
@@ -523,7 +506,10 @@ export async function getOrdersSummary(req, res) {
 
     const orders = aggregateResults[0]?.byStatus || [];
     const orderRevenueResult = aggregateResults[0]?.orderRevenue || [];
-    const subscriptionRevenueResult = subscriptionRevenue[0] || { totalValue: 0, totalCount: 0 };
+    const subscriptionRevenueResult = subscriptionRevenue[0] || {
+      totalValue: 0,
+      totalCount: 0,
+    };
 
     // Tính tổng revenue từ cả orders và subscriptions
     const orderRevenueValue = orderRevenueResult[0]?.totalValue || 0;
@@ -551,10 +537,9 @@ export async function getOrdersSummary(req, res) {
     // Tính tổng và tỷ lệ thành công
     // Thành công = confirmed (deposit đã xác nhận) + delivered (GHN đã giao) + deposit (chờ xác nhận)
     const total = Object.values(result).reduce((sum, val) => sum + val, 0);
-    const successfulOrders = result['confirmed'] + result['delivered'] + result['deposit'];
-    const successRate = total > 0 
-      ? (successfulOrders / total) * 100 
-      : 0;
+    const successfulOrders =
+      result['confirmed'] + result['delivered'] + result['deposit'];
+    const successRate = total > 0 ? (successfulOrders / total) * 100 : 0;
 
     res.json({
       success: true,
@@ -772,9 +757,9 @@ export async function getAllProducts(req, res) {
     });
   } catch (error) {
     console.error('getAllProducts error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message 
+      error: error.message,
     });
   }
 }
@@ -882,9 +867,9 @@ export async function getAllOrders(req, res) {
     });
   } catch (error) {
     console.error('getAllOrders error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message 
+      error: error.message,
     });
   }
 }
@@ -901,20 +886,33 @@ export async function getOrderById(req, res) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    if (order.shipping && order.shipping.carrier === 'GHN' && order.shipping.trackingNumber) {
+    if (
+      order.shipping &&
+      order.shipping.carrier === 'GHN' &&
+      order.shipping.trackingNumber
+    ) {
       try {
         const headers = getGhnHeaders();
-        const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code: order.shipping.trackingNumber }, { headers });
+        const resp = await ghnClient.post(
+          '/v2/shipping-order/detail',
+          { order_code: order.shipping.trackingNumber },
+          { headers }
+        );
         const ghnData = resp.data?.data || resp.data;
         const ghnStatus = ghnData.status || ghnData.current_status || '';
         const mappedStatus = mapGhnStatusToSystemStatus(ghnStatus);
 
         if (mappedStatus && mappedStatus !== order.status) {
           order.status = mappedStatus;
-          if (mappedStatus === "delivered" && !order.shipping.actualDelivery) {
+          if (mappedStatus === 'delivered' && !order.shipping.actualDelivery) {
             order.shipping.actualDelivery = new Date();
           }
-          order.timeline.push({ status: mappedStatus, description: `Tự động đồng bộ trạng thái từ GHN: ${ghnStatus}`, timestamp: new Date(), updatedBy: req.user?.sub });
+          order.timeline.push({
+            status: mappedStatus,
+            description: `Tự động đồng bộ trạng thái từ GHN: ${ghnStatus}`,
+            timestamp: new Date(),
+            updatedBy: req.user?.sub,
+          });
           await order.save();
         }
       } catch (e) {
@@ -1127,19 +1125,21 @@ export async function getPlatformRevenue(req, res) {
 
     // Aggregate doanh thu theo tháng từ orders và subscriptions
     const [orderMonthlyData, subscriptionMonthlyData] = await Promise.all([
-      // Revenue từ orders confirmed
+      // Revenue từ đơn deposit delivered (orderNumber chứa "DEPOSIT")
+      // Sử dụng updatedAt để lấy đơn theo thời điểm delivered (không phải createdAt)
       Order.aggregate([
         {
           $match: {
-            status: 'confirmed',
-            createdAt: dateFilter,
+            orderNumber: { $regex: 'DEPOSIT', $options: 'i' },
+            status: 'delivered',
+            updatedAt: dateFilter, // Đổi từ createdAt sang updatedAt
           },
         },
         {
           $group: {
             _id: {
-              year: { $year: '$createdAt' },
-              month: { $month: '$createdAt' },
+              year: { $year: '$updatedAt' }, // Đổi từ createdAt sang updatedAt
+              month: { $month: '$updatedAt' },
             },
             totalRevenue: { $sum: '$finalAmount' },
             totalOrders: { $sum: 1 },
@@ -1173,8 +1173,8 @@ export async function getPlatformRevenue(req, res) {
 
     // Merge data từ orders và subscriptions
     const monthlyDataMap = new Map();
-    
-    orderMonthlyData.forEach(item => {
+
+    orderMonthlyData.forEach((item) => {
       const key = `${item._id.year}-${item._id.month}`;
       monthlyDataMap.set(key, {
         _id: item._id,
@@ -1182,8 +1182,8 @@ export async function getPlatformRevenue(req, res) {
         totalOrders: item.totalOrders,
       });
     });
-    
-    subscriptionMonthlyData.forEach(item => {
+
+    subscriptionMonthlyData.forEach((item) => {
       const key = `${item._id.year}-${item._id.month}`;
       if (monthlyDataMap.has(key)) {
         const existing = monthlyDataMap.get(key);
@@ -1221,17 +1221,45 @@ export async function getPlatformRevenue(req, res) {
 
     // ✅ Map dữ liệu thực vào danh sách tháng
     const labels = months.map((m) => m.label);
+
+    // Tổng doanh thu (orders + subscriptions) theo tháng
     const revenue = months.map((m) => {
       const found = monthlyData.find(
         (item) => item._id.year === m.year && item._id.month === m.month
       );
       return found ? found.totalRevenue : 0;
     });
+
+    // Số giao dịch orders theo tháng (CHỈ từ orderMonthlyData)
     const orders = months.map((m) => {
-      const found = monthlyData.find(
+      const found = orderMonthlyData.find(
         (item) => item._id.year === m.year && item._id.month === m.month
       );
       return found ? found.totalOrders : 0;
+    });
+
+    // Số giao dịch subscriptions theo tháng
+    const subscriptions = months.map((m) => {
+      const found = subscriptionMonthlyData.find(
+        (item) => item._id.year === m.year && item._id.month === m.month
+      );
+      return found ? found.totalOrders : 0;
+    });
+
+    // Doanh thu từ orders theo tháng
+    const orderRevenue = months.map((m) => {
+      const found = orderMonthlyData.find(
+        (item) => item._id.year === m.year && item._id.month === m.month
+      );
+      return found ? found.totalRevenue : 0;
+    });
+
+    // Doanh thu từ subscriptions theo tháng
+    const subscriptionRevenue = months.map((m) => {
+      const found = subscriptionMonthlyData.find(
+        (item) => item._id.year === m.year && item._id.month === m.month
+      );
+      return found ? found.totalRevenue : 0;
     });
 
     // ✅ Tính % tăng trưởng (tháng gần nhất vs tháng trước)
@@ -1247,11 +1275,13 @@ export async function getPlatformRevenue(req, res) {
 
     // ✅ Tổng hợp summary từ orders và subscriptions
     const [orderSummary, subscriptionSummary] = await Promise.all([
+      // Tổng hợp từ đơn DEPOSIT delivered (CHỈ đơn cọc xe, KHÔNG bao gồm đơn GHN)
       Order.aggregate([
         {
           $match: {
-            status: 'confirmed',
-            createdAt: dateFilter,
+            orderNumber: { $regex: 'DEPOSIT', $options: 'i' }, // CHỈ đơn DEPOSIT
+            status: 'delivered', // CHỈ đơn đã giao
+            updatedAt: dateFilter, // Đổi từ createdAt sang updatedAt
           },
         },
         {
@@ -1283,23 +1313,40 @@ export async function getPlatformRevenue(req, res) {
       ]),
     ]);
 
-    const orderSum = orderSummary[0] || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
-    const subscriptionSum = subscriptionSummary[0] || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
+    const orderSum = orderSummary[0] || {
+      totalRevenue: 0,
+      totalOrders: 0,
+      avgOrderValue: 0,
+    };
+    const subscriptionSum = subscriptionSummary[0] || {
+      totalRevenue: 0,
+      totalOrders: 0,
+      avgOrderValue: 0,
+    };
 
     const summary = {
       totalRevenue: orderSum.totalRevenue + subscriptionSum.totalRevenue,
-      totalOrders: orderSum.totalOrders + subscriptionSum.totalOrders,
-      avgOrderValue: orderSum.totalOrders + subscriptionSum.totalOrders > 0
-        ? (orderSum.totalRevenue + subscriptionSum.totalRevenue) / (orderSum.totalOrders + subscriptionSum.totalOrders)
-        : 0,
+      totalOrders: orderSum.totalOrders, // Chỉ đơn deposit delivered
+      totalSubscriptions: subscriptionSum.totalOrders, // Số gói đăng ký
+      totalTransactions: orderSum.totalOrders + subscriptionSum.totalOrders, // Tổng giao dịch
+      avgOrderValue: orderSum.avgOrderValue || 0, // Giá trị TB đơn hàng
+      avgSubscriptionValue: subscriptionSum.avgOrderValue || 0, // Giá trị TB subscription
+      avgTransactionValue:
+        orderSum.totalOrders + subscriptionSum.totalOrders > 0
+          ? (orderSum.totalRevenue + subscriptionSum.totalRevenue) /
+            (orderSum.totalOrders + subscriptionSum.totalOrders)
+          : 0,
     };
 
     res.json({
       success: true,
       data: {
         labels,
-        revenue,
-        orders,
+        revenue, // Tổng doanh thu (orders + subscriptions) theo tháng
+        orders, // Số giao dịch ORDERS theo tháng (CHỈ xe)
+        subscriptions, // Số giao dịch SUBSCRIPTIONS theo tháng (CHỈ gói)
+        orderRevenue, // Doanh thu từ orders theo tháng
+        subscriptionRevenue, // Doanh thu từ subscriptions theo tháng
         growth,
         summary,
       },
@@ -1423,9 +1470,9 @@ export async function getPendingProducts(req, res) {
     });
   } catch (error) {
     console.error('getPendingProducts error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message 
+      error: error.message,
     });
   }
 }
@@ -1440,10 +1487,14 @@ export async function syncGhnOrderStatus(req, res) {
       return res.status(404).json({ success: false, error: 'Order not found' });
     }
 
-    if (!order.shipping || order.shipping.carrier !== 'GHN' || !order.shipping.trackingNumber) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Order is not using GHN shipping or missing tracking number' 
+    if (
+      !order.shipping ||
+      order.shipping.carrier !== 'GHN' ||
+      !order.shipping.trackingNumber
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: 'Order is not using GHN shipping or missing tracking number',
       });
     }
 
@@ -1452,27 +1503,31 @@ export async function syncGhnOrderStatus(req, res) {
       const shopId = order.shipping?.ghnShopId || process.env.GHN_SHOP_ID;
       const headers = getGhnHeaders(shopId);
       const trackingNumber = order.shipping.trackingNumber.trim();
-      
+
       const resp = await ghnClient.post(
-        '/v2/shipping-order/detail', 
-        { order_code: trackingNumber }, 
+        '/v2/shipping-order/detail',
+        { order_code: trackingNumber },
         { headers }
       );
-      
+
       const ghnData = resp.data?.data || resp.data;
       const ghnStatus = ghnData?.status || ghnData?.current_status || '';
-      
+
       if (!ghnStatus) {
-        console.warn(`[Admin GHN Sync] No status found in GHN response for tracking: ${trackingNumber}`);
+        console.warn(
+          `[Admin GHN Sync] No status found in GHN response for tracking: ${trackingNumber}`
+        );
       }
-      
+
       const mappedStatus = mapGhnStatusToSystemStatus(ghnStatus);
 
       const oldStatus = order.status;
       let updated = false;
 
       if (!mappedStatus) {
-        console.warn(`[Admin GHN Sync] Cannot map GHN status "${ghnStatus}" to system status for order ${order.orderNumber}`);
+        console.warn(
+          `[Admin GHN Sync] Cannot map GHN status "${ghnStatus}" to system status for order ${order.orderNumber}`
+        );
       }
 
       if (mappedStatus && mappedStatus !== order.status) {
@@ -1483,32 +1538,39 @@ export async function syncGhnOrderStatus(req, res) {
             order._id,
             {
               status: mappedStatus,
-              $push: { timeline: {
-                status: mappedStatus,
-                description: `Admin đồng bộ trạng thái từ GHN: ${ghnStatus}`,
-                timestamp: new Date(),
-                updatedBy: req.user?.sub || req.user?.id
-              }},
-              ...(mappedStatus === "delivered" && !order.shipping.actualDelivery ? {
-                'shipping.actualDelivery': new Date()
-              } : {})
+              $push: {
+                timeline: {
+                  status: mappedStatus,
+                  description: `Admin đồng bộ trạng thái từ GHN: ${ghnStatus}`,
+                  timestamp: new Date(),
+                  updatedBy: req.user?.sub || req.user?.id,
+                },
+              },
+              ...(mappedStatus === 'delivered' && !order.shipping.actualDelivery
+                ? {
+                    'shipping.actualDelivery': new Date(),
+                  }
+                : {}),
             },
-            { 
-              new: true, 
+            {
+              new: true,
               runValidators: true,
-              setDefaultsOnInsert: false 
+              setDefaultsOnInsert: false,
             }
           );
-          
+
           if (!savedOrder) {
             throw new Error('Failed to update order: order not found');
           }
-          
+
           // Update local order object to match saved order
           Object.assign(order, savedOrder.toObject());
           updated = true;
         } catch (saveError) {
-          console.error(`[Admin GHN Sync] Error saving order ${order.orderNumber}:`, saveError.message);
+          console.error(
+            `[Admin GHN Sync] Error saving order ${order.orderNumber}:`,
+            saveError.message
+          );
           // Continue even if save fails - will return error in response
         }
       }
@@ -1530,12 +1592,12 @@ export async function syncGhnOrderStatus(req, res) {
           mappedStatus,
           currentStatus: order.status,
           ghnData,
-          updated
-        }
+          updated,
+        },
       });
     } catch (ghnError) {
       console.error('[Admin GHN Sync] Error:', ghnError);
-      
+
       // Extract detailed error info
       const errorDetails = {
         message: ghnError.message,
@@ -1543,23 +1605,39 @@ export async function syncGhnOrderStatus(req, res) {
         statusText: ghnError.response?.statusText,
         ghnResponse: ghnError.response?.data,
         code: ghnError.code,
-        trackingNumber: order.shipping.trackingNumber
+        trackingNumber: order.shipping.trackingNumber,
       };
 
       // More specific error messages
       let errorMessage = 'Không thể kết nối với GHN API';
-      
+
       if (ghnError.code === 'ECONNREFUSED') {
-        errorMessage = 'GHN API từ chối kết nối. Kiểm tra GHN_BASE_URL và network.';
-      } else if (ghnError.code === 'ETIMEDOUT' || ghnError.code === 'ECONNABORTED') {
+        errorMessage =
+          'GHN API từ chối kết nối. Kiểm tra GHN_BASE_URL và network.';
+      } else if (
+        ghnError.code === 'ETIMEDOUT' ||
+        ghnError.code === 'ECONNABORTED'
+      ) {
         errorMessage = 'GHN API timeout (quá 15 giây). Vui lòng thử lại sau.';
-      } else if (ghnError.code === 'ENOTFOUND' || ghnError.code === 'EAI_AGAIN') {
-        errorMessage = 'Không thể tìm thấy GHN API server. Kiểm tra GHN_BASE_URL.';
-      } else if (ghnError.response?.status === 401 || ghnError.response?.status === 403) {
-        errorMessage = 'Lỗi xác thực GHN. Vui lòng kiểm tra GHN_TOKEN và GHN_SHOP_ID.';
+      } else if (
+        ghnError.code === 'ENOTFOUND' ||
+        ghnError.code === 'EAI_AGAIN'
+      ) {
+        errorMessage =
+          'Không thể tìm thấy GHN API server. Kiểm tra GHN_BASE_URL.';
+      } else if (
+        ghnError.response?.status === 401 ||
+        ghnError.response?.status === 403
+      ) {
+        errorMessage =
+          'Lỗi xác thực GHN. Vui lòng kiểm tra GHN_TOKEN và GHN_SHOP_ID.';
       } else if (ghnError.response?.status === 404) {
         errorMessage = `Không tìm thấy đơn hàng với tracking number: ${order.shipping.trackingNumber}`;
-      } else if (ghnError.response?.status === 500 || ghnError.response?.status === 502 || ghnError.response?.status === 503) {
+      } else if (
+        ghnError.response?.status === 500 ||
+        ghnError.response?.status === 502 ||
+        ghnError.response?.status === 503
+      ) {
         errorMessage = `GHN API server error (${ghnError.response.status}). GHN có thể đang bảo trì.`;
       } else if (ghnError.response?.data?.message) {
         errorMessage = `GHN API: ${ghnError.response.data.message}`;
@@ -1573,7 +1651,7 @@ export async function syncGhnOrderStatus(req, res) {
         success: false,
         error: 'Failed to fetch GHN status',
         message: errorMessage,
-        details: errorDetails
+        details: errorDetails,
       });
     }
   } catch (error) {
@@ -1589,7 +1667,7 @@ export async function syncGhnOrdersBulk(req, res) {
 
     let query = {
       'shipping.carrier': 'GHN',
-      'shipping.trackingNumber': { $exists: true, $ne: null }
+      'shipping.trackingNumber': { $exists: true, $ne: null },
     };
 
     // If specific order IDs provided, filter by them
@@ -1598,12 +1676,12 @@ export async function syncGhnOrdersBulk(req, res) {
     }
 
     const orders = await Order.find(query).limit(parseInt(limit));
-    
+
     if (orders.length === 0) {
       return res.json({
         success: true,
         message: 'No GHN orders found to sync',
-        results: []
+        results: [],
       });
     }
 
@@ -1626,14 +1704,14 @@ export async function syncGhnOrdersBulk(req, res) {
 
         if (mappedStatus && mappedStatus !== order.status) {
           order.status = mappedStatus;
-          if (mappedStatus === "delivered" && !order.shipping.actualDelivery) {
+          if (mappedStatus === 'delivered' && !order.shipping.actualDelivery) {
             order.shipping.actualDelivery = new Date();
           }
           order.timeline.push({
             status: mappedStatus,
             description: `Admin đồng bộ hàng loạt từ GHN: ${ghnStatus}`,
             timestamp: new Date(),
-            updatedBy: req.user?.sub || req.user?.id
+            updatedBy: req.user?.sub || req.user?.id,
           });
           await order.save();
           updated = true;
@@ -1647,7 +1725,7 @@ export async function syncGhnOrdersBulk(req, res) {
           newStatus: mappedStatus || order.status,
           ghnStatus,
           updated,
-          success: true
+          success: true,
         });
       } catch (err) {
         results.push({
@@ -1655,18 +1733,18 @@ export async function syncGhnOrdersBulk(req, res) {
           orderNumber: order.orderNumber,
           trackingNumber: order.shipping.trackingNumber,
           error: err.message,
-          success: false
+          success: false,
         });
       }
     }
 
-    const updatedCount = results.filter(r => r.updated).length;
+    const updatedCount = results.filter((r) => r.updated).length;
     res.json({
       success: true,
       message: `Synced ${orders.length} orders, ${updatedCount} updated`,
       total: orders.length,
       updated: updatedCount,
-      results
+      results,
     });
   } catch (error) {
     console.error('[Admin GHN Bulk Sync] Error:', error);

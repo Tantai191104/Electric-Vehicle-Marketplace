@@ -4,6 +4,7 @@ import Product from '../models/Product.js';
 import User from '../models/User.js';
 import WalletTransaction from '../models/WalletTransaction.js';
 import Config from '../models/Config.js';
+import cloudinary from '../config/cloudinary.js';
 
 // Deposit schema for vehicles - no shipping, just deposit payment
 const depositSchema = z.object({
@@ -20,7 +21,7 @@ const depositSchema = z.object({
 async function getDepositAmount() {
   const config = await Config.findOne({ key: 'depositAmount' });
   if (!config) return 500000;
-  
+
   if (Array.isArray(config.value)) {
     return config.value.length > 0 ? config.value[0] : 500000;
   } else if (typeof config.value === 'number') {
@@ -300,7 +301,7 @@ export async function cancelDeposit(req, res) {
       return res.status(404).json({ error: 'Buyer not found' });
     }
 
-    const refundAmount = order.finalAmount || await getDepositAmount();
+    const refundAmount = order.finalAmount || (await getDepositAmount());
     const balanceBefore = buyer.wallet?.balance || 0;
     buyer.wallet = buyer.wallet || {};
     buyer.wallet.balance = balanceBefore + refundAmount;
@@ -409,7 +410,7 @@ export async function getAllDeposits(req, res) {
 export async function getDepositAmountConfig(req, res) {
   try {
     const config = await Config.findOne({ key: 'depositAmount' });
-    
+
     // Support both old format (single amount) and new format (array of amounts)
     let depositAmounts = [];
     if (config) {
@@ -507,5 +508,107 @@ export async function updateDepositAmountConfig(req, res) {
   } catch (error) {
     console.error('updateDepositAmountConfig error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Upload contract PDF to Cloudinary and attach to order
+ * Supports single PDF file upload
+ */
+export async function uploadContractPdf(req, res) {
+  try {
+    const { orderId } = req.params;
+    const userId = req.user?.sub || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Find order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Check permission (buyer, seller, or admin can upload)
+    const isAdmin = req.user?.role === 'admin';
+    const isBuyer = order.buyerId.toString() === userId;
+    const isSeller = order.sellerId.toString() === userId;
+
+    if (!isAdmin && !isBuyer && !isSeller) {
+      return res.status(403).json({
+        error:
+          'Permission denied. Only buyer, seller, or admin can upload contract',
+      });
+    }
+
+    // Check if file exists
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Validate file is PDF
+    if (!req.file.mimetype.includes('pdf')) {
+      return res.status(400).json({
+        error: 'Only PDF files are allowed for contracts',
+      });
+    }
+
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image', // Use 'image' for PDF to allow inline preview
+          folder: 'contracts',
+          format: 'pdf',
+          public_id: `contract_${order.orderNumber}_${Date.now()}`,
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error);
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+
+      uploadStream.end(req.file.buffer);
+    });
+
+    // Update order contract information
+    if (!order.contract) {
+      order.contract = {};
+    }
+
+    order.contract.pdfUrl = uploadResult.secure_url;
+    order.contract.signedAt = new Date();
+
+    // Add timeline entry
+    order.timeline.push({
+      status: 'upload thành công',
+      description: `Tải lên hợp đồng thành công: ${req.file.originalname}`,
+      updatedBy: userId,
+    });
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Contract PDF uploaded successfully',
+      data: {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        contractPdfUrl: uploadResult.secure_url,
+        uploadedAt: order.contract.signedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error uploading contract PDF:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message,
+    });
   }
 }

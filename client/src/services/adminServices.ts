@@ -11,12 +11,14 @@ export type MetricData = {
   totalUsers: number;
   totalProducts: number;
   totalOrders: number;
+  totalGHNOrders: number;
   totalRevenue: number;
   totalCommission: number;
   percentageChanges: {
     users: number;
     products: number;
     orders: number;
+    ghnOrders: number;
     revenue: number;
     commission: number;
   };
@@ -87,11 +89,17 @@ export const adminServices = {
     labels: string[];
     revenue: number[];
     orders: number[];
+    orderRevenue: number[];
+    subscriptionRevenue: number[];
     growth: string;
     summary: {
       totalRevenue: number;
       totalOrders: number;
+      totalSubscriptions: number;
+      totalTransactions: number;
       avgOrderValue: number;
+      avgSubscriptionValue: number;
+      avgTransactionValue: number;
     };
   }> {
     const query: MetricsParams = {};
@@ -104,6 +112,41 @@ export const adminServices = {
     });
 
     // Trả về đúng object cho chart
+    return response.data.data;
+  },
+  async getSubscriptionRevenue(params?: MetricsParams): Promise<{
+    summary: {
+      totalRevenue: number;
+      totalPurchases: number;
+      avgPurchaseValue: number;
+      period: {
+        startDate: string;
+        endDate: string;
+      };
+    };
+    byTime: Array<{
+      period: string;
+      label: string;
+      revenue: number;
+      count: number;
+    }>;
+    byPlan: Array<{
+      _id: string | null;
+      revenue: number;
+      count: number;
+      planId: string | null;
+      planName: string;
+    }>;
+  }> {
+    const query: MetricsParams = {};
+    if (params?.range) query.range = params.range;
+    if (params?.startDate) query.startDate = params.startDate;
+    if (params?.endDate) query.endDate = params.endDate;
+
+    const response = await API.get("/admin/subscriptions/revenue", {
+      params: Object.keys(query).length ? query : undefined,
+    });
+
     return response.data.data;
   },
   async getAllOrders(): Promise<Order[]> {

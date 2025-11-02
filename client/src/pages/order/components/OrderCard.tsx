@@ -123,6 +123,42 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
     }
   };
 
+  // Helper function to translate status to Vietnamese
+  const getStatusLabel = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      'pending': 'Chờ xử lý',
+      'deposit': 'Chờ xử lý',
+      'confirmed': 'Đã xác nhận',
+      'shipping': 'Đang giao',
+      'delivered': 'Đã giao',
+      'cancelled': 'Đã hủy',
+      'refunded': 'Đã hoàn tiền',
+      'paid': 'Đã thanh toán',
+      'unpaid': 'Chưa thanh toán',
+      'processing': 'Đang xử lý',
+      'completed': 'Hoàn thành'
+    };
+    return statusMap[status.toLowerCase()] || status;
+  };
+
+  // Helper function to get badge color for status
+  const getStatusBadgeClass = (status: string): string => {
+    const colorMap: Record<string, string> = {
+      'pending': 'bg-gray-100 text-gray-700 border-gray-300',
+      'deposit': 'bg-gray-100 text-gray-700 border-gray-300',
+      'confirmed': 'bg-blue-100 text-blue-700 border-blue-300',
+      'shipping': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+      'delivered': 'bg-green-100 text-green-700 border-green-300',
+      'cancelled': 'bg-red-100 text-red-700 border-red-300',
+      'refunded': 'bg-purple-100 text-purple-700 border-purple-300',
+      'paid': 'bg-emerald-100 text-emerald-700 border-emerald-300',
+      'unpaid': 'bg-orange-100 text-orange-700 border-orange-300',
+      'processing': 'bg-indigo-100 text-indigo-700 border-indigo-300',
+      'completed': 'bg-teal-100 text-teal-700 border-teal-300'
+    };
+    return colorMap[status.toLowerCase()] || 'bg-gray-100 text-gray-700 border-gray-300';
+  };
+
   const isDepositOrder = order.shipping?.method !== "GHN";
   return (
     <Card className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden">
@@ -362,8 +398,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
                       {new Date(timeline.timestamp).toLocaleString('vi-VN')}
                     </p>
                   </div>
-                  <Badge variant="outline" className="text-xs border-gray-300 text-gray-700">
-                    {timeline.status}
+                  <Badge className={`text-xs font-semibold border ${getStatusBadgeClass(timeline.status)}`}>
+                    {getStatusLabel(timeline.status)}
                   </Badge>
                 </div>
               ))}
@@ -373,14 +409,25 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-gray-200">
-          <Button
-            variant="outline"
-            className="flex-1 border-black text-black hover:bg-black hover:text-white transition-all duration-200"
-            onClick={() => window.open(order.contract.pdfUrl, '_blank')}
-          >
-            <FiFileText className="w-4 h-4 mr-2" />
-            Xem hợp đồng đã kí
-          </Button>
+          {order.contract && order.contract.pdfUrl ? (
+            <Button
+              variant="outline"
+              className="flex-1 border-black text-black hover:bg-black hover:text-white transition-all duration-200"
+              onClick={() => window.open(order.contract.pdfUrl, '_blank')}
+            >
+              <FiFileText className="w-4 h-4 mr-2" />
+              Xem hợp đồng đã ký
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              disabled
+              className="flex-1 border-gray-300 text-gray-400 bg-gray-50 cursor-not-allowed"
+            >
+              <FiFileText className="w-4 h-4 mr-2" />
+              Chưa có hợp đồng
+            </Button>
+          )}
 
           {/* Button for GHN orders with status delivered_fail */}
           {order.shipping?.method === "GHN" && order.status === "delivered_fail" && (
