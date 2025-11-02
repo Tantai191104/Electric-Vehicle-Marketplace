@@ -21,8 +21,15 @@ import { authenticate } from "../middlewares/authenticate.js";
 
 const router = express.Router();
 
-// User và Admin đều có thể quản lý profile riêng của mình
-router.use(authenticate);
+// Only apply authenticate to /profile routes, not /products routes
+router.use((req, res, next) => {
+  // Skip authentication for non-profile routes
+  if (!req.path.startsWith('/profile')) {
+    return next(); // Skip authentication for non-profile routes
+  }
+  // Apply authentication only to /profile routes
+  authenticate(req, res, next);
+});
 /**
  * @swagger
  * /profile/locations/provinces:
