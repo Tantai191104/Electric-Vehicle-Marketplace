@@ -271,7 +271,6 @@ export function OrderDetailDialog({
                     <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
                     {isSyncing ? "Đang đồng bộ..." : "Đồng bộ GHN"}
                   </Button>
-                  <span className="text-xs text-blue-600">🔄 Tự động mỗi 60s</span>
                 </div>
               </div>
             )

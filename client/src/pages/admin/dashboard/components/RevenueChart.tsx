@@ -110,10 +110,13 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
   // Use API data if available, otherwise use fallback data
   let totalRevenue = 0;
   let totalOrders = 0;
+  let totalSubscriptions = 0;
   let growthDisplay = '+0%';
   let labels: string[] = [];
   let revenue: number[] = [];
   let orders: number[] = [];
+  let orderRevenue: number[] = [];
+  let subscriptionRevenue: number[] = [];
 
   if (
     apiData &&
@@ -128,8 +131,11 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
     labels = apiData.labels as string[];
     revenue = apiData.revenue as number[];
     orders = apiData.orders as number[];
+    orderRevenue = (apiData.orderRevenue as number[]) || [];
+    subscriptionRevenue = (apiData.subscriptionRevenue as number[]) || [];
     totalRevenue = (apiData.summary)?.totalRevenue || 0;
     totalOrders = (apiData.summary)?.totalOrders || 0;
+    totalSubscriptions = (apiData.summary)?.totalSubscriptions || 0;
     growthDisplay = apiData.growth as string || '+0%';
   } else {
     // Use fallback
@@ -197,9 +203,13 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
           label: (context: { parsed: { y: number }; dataIndex: number }) => {
             const revenueValue = context.parsed.y;
             const orderValue = orders?.[context.dataIndex] || 0;
+            const orderRev = orderRevenue?.[context.dataIndex] || 0;
+            const subscriptionRev = subscriptionRevenue?.[context.dataIndex] || 0;
+
             return [
-              `Doanh thu: ${formatVND(revenueValue)} đ`,
-              `Đơn hàng: ${orderValue} giao dịch`
+              `Tổng doanh thu: ${formatVND(revenueValue)}`,
+              `├─ Xe & pin: ${formatVND(orderRev)} (${orderValue} đơn)`,
+              `└─ Subscription: ${formatVND(subscriptionRev)}`
             ];
           },
         },
@@ -231,7 +241,10 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
             size: 12,
             weight: 500,
           },
-          callback: (value: string | number) => `${value}M`,
+          callback: (value: string | number) => {
+            const num = typeof value === 'number' ? value : Number(value);
+            return `${formatVND(Number.isFinite(num) ? num : 0)} `;
+          },
         },
       },
     },
@@ -241,7 +254,17 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
       },
     },
   };
-  console.log("Rendering RevenueChart with data:", { labels, revenue, orders, totalRevenue, totalOrders, growthDisplay });
+  console.log("Rendering RevenueChart with data:", {
+    labels,
+    revenue,
+    orders,
+    orderRevenue,
+    subscriptionRevenue,
+    totalRevenue,
+    totalOrders,
+    totalSubscriptions,
+    growthDisplay
+  });
   return (
     <Card className="border border-gray-200 shadow-sm bg-white h-full">
       <CardHeader className="pb-4">
@@ -291,7 +314,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
           </button>
         </div>
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
             <p className="text-xs text-gray-600 font-medium mb-1">Tổng doanh thu</p>
             <p className="text-xl font-bold text-gray-900">
@@ -299,8 +322,14 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ title, description, 
             </p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
-            <p className="text-xs text-gray-600 font-medium mb-1">Tổng giao dịch</p>
+            <p className="text-xs text-gray-600 font-medium mb-1">Đơn hàng</p>
             <p className="text-xl font-bold text-gray-900">{totalOrders}</p>
+            <p className="text-xs text-gray-500 mt-1">Xe & pin</p>
+          </div>
+          <div className="text-center p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+            <p className="text-xs text-indigo-600 font-medium mb-1">Gói đăng ký</p>
+            <p className="text-xl font-bold text-indigo-900">{totalSubscriptions}</p>
+            <p className="text-xs text-indigo-500 mt-1">Subscription</p>
           </div>
         </div>
 

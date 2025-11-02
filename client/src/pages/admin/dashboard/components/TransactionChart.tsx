@@ -23,7 +23,7 @@ export const TransactionChart: React.FC<TransactionChartProps> = ({ title, descr
 
   // Lấy data từ API, fallback nếu null
   const transactionData = transactionStats || {
-    categories: ['Chờ xử lý', 'Đã xác nhận', 'Đang vận chuyển', 'Đã giao', 'Đã hủy', 'Đã hoàn tiền'],
+    categories: ['Chờ xử lý', 'Đã xác nhận', 'Đang vận chuyển', 'Đã giao', 'Đã hủy'],
     values: [0, 0, 0, 0, 0, 0],
     total: 0,
     successRate: "0.0",

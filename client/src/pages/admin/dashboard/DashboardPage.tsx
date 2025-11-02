@@ -3,7 +3,6 @@ import { FiTrendingUp, FiGlobe } from "react-icons/fi";
 import { RevenueChart } from "./components/RevenueChart";
 import { TransactionChart } from "./components/TransactionChart";
 import { PlatformMetrics } from "./components/PlatformMetrics";
-
 export default function DashboardPage() {
     const [timeRange, setTimeRange] = useState("7d");
 
@@ -49,7 +48,7 @@ export default function DashboardPage() {
                                 <RevenueChart
                                     timeRange={timeRange}
                                     title="Doanh thu giao dịch xe & pin"
-                                    description="Tổng quan doanh thu từ xe điện cũ, pin xe điện và hoa hồng"
+                                    description="Tổng quan doanh thu từ xe điện cũ, pin xe điện và đăng kí gói"
                                 />
                             </div>
                         </div>
@@ -65,7 +64,6 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

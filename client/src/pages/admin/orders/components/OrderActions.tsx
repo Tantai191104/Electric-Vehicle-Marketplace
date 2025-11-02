@@ -30,36 +30,45 @@ export function OrderActions({
 }: OrderActionsProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [actionType, setActionType] = useState<Order['status'] | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const openConfirm = (status: Order['status']) => {
     setActionType(status);
     setConfirmOpen(true);
   };
 
-  const handleConfirm = async (file?: File | null) => {
-    if (!actionType) return;
+  const handleCloseDialog = (open: boolean) => {
+    if (!open && !isUploading) {
+      setConfirmOpen(false);
+      setActionType(null);
+    }
+  };
 
-    // If confirming and a file is provided, attempt to upload and sign contract first
+  const handleConfirm = async (file?: File | null) => {
+    if (!actionType || isUploading) return;
+
+    // If confirming and a file is provided, upload contract to order
     if (actionType === 'confirmed') {
       try {
-        console.log('Uploading and signing contract PDF for order', order);
-        if (file && order.contract && order.contract.contractId) {
-          await contractServices.signContract(order.contract.contractId, file);
-          toast.success('Hợp đồng đã được tải lên và ký thành công');
-        } else if (!file) {
-          // No file provided - in the UI confirm button is disabled when missing, but guard anyway
-          toast.error('Vui lòng chọn file PDF hợp đồng trước khi xác nhận');
-          return;
+        console.log('Uploading contract PDF for order', order);
+        
+        if (file) {
+          setIsUploading(true);
+          // Use the new upload API endpoint
+          await contractServices.uploadContractToOrder(order._id, file);
+          toast.success('Hợp đồng đã được tải lên thành công');
         } else {
-          // No contract ID available on the order
-          toast.error('Không tìm thấy contractId cho đơn hàng này.');
-          // proceed to update status anyway or return? we'll return to avoid inconsistent state
+          // No file provided
+          toast.error('Vui lòng chọn file PDF hợp đồng trước khi xác nhận');
           return;
         }
       } catch (err) {
         console.error('Failed to upload contract PDF', err);
         toast.error('Tải hợp đồng thất bại. Vui lòng thử lại.');
+        setIsUploading(false);
         return;
+      } finally {
+        setIsUploading(false);
       }
     }
 
@@ -120,7 +129,13 @@ export function OrderActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <OrderConfirmDialog open={confirmOpen} setOpen={setConfirmOpen} actionType={actionType} onConfirm={handleConfirm} />
+      <OrderConfirmDialog 
+        open={confirmOpen} 
+        setOpen={handleCloseDialog} 
+        actionType={actionType} 
+        onConfirm={handleConfirm}
+        isUploading={isUploading}
+      />
     </div>
   );
 }

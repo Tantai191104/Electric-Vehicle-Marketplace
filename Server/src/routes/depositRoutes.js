@@ -6,9 +6,27 @@ import {
   getAllDeposits,
   getDepositAmountConfig,
   updateDepositAmountConfig,
+  uploadContractPdf,
 } from '../controllers/depositController.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { requireAdmin } from '../middlewares/authorize.js';
+import multer from 'multer';
+
+// Memory storage for PDF upload
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  },
+});
 
 const router = express.Router();
 
@@ -270,5 +288,69 @@ router.get('/deposit-amount', getDepositAmountConfig);
  *         description: Server error
  */
 router.put('/admin/deposit-amount', authenticate, requireAdmin, updateDepositAmountConfig);
+
+/**
+ * @swagger
+ * /deposit/{orderId}/upload-contract:
+ *   post:
+ *     summary: Upload contract PDF to order
+ *     description: Upload a PDF contract file to Cloudinary and attach to order's contract.pdfUrl
+ *     tags: [Deposit]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: PDF contract file (max 10MB)
+ *     responses:
+ *       200:
+ *         description: Contract uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     orderId:
+ *                       type: string
+ *                     orderNumber:
+ *                       type: string
+ *                     contractPdfUrl:
+ *                       type: string
+ *                     uploadedAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: No file uploaded or invalid file type
+ *       403:
+ *         description: Permission denied
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/deposit/:orderId/upload-contract', authenticate, requireAdmin, upload.single('file'), uploadContractPdf);
 
 export default router;
