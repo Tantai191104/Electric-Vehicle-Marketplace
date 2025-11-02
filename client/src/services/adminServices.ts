@@ -38,10 +38,11 @@ export const adminServices = {
     const response = await API.get("/admin/products/pending");
     return response.data.data;
   },
-  async fetchAllProducts(status?: string): Promise<{ data: Product[]; pagination: { page: number; limit: number; total: number; pages: number } }> {
-    const params = status 
-      ? { status } 
-      : { limit: 100 }; // Fetch more products when showing all
+  async fetchAllProducts(status?: string): Promise<{
+    data: Product[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }> {
+    const params = status ? { status } : {};
     const response = await API.get("/admin/products", { params });
     return response.data;
   },

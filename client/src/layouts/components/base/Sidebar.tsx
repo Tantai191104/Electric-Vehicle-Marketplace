@@ -11,6 +11,7 @@ import {
     FaCarSide,
     FaRegIdCard,
     FaWallet,
+    FaShieldAlt,
 } from "react-icons/fa";
 import { useAuthStore } from "@/store/auth";
 import { authServices } from "@/services/authServices";
@@ -22,6 +23,7 @@ const adminLinks = [
     { to: "/admin/orders", label: "Đơn hàng", icon: <FaClipboardList /> },
     { to: "/admin/subscriptions", label: "Gói đăng ký", icon: <FaRegIdCard /> },
     { to: "/admin/deposits", label: "Mức đặt cọc", icon: <FaWallet /> },
+    { to: "/admin/violations", label: "Quản lý vi phạm", icon: <FaShieldAlt /> },
 ];
 
 export default function SideBar() {

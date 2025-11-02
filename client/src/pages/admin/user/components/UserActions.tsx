@@ -6,6 +6,7 @@ import {
   MoreHorizontal,
   ShieldAlert,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +24,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import { violationServices } from "@/services/violationServices";
 import type { User } from "@/types/authType";
+
+type ViolationCreatePayload = {
+  violationType: string;
+  description: string;
+  severity: "low" | "medium" | "high";
+  action: "warning" | "suspension" | "ban";
+};
 
 interface UserActionsProps {
   user: User;
@@ -57,12 +67,18 @@ export function UserActions({
 }: UserActionsProps) {
   const [showReasonDropdown, setShowReasonDropdown] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showViolationDialog, setShowViolationDialog] = useState(false);
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [extraReason, setExtraReason] = useState<string>("");
   const [reason, setReason] = useState<string>("");
   const [pendingStatus, setPendingStatus] = useState<"active" | "inactive">(
     user.isActive ? "inactive" : "active"
   );
+  const [violationType, setViolationType] = useState<string>("");
+  const [violationDesc, setViolationDesc] = useState<string>("");
+  const [violationSeverity, setViolationSeverity] = useState<"low" | "medium" | "high">("low");
+  const [violationAction, setViolationAction] = useState<"warning" | "suspension" | "ban">("warning");
+  const [violationLoading, setViolationLoading] = useState(false);
 
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);
@@ -84,6 +100,31 @@ export function UserActions({
     setSelectedReason("");
     setExtraReason("");
     setReason("");
+  };
+
+  const handleCreateViolation = async () => {
+    if (!violationType || !violationDesc) {
+      toast.error("Vui lòng nhập loại và mô tả vi phạm");
+      return;
+    }
+    setViolationLoading(true);
+    try {
+      const payload: ViolationCreatePayload = {
+        violationType,
+        description: violationDesc,
+        severity: violationSeverity,
+        action: violationAction,
+      };
+      await violationServices.createViolation(String(user._id), payload);
+      toast.success("Đã tạo vi phạm cho user!");
+      setShowViolationDialog(false);
+      setViolationType("");
+      setViolationDesc("");
+    } catch {
+      toast.error("Tạo vi phạm thất bại");
+    } finally {
+      setViolationLoading(false);
+    }
   };
 
   return (
@@ -126,6 +167,12 @@ export function UserActions({
               <CheckCircle className="h-4 w-4 text-green-500" />
             )}
             {user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setShowViolationDialog(true)}
+            className="flex items-center gap-2 px-3 py-2 hover:bg-red-50 rounded-lg text-red-600"
+          >
+            <ShieldAlert className="h-4 w-4 text-red-500" /> Tạo vi phạm
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -240,6 +287,67 @@ export function UserActions({
               className="bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-lg shadow-lg flex items-center gap-2 px-5 py-2 font-semibold transition-all"
             >
               <CheckCircle className="w-5 h-5" /> Xác nhận
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog tạo vi phạm */}
+      <Dialog open={showViolationDialog} onOpenChange={setShowViolationDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-red-600">Tạo vi phạm cho user</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Loại vi phạm</label>
+              <input
+                className="mt-1 w-full border rounded px-2 py-1"
+                value={violationType}
+                onChange={e => setViolationType(e.target.value)}
+                placeholder="VD: spam, fraud, ..."
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Mô tả</label>
+              <Textarea
+                value={violationDesc}
+                onChange={e => setViolationDesc(e.target.value)}
+                placeholder="Nhập mô tả vi phạm..."
+                className="mt-1 w-full resize-none min-h-[60px] border-gray-300 rounded-lg"
+              />
+            </div>
+            <div className="flex gap-2">
+              <div>
+                <label className="text-xs text-gray-500">Mức độ</label>
+                <select
+                  className="border rounded px-2 py-1"
+                  value={violationSeverity}
+                  onChange={e => setViolationSeverity(e.target.value as "low" | "medium" | "high")}
+                >
+                  <option value="low">Thấp</option>
+                  <option value="medium">Trung bình</option>
+                  <option value="high">Cao</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Hành động</label>
+                <select
+                  className="border rounded px-2 py-1"
+                  value={violationAction}
+                  onChange={e => setViolationAction(e.target.value as "warning" | "suspension" | "ban")}
+                >
+                  <option value="warning">Cảnh báo</option>
+                  <option value="suspension">Tạm khóa</option>
+                  <option value="ban">Cấm</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowViolationDialog(false)} disabled={violationLoading}>Hủy</Button>
+            <Button onClick={handleCreateViolation} disabled={violationLoading || !violationType || !violationDesc} className="bg-red-600 text-white">
+              {violationLoading ? "Đang tạo..." : "Tạo vi phạm"}
             </Button>
           </DialogFooter>
         </DialogContent>
