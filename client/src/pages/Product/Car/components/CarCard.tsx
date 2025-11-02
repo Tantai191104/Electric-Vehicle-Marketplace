@@ -29,19 +29,12 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
     return (
         <Card
             onClick={() => navigate(`/detail/${car._id}`)}
-            className={`bg-white border rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 p-0 overflow-hidden flex flex-col cursor-pointer group relative ${
+            className={`bg-white border rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 p-0 overflow-hidden flex flex-col cursor-pointer group relative ${
                 isHighPriority 
-                    ? "border-yellow-500 shadow-lg shadow-yellow-200/50 ring-2 ring-yellow-400 ring-opacity-50 hover:border-yellow-600 hover:shadow-yellow-300/60" 
-                    : "border-gray-200 hover:border-yellow-400"
+                    ? "border-yellow-400 bg-gradient-to-br from-yellow-50/30 to-orange-50/20" 
+                    : "border-gray-200 hover:border-gray-300"
             }`}
         >
-            {/* High Priority Animated Border Glow */}
-            {isHighPriority && (
-                <>
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 rounded-2xl blur opacity-30 group-hover:opacity-50 animate-pulse"></div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/40 via-transparent to-orange-50/40 pointer-events-none"></div>
-                </>
-            )}
             <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden relative">
                 <img
                     src={car.images[0] || "/images/placeholder.jpg"}
@@ -50,18 +43,18 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
                 />
                 <div className="absolute top-3 right-3 flex gap-2">
                     {isHighPriority && (
-                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg backdrop-blur-sm animate-pulse border-0 flex items-center gap-1">
+                        <Badge className="bg-yellow-500 text-white shadow-md border-0 flex items-center gap-1">
                             <Crown className="w-3 h-3" />
-                            Ưu tiên cao
+                            Ưu tiên
                         </Badge>
                     )}
-                    <Badge variant={car.status ? "default" : "destructive"} className="shadow-lg backdrop-blur-sm">
+                    <Badge variant={car.status ? "default" : "destructive"} className="shadow-md">
                         {car.status ? "Còn hàng" : "Đã bán"}
                     </Badge>
                 </div>
                 {car.condition && (
                     <div className="absolute top-3 left-3">
-                        <Badge variant="secondary" className="bg-white/95 backdrop-blur-sm shadow-lg">
+                        <Badge variant="secondary" className="bg-white/90 shadow-md">
                             {getConditionLabel(car.condition)}
                         </Badge>
                     </div>
@@ -89,15 +82,15 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
                 <div className="mt-auto pt-3 border-t border-gray-100">
                     <div className={`text-xl font-bold ${
                         isHighPriority 
-                            ? "bg-gradient-to-r from-yellow-600 via-orange-500 to-yellow-600 bg-clip-text text-transparent animate-pulse" 
-                            : "bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent"
+                            ? "text-yellow-600" 
+                            : "text-gray-900"
                     }`}>
                         {formatNumberWithDots(car.price)} đ
                     </div>
                     {isHighPriority && (
                         <div className="text-xs text-yellow-600 font-medium mt-1 flex items-center gap-1">
                             <Crown className="w-3 h-3" />
-                            <span>Sản phẩm được đẩy ưu tiên</span>
+                            <span>Sản phẩm ưu tiên</span>
                         </div>
                     )}
                 </div>
