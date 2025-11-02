@@ -316,38 +316,7 @@ router.get("/products/batteries", getBatteries);
  */
 router.get("/products/motorcycles", getMotorcycles);
 
-/**
- * @swagger
- * /products/{id}:
- *   get:
- *     summary: Get product by ID
- *     tags: [Products]
- *     description: Returns a single product. If seller has an active PRO subscription, response priorityLevel is boosted to "high". Also includes isPriorityBoosted and prioritySource.
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Product ID
- *     responses:
- *       200:
- *         description: Product details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   $ref: '#/components/schemas/Product'
- *       404:
- *         description: Product not found
- */
-router.get("/products/:id", getProductById);
-
-// Routes below require authentication
+// Routes below require authentication (specific routes must come before dynamic routes)
 
 /**
  * @swagger
@@ -529,7 +498,7 @@ router.post("/products", authenticate, requireProductManagement, enforceListingQ
  *       401:
  *         description: Unauthorized
  */
-// Chỉ User (người bán) có thể xem sản phẩm của mình
+// Chỉ User (người bán) có thể xem sản phẩm của mình - Must be before /products/:id
 router.get("/products/my/products", authenticate, requireProductManagement, getUserProducts);
 
 /**
@@ -803,5 +772,52 @@ router.get("/products/:id/contract-template", getProductContractTemplate);
  */
 // Get latest (final) contract PDF for a product
 router.get("/products/:id/final-contract", getFinalContractByProduct);
+
+/**
+ * @swagger
+ * /products/{id}:
+ *   get:
+ *     summary: Get product by ID
+ *     tags: [Products]
+ *     description: Returns a single product. If seller has an active PRO subscription, response priorityLevel is boosted to "high". Also includes isPriorityBoosted and prioritySource.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Product details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: Product not found
+ */
+// Public endpoint - MUST be ABSOLUTE LAST to avoid conflicts with ALL other routes
+// Add middleware to ONLY allow ObjectId format (24 hex chars) - this prevents matching /vehicles, /batteries, etc.
+router.get("/products/:id", (req, res, next) => {
+  const id = req.params.id;
+  
+  // Block specific route names that should match other routes
+  if (['vehicles', 'batteries', 'motorcycles', 'my', 'contract-template', 'final-contract'].includes(id)) {
+    return res.status(404).json({ error: 'Route not found' });
+  }
+  
+  // Only allow ObjectId format (24 hex characters)
+  if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+    return res.status(404).json({ error: 'Invalid product ID format' });
+  }
+  
+  next();
+}, getProductById);
 
 export default router;
