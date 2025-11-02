@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
+import { ghnClient, getGhnHeaders } from "../config/ghn.js";
 
 export async function getAdminStats(req, res) {
   try {
@@ -700,7 +701,7 @@ export async function getAllOrders(req, res) {
 export async function getOrderById(req, res) {
   try {
     const { id } = req.params;
-    const order = await Order.findById(id)
+    let order = await Order.findById(id)
       .populate('buyerId', 'name email phone')
       .populate('sellerId', 'name email phone')
       .populate('productId', 'title price images description');
@@ -709,10 +710,34 @@ export async function getOrderById(req, res) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    res.json({
-      success: true,
-      data: order,
-    });
+    if (order.shipping && order.shipping.carrier === 'GHN' && order.shipping.trackingNumber) {
+      try {
+        const headers = getGhnHeaders();
+        const resp = await ghnClient.post('/v2/shipping-order/detail', { order_code: order.shipping.trackingNumber }, { headers });
+        const ghnData = resp.data?.data || resp.data;
+        // Map GHN status sang status hệ thống
+        let ghnStatus = (ghnData.status || ghnData.current_status || '').toLowerCase();
+        let mappedStatus = order.status; // fallback
+        if (["delivered", "completed", "st_delivered_success"].includes(ghnStatus)) mappedStatus = "delivered";
+        else if (["cancelled", "st_cancel"].includes(ghnStatus)) mappedStatus = "cancelled";
+        else if (["return_transporting", "returning", "return_sorting"].includes(ghnStatus)) mappedStatus = "refunded";
+        else if (["picking", "picked", "st_picked_success", "transporting", "sorting", "delivering"].includes(ghnStatus)) mappedStatus = "shipped";
+        else if (["pending", "ready_to_pick", "ready_to_ship"].includes(ghnStatus)) mappedStatus = "pending";
+
+        if (mappedStatus !== order.status) {
+          order.status = mappedStatus;
+          order.timeline.push({ status: mappedStatus, description: `Tự động đồng bộ trạng thái từ GHN: ${ghnStatus}`, timestamp: new Date() });
+          await order.save();
+        }
+      } catch (e) {
+        console.warn('GHN sync status failed:', e?.message);
+      }
+      order = await Order.findById(id)
+        .populate('buyerId', 'name email phone')
+        .populate('sellerId', 'name email phone')
+        .populate('productId', 'title price images description');
+    }
+    res.json({ success: true, data: order });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

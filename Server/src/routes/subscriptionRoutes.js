@@ -11,6 +11,7 @@ import {
   getMySubscriptionUsage,
   assignPlanToUser,
   getUserSubscriptionById,
+  purchaseSubscription,
 } from '../controllers/subscriptionController.js';
 
 const router = express.Router();
@@ -63,6 +64,35 @@ router.get('/subscriptions/me', authenticate, getMySubscription);
  *         description: Usage summary for progress UI
  */
 router.get('/subscriptions/usage', authenticate, getMySubscriptionUsage);
+
+/**
+ * @swagger
+ * /subscriptions/purchase:
+ *   post:
+ *     summary: Purchase subscription plan (deduct from wallet)
+ *     tags: [Subscriptions]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               planId:
+ *                 type: string
+ *             required:
+ *               - planId
+ *     responses:
+ *       200:
+ *         description: Subscription purchased successfully
+ *       400:
+ *         description: Insufficient balance or invalid request
+ *       404:
+ *         description: Plan not found
+ */
+router.post('/subscriptions/purchase', authenticate, purchaseSubscription);
 
 // Admin
 /**
