@@ -30,11 +30,12 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
 }) => {
 
     const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
-    let subtotal = 0, shipping = 0, total = 0;
+    let subtotal = 0, shipping = 0, total = 0, deposit = 0;
     const isVehicle = product.category === "vehicle";
     if (isVehicle) {
         subtotal = 0;
-        shipping = depositAmount;
+        shipping = 0;
+        deposit = depositAmount;
         total = depositAmount;
     } else {
         const summary = calculateOrderSummary(
@@ -102,17 +103,22 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             </SummaryCard>
 
             {/* Info Summary: giao hàng hoặc lịch hẹn */}
-            <SummaryCard title={isVehicle ? "Thông tin lịch hẹn" : "Thông tin giao hàng"}>
+            <SummaryCard title={isVehicle ? "Thông tin đặt cọc" : "Thông tin giao hàng"}>
                 <div className="space-y-2">
                     {isVehicle ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div className="bg-blue-50 border border-blue-100 rounded-md p-2.5">
-                                <div className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Địa điểm nhận xe</div>
-                                <div className="font-semibold text-gray-900">{shippingInfo.city}</div>
-                            </div>
-                            <div className="bg-blue-50 border border-blue-100 rounded-md p-2.5">
-                                <div className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Thời gian hẹn nhận xe</div>
-                                <div className="font-semibold text-gray-900">{shippingInfo.note || "Chưa nhập thời gian hẹn"}</div>
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-semibold text-gray-900 mb-1">Thông tin sẽ được cập nhật sau</h4>
+                                    <p className="text-sm text-gray-600">
+                                        Sau khi hoàn tất thanh toán đặt cọc, đội ngũ chăm sóc khách hàng sẽ liên hệ với bạn trong vòng 24 giờ để xác nhận địa điểm và thời gian nhận xe.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     ) : (
@@ -149,7 +155,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             </SummaryCard>
 
             {/* Order Summary */}
-            <SummaryCard title={isVehicle ? "Lên lịch hẹn" : "Chi tiết thanh toán"}>
+            <SummaryCard title={isVehicle ? "Thanh toán đặt cọc" : "Chi tiết thanh toán"}>
                 <div className="space-y-2">
                     {/* Payment Method */}
                     <div className="bg-blue-50 border border-blue-100 rounded-md p-2.5 mb-3">
@@ -204,12 +210,17 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
                         </>
                     )}
 
-                    {/* Only show shipping fee and total for vehicle */}
+                    {/* Only show deposit for vehicle */}
                     {isVehicle && (
                         <>
-                            <div className="flex justify-between items-center bg-gray-50 px-2.5 py-2 rounded-md">
-                                <span className="text-gray-700 font-medium text-sm">Phí lên lịch hẹn</span>
-                                <span className="font-semibold text-blue-600">{formatVND(depositAmount)}</span>
+                            <div className="flex justify-between items-center bg-yellow-50 border border-yellow-100 px-2.5 py-2 rounded-md">
+                                <span className="text-yellow-800 font-medium text-sm">Phí đặt cọc xe</span>
+                                <span className="font-semibold text-yellow-800">{formatVND(deposit)}</span>
+                            </div>
+                            <div className="bg-blue-50 border border-blue-100 rounded-md p-3 mt-2">
+                                <p className="text-xs text-blue-700">
+                                    <strong>Lưu ý:</strong> Số tiền còn lại sẽ được thanh toán khi nhận xe. Chúng tôi sẽ liên hệ với bạn để xác nhận chi tiết.
+                                </p>
                             </div>
                         </>
                     )}
