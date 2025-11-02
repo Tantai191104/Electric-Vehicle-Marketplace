@@ -28,38 +28,32 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
     return (
         <Card
             onClick={() => navigate(`/detail/${battery._id}`)}
-            className={`relative overflow-hidden flex flex-col cursor-pointer group transition-all duration-500 rounded-3xl border
+            className={`relative overflow-hidden flex flex-col cursor-pointer group transition-all duration-300 rounded-2xl border
         ${isHighPriority
-                    ? "border-blue-400 shadow-[0_0_30px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_0_45px_-10px_rgba(59,130,246,0.6)]"
-                    : "border-gray-100 hover:border-blue-300 hover:shadow-[0_4px_20px_-8px_rgba(59,130,246,0.3)]"
-                } bg-white`}
+                    ? "border-blue-400 bg-gradient-to-br from-blue-50/30 to-cyan-50/20 shadow-md"
+                    : "border-gray-200 hover:border-gray-300 shadow-sm"
+                } bg-white hover:shadow-lg`}
         >
-            {/* Animated Glow Border for High Priority */}
-            {isHighPriority && (
-                <>
-                    <div className="absolute -inset-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 rounded-3xl opacity-25 blur-lg group-hover:opacity-40 transition-opacity"></div>
-                </>
-            )}
 
             {/* Image Section */}
-            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-3xl">
+            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-2xl">
                 <img
                     src={battery.images[0] || "/images/placeholder.jpg"}
                     alt={`${battery.brand} ${battery.model}`}
-                    className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                 />
 
                 {/* Badges top-right */}
                 <div className="absolute top-3 right-3 flex gap-2">
                     {isHighPriority && (
-                        <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md border-0 backdrop-blur-md flex items-center gap-1 animate-pulse">
+                        <Badge className="bg-blue-500 text-white shadow-md border-0 flex items-center gap-1">
                             <Crown className="w-3.5 h-3.5" />
-                            Ưu tiên cao
+                            Ưu tiên
                         </Badge>
                     )}
                     <Badge
                         variant={battery.status ? "default" : "destructive"}
-                        className="backdrop-blur-md shadow-sm border-0 text-white font-semibold px-2"
+                        className="shadow-md border-0 text-white font-semibold"
                     >
                         {battery.status ? "Còn hàng" : "Đã bán"}
                     </Badge>
@@ -70,7 +64,7 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
                     <div className="absolute top-3 left-3">
                         <Badge
                             variant="secondary"
-                            className="bg-white/80 text-gray-700 border border-gray-100 backdrop-blur-md shadow-sm"
+                            className="bg-white/90 text-gray-700 shadow-md"
                         >
                             {getConditionLabel(battery.condition)}
                         </Badge>
@@ -109,18 +103,18 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
                 {/* Price */}
                 <div className="mt-auto pt-3 border-t border-gray-100">
                     <div
-                        className={`text-2xl font-bold ${isHighPriority
-                            ? "bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-600 bg-clip-text text-transparent animate-pulse"
-                            : "bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent"
+                        className={`text-xl font-bold ${isHighPriority
+                            ? "text-blue-600"
+                            : "text-gray-900"
                             }`}
                     >
                         {formatNumberWithDots(battery.price)} đ
                     </div>
 
                     {isHighPriority && (
-                        <div className="text-xs text-blue-600 font-medium mt-2 flex items-center gap-1">
+                        <div className="text-xs text-blue-600 font-medium mt-1 flex items-center gap-1">
                             <Crown className="w-3.5 h-3.5" />
-                            <span>Sản phẩm được đẩy ưu tiên</span>
+                            <span>Sản phẩm ưu tiên</span>
                         </div>
                     )}
                 </div>
