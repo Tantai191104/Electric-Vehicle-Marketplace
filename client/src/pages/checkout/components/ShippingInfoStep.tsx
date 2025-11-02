@@ -109,21 +109,23 @@ export const ShippingInfoStep: React.FC<ShippingInfoStepProps> = ({
                 <div className="flex items-center justify-between bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <div>
                         <h3 className="font-semibold text-blue-900">
-                            {isDepositOrder ? "Thông tin hẹn nhận xe" : "Thông tin giao hàng"}
+                            {isDepositOrder ? "Thông tin đặt cọc xe" : "Thông tin giao hàng"}
                         </h3>
                         <p className="text-sm text-blue-700">
-                            {isDepositOrder ? "Vui lòng nhập địa điểm và thời gian hẹn nhận xe" : "Sử dụng thông tin từ hồ sơ của bạn"}
+                            {isDepositOrder ? "Thời điểm và thông tin sẽ được liên hệ sau" : "Sử dụng thông tin từ hồ sơ của bạn"}
                         </p>
                     </div>
-                    <Button
-                        onClick={handleEditProfile}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-100"
-                    >
-                        <FiEdit3 className="w-4 h-4" />
-                        Sửa hồ sơ
-                    </Button>
+                    {!isDepositOrder && (
+                        <Button
+                            onClick={handleEditProfile}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-100"
+                        >
+                            <FiEdit3 className="w-4 h-4" />
+                            Sửa hồ sơ
+                        </Button>
+                    )}
                 </div>
 
                 {/* Display user information (read-only) */}
@@ -158,43 +160,60 @@ export const ShippingInfoStep: React.FC<ShippingInfoStepProps> = ({
                         </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <InfoDisplay
-                            label="Địa điểm nhận xe"
-                            value={formData.city ? getCityLabel(formData.city) : "Vui lòng chọn địa điểm nhận xe"}
-                            icon={<FiMapPin className="w-4 h-4 text-blue-600" />}
-                        />
-                        <InfoDisplay
-                            label="Thời gian hẹn nhận xe"
-                            value={formData.note || "Vui lòng nhập thời gian hẹn nhận xe"}
-                            icon={<FiMapPin className="w-4 h-4 text-blue-600" />}
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border-2 border-blue-200">
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                <FiMapPin className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-semibold text-lg text-gray-900 mb-2">Đặt cọc xe thành công</h4>
+                                <p className="text-gray-700 mb-3">
+                                    Sau khi hoàn tất đặt cọc, chúng tôi sẽ liên hệ với bạn để:
+                                </p>
+                                <ul className="space-y-2 text-sm text-gray-600">
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-blue-600 font-bold mt-0.5">•</span>
+                                        <span>Xác nhận thông tin và lịch hẹn xem xe</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-blue-600 font-bold mt-0.5">•</span>
+                                        <span>Thỏa thuận địa điểm và thời gian nhận xe phù hợp</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-blue-600 font-bold mt-0.5">•</span>
+                                        <span>Hướng dẫn các thủ tục cần thiết</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Only note field is editable - hidden for vehicle */}
+                {!isDepositOrder && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ghi chú giao hàng (tùy chọn)
+                        </label>
+                        <textarea
+                            value={formData.note || ''}
+                            onChange={(e) => handleNoteChange(e.target.value)}
+                            rows={3}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            placeholder="Ghi chú đặc biệt cho việc giao hàng..."
                         />
                     </div>
                 )}
 
-                {/* Only note field is editable */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {isDepositOrder ? "Thời gian hẹn nhận xe (bắt buộc)" : "Ghi chú giao hàng (tùy chọn)"}
-                    </label>
-                    <textarea
-                        value={formData.note || ''}
-                        onChange={(e) => handleNoteChange(e.target.value)}
-                        rows={3}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        placeholder={isDepositOrder ? "Nhập thời gian hẹn nhận xe (ví dụ: 10h sáng, ngày 30/10/2025)" : "Ghi chú đặc biệt cho việc giao hàng..."}
-                    />
-                </div>
-
                 {/* Info banner */}
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className={`${isDepositOrder ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4`}>
                     <div className="flex items-start gap-3">
-                        <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className={`w-5 h-5 ${isDepositOrder ? 'bg-green-400' : 'bg-yellow-400'} rounded-full flex items-center justify-center flex-shrink-0 mt-0.5`}>
                             <span className="text-white text-xs font-bold">!</span>
                         </div>
                         <div>
-                            <p className="text-sm text-yellow-800">
-                                <strong>Lưu ý:</strong> {isDepositOrder ? "Vui lòng nhập chính xác địa điểm và thời gian hẹn nhận xe. Nếu cần thay đổi, hãy liên hệ với người bán hoặc cập nhật trong hồ sơ." : "Để thay đổi thông tin cá nhân và địa chỉ giao hàng, vui lòng cập nhật trong phần Hồ sơ của bạn."}
+                            <p className={`text-sm ${isDepositOrder ? 'text-green-800' : 'text-yellow-800'}`}>
+                                <strong>Lưu ý:</strong> {isDepositOrder ? "Đội ngũ chăm sóc khách hàng sẽ liên hệ với bạn trong vòng 24 giờ để xác nhận thông tin và sắp xếp lịch hẹn xem xe. Vui lòng giữ máy và kiểm tra email thường xuyên." : "Để thay đổi thông tin cá nhân và địa chỉ giao hàng, vui lòng cập nhật trong phần Hồ sơ của bạn."}
                             </p>
                         </div>
                     </div>

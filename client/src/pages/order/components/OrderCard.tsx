@@ -154,20 +154,28 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
               <FiCalendar className="w-4 h-4" />
               <span>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
             </div>
-            {/* Nếu là đơn đặt cọc thì hiện địa điểm và thời gian gặp mặt */}
-            {isDepositOrder && order.meetingInfo && (
-              <div className="flex flex-col gap-1 ml-4">
-                <div className="flex items-center gap-1">
-                  <FiMapPin className="w-4 h-4" />
-                  <span className="font-semibold">Địa điểm gặp mặt:</span>
-                  <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{order.meetingInfo.location}</span>
+            {/* Nếu là đơn đặt cọc */}
+            {isDepositOrder && (
+              order.meetingInfo ? (
+                <div className="flex flex-col gap-1 ml-4">
+                  <div className="flex items-center gap-1">
+                    <FiMapPin className="w-4 h-4" />
+                    <span className="font-semibold">Địa điểm gặp mặt:</span>
+                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{order.meetingInfo.location}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <FiCalendar className="w-4 h-4" />
+                    <span className="font-semibold">Thời gian:</span>
+                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{order.meetingInfo.time}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <FiCalendar className="w-4 h-4" />
-                  <span className="font-semibold">Thời gian:</span>
-                  <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{order.meetingInfo.time}</span>
+              ) : (
+                <div className="flex items-center gap-2 ml-4">
+                  <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">
+                    Thông tin sẽ được liên hệ trực tiếp với bạn sau
+                  </Badge>
                 </div>
-              </div>
+              )
             )}
             {/* Nếu là đơn GHN thì hiện tracking như cũ */}
             {!isDepositOrder && order.shipping?.trackingNumber && (
@@ -224,19 +232,35 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
               {isDepositOrder ? "Thông tin lịch hẹn" : "Thông tin giao hàng"}
             </h4>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
-              {isDepositOrder && order.meetingInfo ? (
-                <>
-                  <div className="flex items-center gap-2 text-sm">
-                    <FiMapPin className="w-4 h-4 text-gray-600" />
-                    <span className="font-medium text-black">Địa điểm gặp mặt:</span>
-                    <span className="text-gray-700">{order.meetingInfo.location}</span>
+              {isDepositOrder ? (
+                order.meetingInfo ? (
+                  <>
+                    <div className="flex items-center gap-2 text-sm">
+                      <FiMapPin className="w-4 h-4 text-gray-600" />
+                      <span className="font-medium text-black">Địa điểm gặp mặt:</span>
+                      <span className="text-gray-700">{order.meetingInfo.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <FiCalendar className="w-4 h-4 text-gray-600" />
+                      <span className="font-medium text-black">Thời gian:</span>
+                      <span className="text-gray-700">{order.meetingInfo.time}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <FiClock className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-blue-900 text-sm mb-1">Đang xử lý thông tin</p>
+                        <p className="text-xs text-blue-700">
+                          Thông tin lịch hẹn sẽ được liên hệ trực tiếp với bạn sau. Vui lòng kiểm tra email và điện thoại thường xuyên.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <FiCalendar className="w-4 h-4 text-gray-600" />
-                    <span className="font-medium text-black">Thời gian:</span>
-                    <span className="text-gray-700">{order.meetingInfo.time}</span>
-                  </div>
-                </>
+                )
               ) : (
                 <>
                   <div className="flex items-center gap-2 text-sm">

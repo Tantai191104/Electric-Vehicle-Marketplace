@@ -83,8 +83,12 @@ export default function CheckoutPage() {
             if (product?.category === "vehicle") {
                 try {
                     const response = await orderServices.getDepositAmount();
-                    if (response.success && response.data?.amount) {
-                        setDepositAmount(response.data.amount);
+                    console.log("Deposit API response:", response);
+                    if (response.success && response.depositAmounts && response.depositAmounts.length > 0) {
+                        setDepositAmount(response.depositAmounts[0]);
+                    } else {
+                        // Fallback to default if no depositAmounts
+                        setDepositAmount(500000);
                     }
                 } catch (error) {
                     console.error("Error fetching deposit amount:", error);
