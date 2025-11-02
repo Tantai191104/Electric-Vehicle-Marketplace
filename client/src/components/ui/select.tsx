@@ -7,6 +7,22 @@ import { cn } from "@/lib/utils"
 function Select({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
+  // Prevent layout shift when opening select
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      body[data-scroll-locked] {
+        overflow: visible !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return <SelectPrimitive.Root data-slot="select" {...props} />
 }
 
@@ -65,6 +81,8 @@ function SelectContent({
           className
         )}
         position={position}
+        sideOffset={4}
+        avoidCollisions={false}
         {...props}
       >
         <SelectScrollUpButton />

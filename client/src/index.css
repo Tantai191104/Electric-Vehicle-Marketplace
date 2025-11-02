@@ -41,12 +41,23 @@ body {
 /* Fix Radix Select không làm giật layout */
 html {
   overflow-y: scroll !important;
+  width: 100% !important;
 }
 
 body[data-scroll-locked] {
   overflow: visible !important;
   padding-right: 0 !important;
   margin-right: 0 !important;
+  width: 100% !important;
+}
+
+/* Ngăn tất cả Portal components gây shift */
+body {
+  overflow-x: hidden !important;
+}
+
+html, body {
+  scroll-behavior: smooth;
 }
 img,
 picture,
