@@ -28,6 +28,7 @@ import TransactionsPage from "@/pages/transaction/TransactionsPage";
 import OwnProduct from "@/pages/Product/own/OwnProduct";
 import OrderManage from "@/pages/admin/orders/OrderManage";
 import DepositFeePage from "@/pages/admin/deposit/DepositFeePage";
+import ViolationManagePage from "@/pages/admin/violations/ViolationManagePage";
 const pageVariants = {
   initial: { opacity: 0, y: 10, scale: 0.98 },
   animate: { opacity: 1, y: 0, scale: 1 },
@@ -107,6 +108,7 @@ export default function App() {
             <Route path="products" element={animatePage(<ProductManage />)} />
             <Route path="subscriptions" element={animatePage(<SubscriptionManage />)} />
             <Route path="deposits" element={animatePage(<DepositFeePage />)} />
+            <Route path="violations" element={animatePage(<ViolationManagePage />)} />
           </Route>
         </Route>
       </Routes>
