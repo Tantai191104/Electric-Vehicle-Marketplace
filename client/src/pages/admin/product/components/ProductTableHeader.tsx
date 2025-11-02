@@ -40,9 +40,9 @@ export default function ProductTableHeader({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Quản lý sản phẩm chờ duyệt</h2>
+                        <h2 className="text-2xl font-bold text-gray-800">Quản lý sản phẩm</h2>
                         <p className="text-sm text-gray-600">
-                            Xem xét và phê duyệt các sản phẩm được đăng bởi người dùng
+                            Xem xét, phê duyệt và quản lý tất cả sản phẩm trên hệ thống
                         </p>
                     </div>
                     {pendingCount > 0 && (
@@ -110,7 +110,8 @@ export default function ProductTableHeader({
                         <SelectItem value="all">Tất cả</SelectItem>
                         <SelectItem value="pending">Chờ duyệt</SelectItem>
                         <SelectItem value="active">Đã duyệt</SelectItem>
-                        <SelectItem value="inactive">Từ chối</SelectItem>
+                        <SelectItem value="rejected">Bị từ chối</SelectItem>
+                        <SelectItem value="inactive">Ngừng hoạt động</SelectItem>
                         <SelectItem value="sold">Đã bán</SelectItem>
                     </SelectContent>
                 </Select>

@@ -15,7 +15,7 @@ import { ProductDetailDialog } from "./components/ProductDetailDialog";
 import type { Product } from "@/types/productType";
 import ProductTablePagination from "./components/ProductTablePagination";
 import ProductTable from "./components/ProductTable";
-import { useAdmin } from "@/hooks/useAdmin";
+import { useQuery } from "@tanstack/react-query";
 import { adminServices } from "@/services/adminServices";
 import type { AxiosError } from "axios";
 import { RejectDialog } from "@/pages/admin/product/components/RejectDialog";
@@ -23,7 +23,7 @@ import { ConfirmDialog } from "./components/ConfirmDialog";
 export default function ProductManage() {
     const [globalFilter, setGlobalFilter] = useState("");
     const [categoryFilter, setCategoryFilter] = useState("all");
-    const [statusFilter, setStatusFilter] = useState("pending");
+    const [statusFilter, setStatusFilter] = useState("all");
     const [conditionFilter, setConditionFilter] = useState("all");
     const [sorting, setSorting] = useState<SortingState>([]);
     const [pageIndex, setPageIndex] = useState(0);
@@ -38,14 +38,21 @@ export default function ProductManage() {
 
     const queryClient = useQueryClient();
 
-    // Use admin hook to fetch all products
-    const { productsQuery } = useAdmin();
+    // Fetch products based on status filter
+    const productsQuery = useQuery({
+        queryKey: ["admin-products", statusFilter],
+        queryFn: () => adminServices.fetchAllProducts(statusFilter === "all" ? undefined : statusFilter),
+        staleTime: 30000, // Cache for 30 seconds
+    });
+
     const {
-        data: productsData = [],
+        data: productsResponse,
         isLoading,
         refetch,
         error
     } = productsQuery;
+
+    const productsData = productsResponse?.data || [];
 
     // Mutation for approving product
     const approveMutation = useMutation({

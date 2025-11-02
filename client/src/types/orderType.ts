@@ -40,6 +40,7 @@ export interface Order {
     | "pending"
     | "confirmed"
     | "shipping"
+    | "shipped"
     | "delivered"
     | "cancelled"
     | "refunded"

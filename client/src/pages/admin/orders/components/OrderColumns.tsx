@@ -94,6 +94,7 @@ export const getOrderColumns = (
                     confirmed: { label: "Đã xác nhận", variant: "default" as const },
                     deposit_confirmed: { label: "Đã đặt cọc", variant: "default" as const },
                     shipping: { label: "Đang giao", variant: "outline" as const },
+                    shipped: { label: "Đang giao hàng", variant: "outline" as const },
                     delivered: { label: "Đã giao", variant: "default" as const },
                     delivered_fail: { label: "Giao thất bại", variant: "destructive" as const },
                     cancelled: { label: "Đã hủy", variant: "destructive" as const },
