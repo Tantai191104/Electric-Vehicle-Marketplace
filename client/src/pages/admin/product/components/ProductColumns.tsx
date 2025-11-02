@@ -31,6 +31,7 @@ export const getProductColumns = (
     {
       accessorKey: "title",
       header: "Tên sản phẩm",
+      enableSorting: true,
       cell: (info) => (
         <div className="max-w-[200px]">
           <div className="font-semibold text-gray-800 truncate">
@@ -96,6 +97,12 @@ export const getProductColumns = (
     {
       accessorKey: "price",
       header: "Giá",
+      enableSorting: true,
+      sortingFn: (rowA, rowB) => {
+        const priceA = Number(rowA.original.price || 0);
+        const priceB = Number(rowB.original.price || 0);
+        return priceA - priceB;
+      },
       cell: (info) => (
         <div className="font-semibold text-gray-900">
           {formatVND(Number(info.getValue()))}
@@ -106,6 +113,12 @@ export const getProductColumns = (
     {
       accessorKey: "year",
       header: "Năm SX",
+      enableSorting: true,
+      sortingFn: (rowA, rowB) => {
+        const yearA = Number(rowA.original.year || 0);
+        const yearB = Number(rowB.original.year || 0);
+        return yearA - yearB;
+      },
       cell: (info) => (
         <div className="text-sm text-gray-600">
           {String(info.getValue())}
@@ -116,6 +129,7 @@ export const getProductColumns = (
     {
       accessorKey: "status",
       header: "Trạng thái",
+      enableSorting: true,
       cell: ({ row }) => {
         const status = row.original.status;
         const getStatusInfo = (status: string) => {
@@ -162,6 +176,12 @@ export const getProductColumns = (
     {
       accessorKey: "views",
       header: "Lượt xem",
+      enableSorting: true,
+      sortingFn: (rowA, rowB) => {
+        const viewsA = Number(rowA.original.views || 0);
+        const viewsB = Number(rowB.original.views || 0);
+        return viewsA - viewsB;
+      },
       cell: (info) => (
         <div className="text-center text-sm font-medium text-gray-700">
           {Number(info.getValue()).toLocaleString()}
@@ -172,6 +192,12 @@ export const getProductColumns = (
     {
       accessorKey: "likes",
       header: "Lượt thích",
+      enableSorting: true,
+      sortingFn: (rowA, rowB) => {
+        const likesA = Number(rowA.original.likes || 0);
+        const likesB = Number(rowB.original.likes || 0);
+        return likesA - likesB;
+      },
       cell: (info) => (
         <div className="text-center text-sm font-medium text-gray-700">
           {Number(info.getValue()).toLocaleString()}

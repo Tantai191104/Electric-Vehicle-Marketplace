@@ -72,10 +72,14 @@ export function UserActions({
   };
 
   const handleFinalConfirm = () => {
+    if (!user._id) {
+      console.error("User ID is missing");
+      return;
+    }
     const finalReason = extraReason.trim()
       ? `${selectedReason} - ${extraReason.trim()}`
       : selectedReason;
-    onStatusChange(user.email, pendingStatus, finalReason);
+    onStatusChange(user._id, pendingStatus, finalReason);
     setShowConfirmModal(false);
     setSelectedReason("");
     setExtraReason("");

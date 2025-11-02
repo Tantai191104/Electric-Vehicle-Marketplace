@@ -1,7 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { FiFilter } from "react-icons/fi";
 import { RefreshCw } from "lucide-react";
 
@@ -18,7 +17,6 @@ interface Props {
     onRefresh?: () => void;
     isLoading?: boolean;
     totalProducts?: number;
-    pendingCount?: number;
 }
 
 export default function ProductTableHeader({
@@ -33,7 +31,6 @@ export default function ProductTableHeader({
     onRefresh,
     isLoading = false,
     totalProducts = 0,
-    pendingCount = 0,
 }: Props) {
     return (
         <div className="flex flex-col gap-4 mb-6">
@@ -45,11 +42,6 @@ export default function ProductTableHeader({
                             Xem xét, phê duyệt và quản lý tất cả sản phẩm trên hệ thống
                         </p>
                     </div>
-                    {pendingCount > 0 && (
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                            {pendingCount} chờ duyệt
-                        </Badge>
-                    )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -116,28 +108,25 @@ export default function ProductTableHeader({
                     </SelectContent>
                 </Select>
 
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        setGlobalFilter("");
-                        setCategoryFilter("all");
-                        setStatusFilter("all");
-                        setConditionFilter("all");
-                    }}
-                >
-                    Xóa bộ lọc
-                </Button>
+                {(globalFilter !== "" || categoryFilter !== "all" || statusFilter !== "all" || conditionFilter !== "all") && (
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            setGlobalFilter("");
+                            setCategoryFilter("all");
+                            setStatusFilter("all");
+                            setConditionFilter("all");
+                        }}
+                    >
+                        Xóa bộ lọc
+                    </Button>
+                )}
             </div>
 
             {/* Stats */}
             {totalProducts > 0 && (
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                     <span>Tổng: {totalProducts} sản phẩm</span>
-                    {pendingCount > 0 && (
-                        <span className="text-yellow-600">
-                            • {pendingCount} đang chờ duyệt
-                        </span>
-                    )}
                 </div>
             )}
         </div>

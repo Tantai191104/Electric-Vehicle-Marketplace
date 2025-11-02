@@ -14,10 +14,19 @@ const depositSchema = z.object({
   buyer_address: z.string().min(5, 'Valid address is required'),
 });
 
-// Helper function to get deposit amount from config, default 500k VND
+// Helper function to get deposit amount from config
+// Returns first amount from array or default 500k VND
+// If config.value is array, returns first element; if number, returns it directly
 async function getDepositAmount() {
   const config = await Config.findOne({ key: 'depositAmount' });
-  return config ? config.value : 500000;
+  if (!config) return 500000;
+  
+  if (Array.isArray(config.value)) {
+    return config.value.length > 0 ? config.value[0] : 500000;
+  } else if (typeof config.value === 'number') {
+    return config.value;
+  }
+  return 500000;
 }
 
 /**
@@ -395,21 +404,31 @@ export async function getAllDeposits(req, res) {
 
 /**
  * Get current deposit amount configuration
- * Admin only
+ * Returns array of deposit amounts
  */
 export async function getDepositAmountConfig(req, res) {
   try {
     const config = await Config.findOne({ key: 'depositAmount' });
-    const amount = config ? config.value : 500000;
-    const description = config ? config.description : 'Default deposit amount';
+    
+    // Support both old format (single amount) and new format (array of amounts)
+    let depositAmounts = [];
+    if (config) {
+      if (Array.isArray(config.value)) {
+        depositAmounts = config.value;
+      } else if (typeof config.value === 'number') {
+        // Backward compatibility: convert single amount to array
+        depositAmounts = [config.value];
+      } else {
+        depositAmounts = [];
+      }
+    } else {
+      // Default: empty array or single default amount
+      depositAmounts = [];
+    }
 
     res.json({
       success: true,
-      data: {
-        amount,
-        description,
-        updatedAt: config?.updatedAt || null,
-      },
+      depositAmounts,
     });
   } catch (error) {
     console.error('getDepositAmountConfig error:', error);
@@ -420,49 +439,69 @@ export async function getDepositAmountConfig(req, res) {
 /**
  * Update deposit amount configuration
  * Admin only
+ * Accepts array of deposit amounts
  */
 export async function updateDepositAmountConfig(req, res) {
   try {
     const adminId = req.user?.sub || req.user?.id;
-    const { amount, description } = req.body;
+    const { depositAmounts, amount } = req.body; // Support both old and new format
 
-    if (amount === undefined || amount === null) {
+    // Determine which format is being used
+    let amountsArray = [];
+    if (Array.isArray(depositAmounts)) {
+      amountsArray = depositAmounts;
+    } else if (typeof amount === 'number') {
+      // Backward compatibility: single amount
+      amountsArray = [amount];
+    } else if (amount !== undefined) {
       return res.status(400).json({
         success: false,
-        error: 'Amount is required',
+        error: 'depositAmounts must be an array of numbers',
       });
     }
 
-    if (typeof amount !== 'number' || amount <= 0) {
+    // Validate all amounts are positive numbers
+    if (!Array.isArray(amountsArray)) {
       return res.status(400).json({
         success: false,
-        error: 'Amount must be a positive number',
+        error: 'depositAmounts must be an array',
       });
     }
+
+    for (const amt of amountsArray) {
+      if (typeof amt !== 'number' || amt <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'All deposit amounts must be positive numbers',
+        });
+      }
+    }
+
+    // Sort amounts and remove duplicates
+    const sortedAmounts = [...new Set(amountsArray)].sort((a, b) => a - b);
 
     // Find or create config
     const config = await Config.findOne({ key: 'depositAmount' });
 
     if (config) {
-      config.value = amount;
-      config.description = description || 'Vehicle deposit amount';
+      config.value = sortedAmounts;
+      config.description = 'Vehicle deposit amounts';
       config.updatedBy = adminId;
       await config.save();
     } else {
       await Config.create({
         key: 'depositAmount',
-        value: amount,
-        description: description || 'Vehicle deposit amount',
+        value: sortedAmounts,
+        description: 'Vehicle deposit amounts',
         updatedBy: adminId,
       });
     }
 
     res.json({
       success: true,
-      message: 'Deposit amount updated successfully',
+      message: 'Deposit amounts updated successfully',
       data: {
-        amount,
-        description: description || 'Vehicle deposit amount',
+        depositAmounts: sortedAmounts,
       },
     });
   } catch (error) {

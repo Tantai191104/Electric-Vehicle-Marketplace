@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import {
     useReactTable,
     getCoreRowModel,
@@ -53,6 +53,15 @@ export default function ProductManage() {
     } = productsQuery;
 
     const productsData = productsResponse?.data || [];
+    // Total from server is the total after status filter
+    // But we need to show total after all filters (status + category + condition)
+    // So we'll use filteredData length for accurate count
+    // But if we haven't filtered yet, use server total as estimate
+
+    // Reset to first page when filters or sorting change
+    useEffect(() => {
+        setPageIndex(0);
+    }, [statusFilter, categoryFilter, conditionFilter, sorting]);
 
     // Mutation for approving product
     const approveMutation = useMutation({
@@ -62,7 +71,9 @@ export default function ProductManage() {
                 description: "Người bán sẽ nhận được thông báo về việc phê duyệt",
                 duration: 4000,
             });
+            queryClient.invalidateQueries({ queryKey: ["admin-products"] });
             queryClient.invalidateQueries({ queryKey: ["products"] });
+            refetch();
             // Close dialog if the approved product is currently selected
             if (selectedProduct?._id === productId) {
                 setSelectedProduct(null);
@@ -89,7 +100,9 @@ export default function ProductManage() {
                 description: "Người bán đã nhận được thông báo kèm lý do từ chối",
                 duration: 4000,
             });
+            queryClient.invalidateQueries({ queryKey: ["admin-products"] });
             queryClient.invalidateQueries({ queryKey: ["products"] });
+            refetch();
             // Close dialog if the rejected product is currently selected
             if (selectedProduct?._id === productId) {
                 setSelectedProduct(null);
@@ -107,25 +120,32 @@ export default function ProductManage() {
         },
     });
 
-    // Calculate stats
-    const pendingCount = useMemo(() => {
-        if (!Array.isArray(productsData)) return 0;
-        return productsData.filter((product) => product.status === "pending").length;
-    }, [productsData]);
-
     // Filter data based on filters
     const filteredData = useMemo(() => {
         if (!Array.isArray(productsData)) return [];
         return productsData.filter((product) => {
+            // Category filter (client-side only)
             const matchesCategory =
                 categoryFilter === "all" || product.category === categoryFilter;
-            const matchesStatus =
-                statusFilter === "all" || product.status === statusFilter;
+            
+            
+            // Condition filter (client-side only)
             const matchesCondition =
                 conditionFilter === "all" || product.condition === conditionFilter;
-            return matchesCategory && matchesStatus && matchesCondition;
+            
+            return matchesCategory && matchesCondition;
         });
-    }, [productsData, categoryFilter, statusFilter, conditionFilter]);
+    }, [productsData, categoryFilter, conditionFilter]);
+
+    // Calculate display total
+    // If no client-side filters (category/condition = all), show server total
+    // If client-side filters applied, show filtered count from available data
+    const totalProductsFromServer = productsResponse?.pagination?.total || 0;
+    const hasClientSideFilters = categoryFilter !== "all" || conditionFilter !== "all";
+    
+    const displayTotal = hasClientSideFilters 
+        ? filteredData.length  // Client-side filtered count (may be incomplete if server limited results)
+        : (totalProductsFromServer > 0 ? totalProductsFromServer : filteredData.length); // Server total or fallback
 
     const handleToggleFeatured = useCallback(
         (productId: string, featured: boolean) => {
@@ -243,8 +263,7 @@ export default function ProductManage() {
                     setConditionFilter={setConditionFilter}
                     onRefresh={handleRefresh}
                     isLoading={isLoading || isProcessing}
-                    totalProducts={productsData.length}
-                    pendingCount={pendingCount}
+                    totalProducts={displayTotal}
                 />
 
                 {/* Loading overlay */}
@@ -263,12 +282,14 @@ export default function ProductManage() {
                     <div className="flex-1">
                         <ProductTable table={table} columns={columns} />
                     </div>
-                    <ProductTablePagination
-                        table={table}
-                        pageSize={pageSize}
-                        setPageSize={setPageSize}
-                    />
                 </div>
+                
+                {/* Pagination outside of pointer-events-none div - always interactive */}
+                <ProductTablePagination
+                    table={table}
+                    pageSize={pageSize}
+                    setPageSize={setPageSize}
+                />
 
                 {/* Product Detail Dialog */}
                 <ProductDetailDialog

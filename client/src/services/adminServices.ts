@@ -39,7 +39,9 @@ export const adminServices = {
     return response.data.data;
   },
   async fetchAllProducts(status?: string): Promise<{ data: Product[]; pagination: { page: number; limit: number; total: number; pages: number } }> {
-    const params = status ? { status } : {};
+    const params = status 
+      ? { status } 
+      : { limit: 100 }; // Fetch more products when showing all
     const response = await API.get("/admin/products", { params });
     return response.data;
   },
@@ -117,6 +119,17 @@ export const adminServices = {
   },
   async syncGhnOrderStatus(orderId: string) {
     const response = await API.post(`/admin/orders/${orderId}/sync-ghn`);
+    return response.data;
+  },
+  async updateUserStatus(
+    userId: string,
+    isActive: boolean,
+    reason?: string
+  ): Promise<User> {
+    const response = await API.put(`/users/${userId}`, {
+      isActive,
+      ...(reason && { banReason: reason }),
+    });
     return response.data;
   },
 };
