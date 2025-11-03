@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import PostSuccessDialog from "./components/PostSuccessDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { VehicleFormData, BatteryFormData } from "@/types/productType";
@@ -88,7 +87,6 @@ const CATEGORY_LIST = [
 ];
 
 const EditorPage: React.FC = () => {
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [form, setForm] = useState<VehicleFormData | BatteryFormData | null>(null);
   const [showTypeDialog, setShowTypeDialog] = useState(true);
   const [images, setImages] = useState<string[]>([]);
@@ -99,16 +97,6 @@ const EditorPage: React.FC = () => {
   const [sellerSignatureDataUrl, setSellerSignatureDataUrl] = useState<string | null>(null);
   const [buyerSignatureDataUrl, setBuyerSignatureDataUrl] = useState<string | null>(null);
   const [createdProductId, setCreatedProductId] = useState<string | null>(null);
-  const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
-  const [priceAnalysis, setPriceAnalysis] = useState<{
-    priceRange?: { low: number; recommended: number; high: number };
-    reasoning?: { low: string; recommended: string; high: string };
-    marketAnalysis?: string;
-    factors?: string[];
-    tips?: string[];
-    warnings?: string[];
-  } | null>(null);
-  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -119,44 +107,6 @@ const EditorPage: React.FC = () => {
       setForm(initialBatteryData);
     }
     setShowTypeDialog(false);
-  };
-
-  const handleGetPriceSuggestion = async () => {
-    if (!form) return;
-    
-    // Validate required fields
-    const requiredFields = ['title', 'brand', 'model', 'year'];
-    const missingFields = requiredFields.filter(field => !form[field as keyof typeof form]);
-    
-    if (missingFields.length > 0) {
-      toast.error("Vui lòng điền đầy đủ thông tin cơ bản (Tiêu đề, Thương hiệu, Model, Năm) để nhận gợi ý giá");
-      return;
-    }
-
-    setIsLoadingPrice(true);
-    try {
-      const priceData = await productServices.suggestPrice(form);
-      
-      setSuggestedPrice(priceData.suggestedPrice);
-      setPriceAnalysis({
-        priceRange: priceData.priceRange,
-        reasoning: priceData.reasoning,
-        marketAnalysis: priceData.marketAnalysis,
-        factors: priceData.factors,
-        tips: priceData.tips,
-        warnings: priceData.warnings,
-      });
-      
-      // Auto-fill the recommended price
-      setForm({ ...form, price: priceData.priceRange?.recommended || priceData.suggestedPrice });
-      
-      toast.success(`Gợi ý giá: ${(priceData.priceRange?.recommended || priceData.suggestedPrice).toLocaleString('vi-VN')} ₫`);
-    } catch (error) {
-      console.error("Error getting price suggestion:", error);
-      toast.error("Không thể lấy gợi ý giá. Vui lòng thử lại sau.");
-    } finally {
-      setIsLoadingPrice(false);
-    }
   };
 
   const handleSubmit = async () => {
@@ -173,10 +123,11 @@ const EditorPage: React.FC = () => {
 
       if (form?.category === "vehicle") {
         toast.success("Đăng tin xe điện thành công!");
-        setShowSuccessDialog(true);
       } else {
         toast.success("Đăng tin pin thành công! Chuyển sang tạo hợp đồng...");
+        // prepare contract HTML and open dialog for extra terms + signature
         setCreatedProductId(productId || null);
+        // navigate to full-page contract editor where user can sign on-screen
         navigate(`/contracts/edit/${productId}`);
       }
     } catch (error) {
@@ -245,13 +196,7 @@ const EditorPage: React.FC = () => {
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       <div className="relative z-10 flex justify-center">
         {/* Popup chọn loại sản phẩm */}
-        <Dialog
-          open={showTypeDialog}
-          onOpenChange={(open) => {
-            setShowTypeDialog(open);
-            if (!open && !form) setForm(initialBatteryData);
-          }}
-        >
+        <Dialog open={showTypeDialog} onOpenChange={setShowTypeDialog}>
           <DialogContent className="sm:max-w-md md:max-w-xl rounded-2xl p-0 overflow-hidden bg-white shadow-2xl">
             <div className="border-b px-6 py-4 bg-gray-50">
               <DialogHeader>
@@ -286,27 +231,6 @@ const EditorPage: React.FC = () => {
         {/* Layout cải tiến */}
         {form && (
           <div className="w-full max-w-7xl mx-auto">
-            {/* Dropdown to change category */}
-            <div className="flex justify-end mb-6">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-700">Danh mục:</span>
-                <select
-                  value={form.category}
-                  onChange={e => {
-                    const cat = e.target.value;
-                    if (cat === "vehicle") {
-                      setForm(initialVehicleData);
-                    } else {
-                      setForm(initialBatteryData);
-                    }
-                  }}
-                  className="rounded-xl border border-gray-300 px-4 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                >
-                  <option value="vehicle">Xe điện</option>
-                  <option value="battery">Pin xe điện</option>
-                </select>
-              </div>
-            </div>
             {/* Header với gradient đẹp */}
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-4 p-6 bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 rounded-3xl shadow-2xl">
@@ -342,14 +266,7 @@ const EditorPage: React.FC = () => {
 
               {/* Cột phải: Forms */}
               <div className="lg:w-2/3 w-full space-y-8">
-                <BasicInfoForm 
-                  form={form} 
-                  setForm={setForm}
-                  onGetPriceSuggestion={handleGetPriceSuggestion}
-                  isLoadingPrice={isLoadingPrice}
-                  suggestedPrice={suggestedPrice}
-                  priceAnalysis={priceAnalysis}
-                />
+                <BasicInfoForm form={form} setForm={setForm} />
 
                 {form.category === "vehicle" ? (
                   <VehicleSpecificationsForm form={form as VehicleFormData} setForm={setForm as React.Dispatch<React.SetStateAction<VehicleFormData>>} />
@@ -510,8 +427,6 @@ const EditorPage: React.FC = () => {
             </Button>
           </div>
         )}
-
-        <PostSuccessDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
       </div>
     </div>
   );

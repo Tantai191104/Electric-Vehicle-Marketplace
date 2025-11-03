@@ -21,7 +21,7 @@ const PostSuccessDialog: React.FC<PostSuccessDialogProps> = ({ open, onOpenChang
                 <div className="px-6 pt-4 pb-2">
                     <div className="font-semibold text-gray-700 text-base mb-3 text-center">Bạn muốn chuyển sang trang quản lý tin hay tiếp tục đăng tin mới?</div>
                     <div className="flex gap-4 justify-center mt-6">
-                        <Button variant="secondary" onClick={() => { onOpenChange(false); navigate("/products/manage"); }}>Quản lý tin</Button>
+                        <Button variant="secondary" onClick={() => { onOpenChange(false); navigate("/own/product"); }}>Quản lý tin</Button>
                         <Button variant="outline" onClick={() => onOpenChange(false)}>Ở lại trang này</Button>
                     </div>
                 </div>
