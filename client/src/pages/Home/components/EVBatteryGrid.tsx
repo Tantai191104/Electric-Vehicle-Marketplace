@@ -97,16 +97,19 @@ export default function EVBatteryGrid() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product: Product) => {
-            const isHighPriority = product.priorityLevel === "high" || product.isPriorityBoosted === true;
+                  const isHighPriority = product.priorityLevel === "high";
+                  const isLowPriority = product.priorityLevel === "low";
 
             return (
               <Card
                 onClick={() => navigate(`/detail/${product._id}`)}
                 key={product._id}
-                className={`group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-2xl ${isHighPriority
-                  ? "border-2 border-blue-400 shadow-lg shadow-blue-200/50 ring-2 ring-blue-300/30"
-                  : "border border-gray-200 hover:border-blue-300"
-                  }`}
+                      className={`group cursor-pointer overflow-hidden transition-all duration-300 ${isHighPriority
+                        ? "border-2 border-amber-600 shadow-lg shadow-amber-200/50 ring-2 ring-amber-300/30"
+                        : isLowPriority
+                          ? "border border-black bg-white text-black shadow-sm hover:shadow-md"
+                          : "border border-gray-200 hover:border-amber-300"
+                        }`}
               >
                 {/* Image */}
                 <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -120,7 +123,7 @@ export default function EVBatteryGrid() {
                   {/* Priority Badge */}
                   {isHighPriority && (
                     <div className="absolute top-3 right-3">
-                      <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 shadow-md flex items-center gap-1 animate-pulse">
+                      <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-md flex items-center gap-1 animate-pulse">
                         <Crown className="w-3 h-3" />
                         Ưu tiên
                       </Badge>
@@ -138,7 +141,7 @@ export default function EVBatteryGrid() {
                 {/* Content */}
                 <div className="p-4">
                   {/* Title */}
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem] group-hover:text-blue-600 transition-colors">
+                  <h3 className={`font-semibold mb-2 line-clamp-2 min-h-[3rem] transition-colors ${isLowPriority ? 'text-black' : 'text-gray-900 group-hover:text-amber-600'}`}>
                     {product.title || `${product.brand} ${product.model}`}
                   </h3>
 
@@ -204,10 +207,7 @@ export default function EVBatteryGrid() {
                   )}
 
                   {/* Price */}
-                  <div className={`text-xl font-bold ${isHighPriority
-                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent"
-                    : "text-blue-600"
-                    }`}>
+                  <div className={`text-xl font-bold ${isHighPriority ? 'text-amber-600' : isLowPriority ? 'text-black' : 'text-gray-900'}`}>
                     {formatNumberWithDots(product.price)} đ
                   </div>
                 </div>

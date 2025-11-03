@@ -55,7 +55,16 @@ export default function EVProductGrid() {
     );
   }
 
-  const products = (data?.products || []).slice(0, 8);
+  // Sort by priority (high -> medium -> low), then take first 8
+  const products = (data?.products || [])
+    .slice() // clone to avoid mutating original
+    .sort((a: Product, b: Product) => {
+      const priorityOrder = { high: 1, medium: 2, low: 3 } as Record<string, number>;
+      const aPriority = priorityOrder[a.priorityLevel as keyof typeof priorityOrder] || 99;
+      const bPriority = priorityOrder[b.priorityLevel as keyof typeof priorityOrder] || 99;
+      return aPriority - bPriority;
+    })
+    .slice(0, 8);
 
   return (
     <section className="max-w-7xl mx-auto px-2 py-10">
@@ -92,18 +101,20 @@ export default function EVProductGrid() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product: Product) => {
-            const isHighPriority =
-              product.priorityLevel === "high" || product.isPriorityBoosted;
+            const isHighPriority = product.priorityLevel === "high";
+            const isLowPriority = product.priorityLevel === "low";
 
             return (
               <Card
                 onClick={() => navigate(`/detail/${product._id}`)}
                 key={product._id}
-                className={`overflow-hidden rounded-2xl border bg-white group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 ${
-                  isHighPriority
-                    ? "border-amber-400"
-                    : "border-gray-100 hover:border-amber-300"
-                }`}
+                className={`overflow-hidden rounded-2xl border group cursor-pointer transition-all duration-300 ${
+                    isHighPriority
+                      ? "bg-white shadow-lg hover:shadow-xl border-amber-600"
+                      : isLowPriority
+                        ? "bg-white border-black text-black shadow-sm hover:shadow-md"
+                        : "bg-white border-gray-100 hover:border-amber-300 shadow-sm hover:shadow-lg"
+                  }`}
               >
                 {/* Image */}
                 <CardHeader className="p-0 relative">
@@ -130,7 +141,7 @@ export default function EVProductGrid() {
 
                 <CardContent className="p-4 flex flex-col justify-between">
                   <div>
-                    <CardTitle className="text-base font-bold text-gray-900 mb-1 line-clamp-1">
+                    <CardTitle className={`text-base font-bold mb-1 line-clamp-1 ${isLowPriority ? 'text-black' : 'text-gray-900'}`}>
                       {product.brand} {product.model}
                     </CardTitle>
 
@@ -148,13 +159,7 @@ export default function EVProductGrid() {
                       </span>
                     </div>
 
-                    <div
-                      className={`text-lg font-bold mb-3 ${
-                        isHighPriority
-                          ? "text-amber-600"
-                          : "text-gray-800"
-                      }`}
-                    >
+                    <div className={`text-lg font-bold mb-3 ${isHighPriority ? 'text-amber-600' : isLowPriority ? 'text-black' : 'text-gray-800'}`}>
                       {formatNumberWithDots(product.price)} VNĐ
                     </div>
 
