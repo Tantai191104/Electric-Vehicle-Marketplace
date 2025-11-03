@@ -14,7 +14,8 @@ interface BatteryCardProps {
 
 const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
     const navigate = useNavigate();
-    const isHighPriority = battery.priorityLevel === "high" || battery.isPriorityBoosted === true;
+    const isHighPriority = battery.priorityLevel === "high";
+    const isLowPriority = battery.priorityLevel === "low";
     
     console.log('Battery Priority Info:', {
         id: battery._id,
@@ -28,11 +29,13 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
     return (
         <Card
             onClick={() => navigate(`/detail/${battery._id}`)}
-            className={`relative overflow-hidden flex flex-col cursor-pointer group transition-all duration-300 rounded-2xl border
-        ${isHighPriority
-                    ? "border-blue-400 bg-gradient-to-br from-blue-50/30 to-cyan-50/20 shadow-md"
-                    : "border-gray-200 hover:border-gray-300 shadow-sm"
-                } bg-white hover:shadow-lg`}
+            className={`relative overflow-hidden flex flex-col cursor-pointer group transition-all duration-300 rounded-2xl ${
+                isHighPriority
+                        ? 'bg-white shadow-lg hover:shadow-xl border-amber-600 bg-gradient-to-br from-amber-50/30 to-amber-100/20'
+                        : isLowPriority
+                            ? 'bg-white border-black text-black opacity-95 shadow-sm hover:shadow-md'
+                            : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-lg'
+            }`}
         >
 
             {/* Image Section */}
@@ -46,7 +49,7 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
                 {/* Badges top-right */}
                 <div className="absolute top-3 right-3 flex gap-2">
                     {isHighPriority && (
-                        <Badge className="bg-blue-500 text-white shadow-md border-0 flex items-center gap-1">
+                        <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md border-0 flex items-center gap-1">
                             <Crown className="w-3.5 h-3.5" />
                             Ưu tiên
                         </Badge>
@@ -74,7 +77,7 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
 
             {/* Content */}
             <CardContent className="relative flex flex-col flex-1 p-5">
-                <CardTitle className="text-lg font-semibold text-gray-900 leading-tight mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[3rem]">
+                <CardTitle className={`text-lg font-semibold leading-tight mb-2 line-clamp-2 min-h-[3rem] transition-colors ${isLowPriority ? 'text-black' : 'text-gray-900 group-hover:text-amber-600'}`}>
                     {battery.title || `${battery.brand} ${battery.model}`}
                 </CardTitle>
 
@@ -102,17 +105,12 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
 
                 {/* Price */}
                 <div className="mt-auto pt-3 border-t border-gray-100">
-                    <div
-                        className={`text-xl font-bold ${isHighPriority
-                            ? "text-blue-600"
-                            : "text-gray-900"
-                            }`}
-                    >
+                    <div className={`text-xl font-bold ${isHighPriority ? 'text-amber-600' : isLowPriority ? 'text-black' : 'text-gray-900'}`}>
                         {formatNumberWithDots(battery.price)} đ
                     </div>
 
                     {isHighPriority && (
-                        <div className="text-xs text-blue-600 font-medium mt-1 flex items-center gap-1">
+                        <div className="text-xs text-amber-600 font-medium mt-1 flex items-center gap-1">
                             <Crown className="w-3.5 h-3.5" />
                             <span>Sản phẩm ưu tiên</span>
                         </div>
