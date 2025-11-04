@@ -97,22 +97,25 @@ export default function EVBatteryGrid() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product: Product) => {
-                  const isHighPriority = product.priorityLevel === "high";
-                  const isLowPriority = product.priorityLevel === "low";
+            const isHighPriority = product.priorityLevel === "high";
+            const isLowPriority = product.priorityLevel === "low";
 
             return (
               <Card
                 onClick={() => navigate(`/detail/${product._id}`)}
                 key={product._id}
-                      className={`group cursor-pointer overflow-hidden transition-all duration-300 ${isHighPriority
-                        ? "border-2 border-amber-600 shadow-lg shadow-amber-200/50 ring-2 ring-amber-300/30"
-                        : isLowPriority
-                          ? "border border-black bg-white text-black shadow-sm hover:shadow-md"
-                          : "border border-gray-200 hover:border-amber-300"
-                        }`}
+                className={`group cursor-pointer overflow-hidden transition-all duration-300 ${isHighPriority
+                  ? "bg-gradient-to-br from-amber-50 to-amber-100 border-0 shadow-2xl hover:-translate-y-1 hover:shadow-2xl"
+                  : isLowPriority
+                    ? "border border-black bg-white text-black shadow-sm hover:shadow-md"
+                    : "border border-gray-200 hover:border-amber-300"
+                  }`}
               >
                 {/* Image */}
                 <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-50 to-cyan-50">
+                  {isHighPriority && (
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-amber-400 to-amber-600" />
+                  )}
                   <img
                     src={product.images[0] || "/images/placeholder.jpg"}
                     alt={`${product.brand} ${product.model}`}
@@ -123,7 +126,7 @@ export default function EVBatteryGrid() {
                   {/* Priority Badge */}
                   {isHighPriority && (
                     <div className="absolute top-3 right-3">
-                      <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-md flex items-center gap-1 animate-pulse">
+                      <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg flex items-center gap-2 rounded-full px-3 py-1">
                         <Crown className="w-3 h-3" />
                         Ưu tiên
                       </Badge>

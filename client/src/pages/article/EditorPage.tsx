@@ -9,6 +9,7 @@ import BatterySpecificationsForm from "./components/BatterySpecificationsForm";
 import LocationForm from "./components/LocationForm";
 import ImagesForm from "./components/ImagesForm";
 import { Car, Bike, BatteryCharging } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { productServices } from "@/services/productServices";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -99,6 +100,16 @@ const EditorPage: React.FC = () => {
   const [createdProductId, setCreatedProductId] = useState<string | null>(null);
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
+  const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
+  const [priceAnalysis, setPriceAnalysis] = useState<null | {
+    priceRange?: { low: number; recommended: number; high: number };
+    reasoning?: { low: string; recommended: string; high: string };
+    marketAnalysis?: string;
+    factors?: string[];
+    tips?: string[];
+    warnings?: string[];
+  }>(null);
 
   const handleCategorySelect = (category: "vehicle" | "battery") => {
     if (category === "vehicle") {
@@ -107,6 +118,34 @@ const EditorPage: React.FC = () => {
       setForm(initialBatteryData);
     }
     setShowTypeDialog(false);
+  };
+
+  // Gợi ý giá AI: chỉ tính toán và cập nhật state, KHÔNG đăng tin
+  const handleGetPriceSuggestion = async () => {
+    if (!form) {
+      toast.error("Vui lòng điền thông tin cơ bản trước khi gợi ý giá");
+      return;
+    }
+    try {
+      setIsLoadingPrice(true);
+      setSuggestedPrice(null);
+      setPriceAnalysis(null);
+      const res = await productServices.suggestPrice(form);
+      setSuggestedPrice(res?.suggestedPrice ?? null);
+      setPriceAnalysis({
+        priceRange: res?.priceRange,
+        reasoning: res?.reasoning,
+        marketAnalysis: res?.marketAnalysis,
+        factors: res?.factors,
+        tips: res?.tips,
+        warnings: res?.warnings,
+      });
+    } catch (err) {
+      console.error("Error suggesting price:", err);
+      toast.error("Gợi ý giá thất bại");
+    } finally {
+      setIsLoadingPrice(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -254,6 +293,32 @@ const EditorPage: React.FC = () => {
                 </div>
               </div>
             </div>
+            {/* Dropdown to switch between Vehicle and Battery posting */}
+            <div className="w-full max-w-7xl mx-auto mb-6 flex justify-end">
+              <div className="w-56">
+                <Select
+                  value={form.category}
+                  onValueChange={(val) => {
+                    if (val === "vehicle") {
+                      setForm(initialVehicleData);
+                    } else {
+                      setForm(initialBatteryData);
+                    }
+                    // clear previous suggestions when switching
+                    setSuggestedPrice(null);
+                    setPriceAnalysis(null);
+                  }}
+                >
+                  <SelectTrigger className="w-full rounded-xl bg-white border border-gray-200 h-10 px-3 shadow-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="vehicle">Đăng xe</SelectItem>
+                    <SelectItem value="battery">Đăng pin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             {/* Main content */}
             <div className="flex flex-col lg:flex-row gap-8">
@@ -266,7 +331,14 @@ const EditorPage: React.FC = () => {
 
               {/* Cột phải: Forms */}
               <div className="lg:w-2/3 w-full space-y-8">
-                <BasicInfoForm form={form} setForm={setForm} />
+                <BasicInfoForm
+                  form={form}
+                  setForm={setForm}
+                  onGetPriceSuggestion={handleGetPriceSuggestion}
+                  isLoadingPrice={isLoadingPrice}
+                  suggestedPrice={suggestedPrice}
+                  priceAnalysis={priceAnalysis}
+                />
 
                 {form.category === "vehicle" ? (
                   <VehicleSpecificationsForm form={form as VehicleFormData} setForm={setForm as React.Dispatch<React.SetStateAction<VehicleFormData>>} />

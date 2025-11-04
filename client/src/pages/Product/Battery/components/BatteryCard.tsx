@@ -31,7 +31,7 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
             onClick={() => navigate(`/detail/${battery._id}`)}
             className={`relative overflow-hidden flex flex-col cursor-pointer group transition-all duration-300 rounded-2xl ${
                 isHighPriority
-                        ? 'bg-white shadow-lg hover:shadow-xl border-amber-600 bg-gradient-to-br from-amber-50/30 to-amber-100/20'
+                        ? 'bg-gradient-to-br from-amber-50 to-amber-100 border-0 shadow-2xl hover:-translate-y-1 hover:shadow-2xl'
                         : isLowPriority
                             ? 'bg-white border-black text-black opacity-95 shadow-sm hover:shadow-md'
                             : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-lg'
@@ -40,6 +40,9 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
 
             {/* Image Section */}
             <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-2xl">
+                {isHighPriority && (
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-amber-400 to-amber-600" />
+                )}
                 <img
                     src={battery.images[0] || "/images/placeholder.jpg"}
                     alt={`${battery.brand} ${battery.model}`}
@@ -49,10 +52,12 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
                 {/* Badges top-right */}
                 <div className="absolute top-3 right-3 flex gap-2">
                     {isHighPriority && (
-                        <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md border-0 flex items-center gap-1">
-                            <Crown className="w-3.5 h-3.5" />
-                            Ưu tiên
-                        </Badge>
+                        <div>
+                            <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg flex items-center gap-2 rounded-full px-3 py-1">
+                                <Crown className="w-3.5 h-3.5" />
+                                Ưu tiên
+                            </Badge>
+                        </div>
                     )}
                     <Badge
                         variant={battery.status ? "default" : "destructive"}
