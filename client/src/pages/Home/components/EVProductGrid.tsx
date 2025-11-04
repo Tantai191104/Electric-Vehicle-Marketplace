@@ -108,14 +108,12 @@ export default function EVProductGrid() {
               <Card
                 onClick={() => navigate(`/detail/${product._id}`)}
                 key={product._id}
-                className={`overflow-hidden rounded-2xl border group cursor-pointer transition-all duration-300 ${
-                    isHighPriority
-                      ? "bg-white shadow-lg hover:shadow-xl border-amber-600"
-                      : isLowPriority
-                        ? "bg-white border-black text-black shadow-sm hover:shadow-md"
-                        : "bg-white border-gray-100 hover:border-amber-300 shadow-sm hover:shadow-lg"
-                  }`}
-              >
+                className={`overflow-hidden rounded-2xl group cursor-pointer transition-all duration-300 ${isHighPriority
+                  ? "bg-gradient-to-br from-amber-50 to-amber-100 border-0 shadow-2xl hover:-translate-y-1 hover:shadow-2xl"
+                  : isLowPriority
+                    ? "bg-white border-black text-black shadow-sm hover:shadow-md"
+                    : "bg-white border-gray-100 hover:border-amber-300 shadow-sm hover:shadow-lg"
+                  }`}>
                 {/* Image */}
                 <CardHeader className="p-0 relative">
                   <img
@@ -125,12 +123,16 @@ export default function EVProductGrid() {
                     loading="lazy"
                   />
 
-                  {/* Priority Badge */}
                   {isHighPriority && (
-                    <Badge className="absolute top-3 right-3 bg-amber-500 text-white font-medium px-2 py-1 flex items-center gap-1 rounded-md shadow-sm">
-                      <Crown className="w-3 h-3" />
-                      Ưu tiên
-                    </Badge>
+                    <>
+                      <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-amber-400 to-amber-600" />
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg flex items-center gap-2 rounded-full px-3 py-1">
+                          <Crown className="w-3 h-3" />
+                          Ưu tiên
+                        </Badge>
+                      </div>
+                    </>
                   )}
 
                   {/* Condition Badge */}

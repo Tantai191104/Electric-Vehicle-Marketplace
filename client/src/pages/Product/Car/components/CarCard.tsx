@@ -30,15 +30,18 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
     return (
         <Card
             onClick={() => navigate(`/detail/${car._id}`)}
-            className={`p-0 overflow-hidden flex flex-col cursor-pointer group relative transition-all duration-300 ${
+            className={`p-0 overflow-hidden flex flex-col cursor-pointer group relative transition-all duration-300 rounded-2xl ${
             isHighPriority
-                ? "bg-white shadow-lg hover:shadow-xl border-amber-600 bg-gradient-to-br from-amber-50/30 to-amber-100/20"
-                    : isLowPriority
-                        ? "bg-gray-50 border-gray-200 opacity-95 shadow-sm hover:shadow-md"
-                        : "bg-white border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-lg"
-            } rounded-2xl`}
+                ? "bg-gradient-to-br from-amber-50 to-amber-100 border-0 shadow-2xl hover:-translate-y-1 hover:shadow-2xl"
+                : isLowPriority
+                    ? "bg-gray-50 border-gray-200 opacity-95 shadow-sm hover:shadow-md"
+                    : "bg-white border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-lg"
+            }`}
         >
             <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden relative">
+                {isHighPriority && (
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-amber-400 to-amber-600" />
+                )}
                 <img
                     src={car.images[0] || "/images/placeholder.jpg"}
                     alt={`${car.brand} ${car.model}`}
@@ -46,10 +49,12 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
                 />
                 <div className="absolute top-3 right-3 flex gap-2">
                     {isHighPriority && (
-                        <Badge className="bg-yellow-500 text-white shadow-md border-0 flex items-center gap-1">
-                            <Crown className="w-3 h-3" />
-                            Ưu tiên
-                        </Badge>
+                        <div>
+                            <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg flex items-center gap-2 rounded-full px-3 py-1">
+                                <Crown className="w-3 h-3" />
+                                Ưu tiên
+                            </Badge>
+                        </div>
                     )}
                     <Badge variant={car.status ? "default" : "destructive"} className="shadow-md">
                         {car.status ? "Còn hàng" : "Đã bán"}

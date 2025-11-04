@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Info, RefreshCw } from "lucide-react";
+import { FiFileText } from "react-icons/fi";
 import { formatVND } from "@/utils/formatVND";
 import type { Order } from "@/types/orderType";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -287,6 +288,23 @@ export function OrderDetailDialog({
                   <span className="text-gray-600">Mã đơn hàng:</span>
                   <span className="font-medium">{order.orderNumber}</span>
                 </div>
+                  {order.contract?.pdfUrl && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Hợp đồng:</span>
+                      <span>
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="border-gray-300 text-gray-700"
+                        >
+                          <a href={order.contract.pdfUrl} target="_blank" rel="noreferrer">
+                            <FiFileText className="w-4 h-4 mr-2 inline" /> Xem hợp đồng
+                          </a>
+                        </Button>
+                      </span>
+                    </div>
+                  )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Trạng thái:</span>
                   {getStatusBadge(order.status)}

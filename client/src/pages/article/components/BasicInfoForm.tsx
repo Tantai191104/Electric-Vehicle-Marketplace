@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import type { VehicleFormData, BatteryFormData } from "@/types/productType";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatNumberWithDots } from "@/utils/numberFormatter";
-import { Car, BatteryCharging, Sparkles } from "lucide-react";
+import { Car, BatteryCharging, Sparkles, DollarSign, TrendingUp, Lightbulb, AlertCircle, ArrowDownCircle, Star, ArrowUpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -337,7 +337,7 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm, onGetPriceSuggestion, i
                                 value={form.price ? formatNumberWithDots(form.price) : ""}
                                 onChange={(e) => handleChange("price", Number(e.target.value.replace(/\./g, "")))}
                                 placeholder="Nhập giá sản phẩm"
-                                className={`${inputClass} pl-12`}
+                                className={`${inputClass} pl-14`}
                             />
                             <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
                                 VNĐ
@@ -346,9 +346,15 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm, onGetPriceSuggestion, i
                         {onGetPriceSuggestion && (
                             <Button
                                 type="button"
-                                onClick={onGetPriceSuggestion}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    onGetPriceSuggestion?.();
+                                }}
                                 disabled={isLoadingPrice}
-                                className="h-12 px-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                                className="h-12 px-6 bg-gradient-to-r from-purple-500 to-pink-500
+             hover:from-purple-600 hover:to-pink-600 text-white
+             rounded-xl shadow-lg hover:shadow-xl transition-all duration-200
+             flex items-center gap-2"
                             >
                                 <Sparkles className="w-5 h-5" />
                                 {isLoadingPrice ? "Đang phân tích..." : "Gợi ý giá AI"}
@@ -356,110 +362,185 @@ const BasicInfoForm: React.FC<Props> = ({ form, setForm, onGetPriceSuggestion, i
                         )}
                     </div>
                     {suggestedPrice && priceAnalysis && (
-                        <div className="mt-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl space-y-4">
-                            {/* Price Range */}
-                            {priceAnalysis.priceRange && (
-                                <div>
-                                    <p className="text-sm font-semibold text-purple-700 mb-2 flex items-center gap-2">
-                                        <Sparkles className="w-4 h-4" />
-                                        Khoảng giá gợi ý (Nhấn để chọn)
-                                    </p>
-                                    <div className="grid grid-cols-3 gap-3 text-sm">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleChange("price", priceAnalysis.priceRange!.low)}
-                                            className={`p-3 rounded-lg border-2 transition-all cursor-pointer text-left ${form.price === priceAnalysis.priceRange.low
-                                                    ? "bg-gradient-to-br from-purple-500 to-pink-500 border-purple-600 text-white shadow-lg scale-105"
-                                                    : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
-                                                }`}
-                                        >
-                                            <div className={`text-xs mb-1 ${form.price === priceAnalysis.priceRange.low ? "text-purple-100" : "text-gray-500"}`}>
-                                                Giá thấp
-                                            </div>
-                                            <div className="font-bold">{formatNumberWithDots(priceAnalysis.priceRange.low)} ₫</div>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleChange("price", priceAnalysis.priceRange!.recommended)}
-                                            className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${form.price === priceAnalysis.priceRange.recommended
-                                                    ? "bg-gradient-to-br from-purple-500 to-pink-500 border-purple-600 text-white shadow-lg scale-105"
-                                                    : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
-                                                }`}
-                                        >
-                                            <div className={`text-xs mb-1 ${form.price === priceAnalysis.priceRange.recommended ? "text-purple-100" : "text-gray-500"}`}>
-                                                Khuyến nghị
-                                            </div>
-                                            <div className="font-bold">{formatNumberWithDots(priceAnalysis.priceRange.recommended)} ₫</div>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleChange("price", priceAnalysis.priceRange!.high)}
-                                            className={`p-3 rounded-lg border-2 transition-all cursor-pointer text-left ${form.price === priceAnalysis.priceRange.high
-                                                    ? "bg-gradient-to-br from-purple-500 to-pink-500 border-purple-600 text-white shadow-lg scale-105"
-                                                    : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
-                                                }`}
-                                        >
-                                            <div className={`text-xs mb-1 ${form.price === priceAnalysis.priceRange.high ? "text-purple-100" : "text-gray-500"}`}>
-                                                Giá cao
-                                            </div>
-                                            <div className="font-bold">{formatNumberWithDots(priceAnalysis.priceRange.high)} ₫</div>
-                                        </button>
+                        <div className="mt-4 p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border-2 border-purple-200 shadow-lg">
+                            {/* Header với giá khuyến nghị chính */}
+                            <div className="flex flex-col gap-4 mb-6 pb-6 border-b-2 border-purple-200">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-md">
+                                        <Sparkles className="w-6 h-6 text-white" />
                                     </div>
+                                    <h3 className="text-xl font-bold text-gray-800">Gợi ý giá từ AI</h3>
+                                </div>
+                            </div>
+
+                            {/* 3 mức giá theo chiều ngang */}
+                            {priceAnalysis.priceRange && (
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <DollarSign className="w-5 h-5 text-gray-700" />
+                                        <h4 className="text-base font-bold text-gray-800">Chọn mức giá phù hợp</h4>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                        {(["low", "recommended", "high"] as const).map((k) => {
+                                            const configs = {
+                                                low: { label: "Giá thấp", desc: "Bán nhanh" },
+                                                recommended: { label: "Khuyến nghị", desc: "Cân bằng tốt nhất" },
+                                                high: { label: "Giá cao", desc: "Lợi nhuận cao" }
+                                            };
+                                            const config = configs[k];
+                                            const value = (priceAnalysis.priceRange as { low: number; recommended: number; high: number })[k as keyof typeof priceAnalysis.priceRange];
+                                            const isSelected = form.price === value;
+
+                                            // Styles based on selection and type
+                                            let cardClasses = "border-2 rounded-xl p-4 transition-all cursor-pointer ";
+                                            let badgeClasses = "inline-block px-3 py-1 rounded-lg text-xs font-semibold mb-2 ";
+                                            let buttonClasses = "w-full py-2.5 font-semibold rounded-lg transition-all text-sm ";
+
+                                            if (isSelected) {
+                                                // Selected state - highlight with bright colors
+                                                if (k === "low") {
+                                                    cardClasses += "bg-green-100 border-green-500 shadow-lg ring-2 ring-green-300";
+                                                    badgeClasses += "bg-green-600 text-white";
+                                                    buttonClasses += "bg-green-600 text-white shadow-md";
+                                                } else if (k === "recommended") {
+                                                    cardClasses += "bg-purple-100 border-purple-500 shadow-lg ring-2 ring-purple-300";
+                                                    badgeClasses += "bg-purple-600 text-white";
+                                                    buttonClasses += "bg-purple-600 text-white shadow-md";
+                                                } else {
+                                                    cardClasses += "bg-orange-100 border-orange-500 shadow-lg ring-2 ring-orange-300";
+                                                    badgeClasses += "bg-orange-600 text-white";
+                                                    buttonClasses += "bg-orange-600 text-white shadow-md";
+                                                }
+                                            } else {
+                                                // Unselected state - subtle colors
+                                                if (k === "low") {
+                                                    cardClasses += "bg-white border-green-200 hover:border-green-400 hover:shadow-md";
+                                                    badgeClasses += "bg-green-50 text-green-700";
+                                                    buttonClasses += "bg-white border-2 border-green-300 text-green-700 hover:bg-green-50";
+                                                } else if (k === "recommended") {
+                                                    cardClasses += "bg-white border-purple-200 hover:border-purple-400 hover:shadow-md";
+                                                    badgeClasses += "bg-purple-50 text-purple-700";
+                                                    buttonClasses += "bg-white border-2 border-purple-300 text-purple-700 hover:bg-purple-50";
+                                                } else {
+                                                    cardClasses += "bg-white border-orange-200 hover:border-orange-400 hover:shadow-md";
+                                                    badgeClasses += "bg-orange-50 text-orange-700";
+                                                    buttonClasses += "bg-white border-2 border-orange-300 text-orange-700 hover:bg-orange-50";
+                                                }
+                                            }
+
+                                            return (
+                                                <div
+                                                    key={k}
+                                                    className={cardClasses}
+                                                    onClick={() => handleChange("price", value)}
+                                                >
+                                                    <div className="text-center">
+                                                        <span className={badgeClasses}>
+                                                            {config.label}
+                                                        </span>
+                                                        <div className={`text-2xl font-black mb-2 ${isSelected ? 'text-gray-900' : 'text-gray-800'}`}>
+                                                            {formatNumberWithDots(value)} ₫
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 mb-4">{config.desc}</div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleChange("price", value);
+                                                        }}
+                                                        className={buttonClasses}
+                                                    >
+                                                        {isSelected ? "✓ Đã chọn" : "Chọn giá này"}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Lý do gợi ý giá */}
+                                    {priceAnalysis.reasoning && (
+                                        <div className="bg-white rounded-xl border border-gray-200 p-4">
+                                            <h5 className="text-sm font-bold text-gray-800 mb-3">
+                                                Vì sao gợi ý các mức giá này?
+                                            </h5>
+                                            <div className="space-y-3">
+                                                {(["low", "recommended", "high"] as const).map((k) => {
+                                                    const configs = {
+                                                        low: { label: "Giá thấp", icon: <ArrowDownCircle className="text-green-500 w-4 h-4" /> },
+                                                        recommended: { label: "Khuyến nghị", icon: <Star className="text-yellow-500 w-4 h-4" /> },
+                                                        high: { label: "Giá cao", icon: <ArrowUpCircle className="text-blue-500 w-4 h-4" /> },
+                                                    };
+                                                    const config = configs[k];
+                                                    const reason = priceAnalysis.reasoning![k as keyof typeof priceAnalysis.reasoning];
+                                                    const value = (priceAnalysis.priceRange as { low: number; recommended: number; high: number })[k];
+
+                                                    return (
+                                                        <div key={k} className="flex gap-3 pb-3 border-b last:border-b-0 border-gray-100">
+                                                            <div className="flex items-center justify-center">{config.icon}</div>
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center justify-between mb-1">
+                                                                    <span className="text-sm font-semibold text-gray-700">{config.label}</span>
+                                                                    <span className="text-sm font-bold text-gray-900">{formatNumberWithDots(value)} ₫</span>
+                                                                </div>
+                                                                <p className="text-xs text-gray-600 leading-relaxed">{reason}</p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
-                            {/* Market Analysis */}
-                            {priceAnalysis.marketAnalysis && (
-                                <div className="bg-white p-3 rounded-lg border border-purple-100">
-                                    <p className="text-xs font-semibold text-purple-700 mb-1">� Phân tích thị trường</p>
-                                    <p className="text-xs text-gray-600 leading-relaxed">{priceAnalysis.marketAnalysis}</p>
-                                </div>
-                            )}
+                            {/* Phân tích chi tiết theo chiều dọc */}
+                            <div className="space-y-3">
+                                {priceAnalysis.marketAnalysis && (
+                                    <div className="p-4 bg-white rounded-xl border border-blue-200 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <TrendingUp className="w-5 h-5 text-blue-600" />
+                                            <h4 className="text-base font-bold text-blue-700">Phân tích thị trường</h4>
+                                        </div>
+                                        <p className="text-sm text-gray-700 leading-relaxed">{priceAnalysis.marketAnalysis}</p>
+                                    </div>
+                                )}
 
-                            {/* Warnings */}
-                            {priceAnalysis.warnings && priceAnalysis.warnings.length > 0 && (
-                                <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
-                                    <p className="text-xs font-semibold text-orange-700 mb-2">⚠️ Lưu ý quan trọng</p>
-                                    <ul className="space-y-1">
-                                        {priceAnalysis.warnings.map((warning, idx) => (
-                                            <li key={idx} className="text-xs text-orange-600 flex items-start gap-1">
-                                                <span className="mt-0.5">•</span>
-                                                <span>{warning}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
+                                {priceAnalysis.tips && priceAnalysis.tips.length > 0 && (
+                                    <div className="p-4 bg-white rounded-xl border border-green-200 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Lightbulb className="w-5 h-5 text-green-600" />
+                                            <h4 className="text-base font-bold text-green-700">Mẹo bán nhanh</h4>
+                                        </div>
+                                        <ul className="space-y-2">
+                                            {priceAnalysis.tips.map((t, i) => (
+                                                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                                                    <span className="text-green-500 mt-0.5 font-bold">✓</span>
+                                                    <span>{t}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
 
-                            {/* Tips */}
-                            {priceAnalysis.tips && priceAnalysis.tips.length > 0 && (
-                                <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                                    <p className="text-xs font-semibold text-green-700 mb-2">💡 Gợi ý để bán nhanh hơn</p>
-                                    <ul className="space-y-1">
-                                        {priceAnalysis.tips.map((tip, idx) => (
-                                            <li key={idx} className="text-xs text-green-600 flex items-start gap-1">
-                                                <span className="mt-0.5">•</span>
-                                                <span>{tip}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-
-                            {/* Factors */}
-                            {priceAnalysis.factors && priceAnalysis.factors.length > 0 && (
-                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                                    <p className="text-xs font-semibold text-blue-700 mb-2">📌 Yếu tố ảnh hưởng giá</p>
-                                    <ul className="space-y-1">
-                                        {priceAnalysis.factors.map((factor, idx) => (
-                                            <li key={idx} className="text-xs text-blue-600 flex items-start gap-1">
-                                                <span className="mt-0.5">•</span>
-                                                <span>{factor}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
+                                {priceAnalysis.warnings && priceAnalysis.warnings.length > 0 && (
+                                    <div className="p-4 bg-white rounded-xl border border-orange-200 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <AlertCircle className="w-5 h-5 text-orange-600" />
+                                            <h4 className="text-base font-bold text-orange-600">Lưu ý quan trọng</h4>
+                                        </div>
+                                        <ul className="space-y-2">
+                                            {priceAnalysis.warnings.map((w, i) => (
+                                                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                                                    <span className="text-orange-500 mt-0.5 font-bold">!</span>
+                                                    <span>{w}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
