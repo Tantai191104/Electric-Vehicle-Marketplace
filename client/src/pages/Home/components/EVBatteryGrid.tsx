@@ -78,9 +78,9 @@ export default function EVBatteryGrid() {
         <Button
           variant="outline"
           onClick={() => navigate("/batteries")}
-          className="rounded-full border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white font-medium px-6 transition-all"
+          className="rounded-full border-gray-800 text-gray-800 font-semibold px-6 py-2 hover:bg-gray-800 hover:text-white transition"
         >
-          Xem tất cả →
+          Xem thêm →
         </Button>
       </div>
 
