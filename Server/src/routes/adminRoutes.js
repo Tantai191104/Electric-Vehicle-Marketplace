@@ -19,6 +19,7 @@ import {
   syncGhnOrderStatus,
   syncGhnOrdersBulk,
 } from '../controllers/adminController.js';
+import { scheduleDepositMeeting } from '../controllers/depositController.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { requireAdmin } from '../middlewares/authorize.js';
 
@@ -433,6 +434,134 @@ router.get('/admin/system-stats', authenticate, requireAdmin, getSystemStats);
  *                   example: "Internal server error"
  */
 router.get('/admin/orders/summary', authenticate, requireAdmin, getOrdersSummary);
+
+/**
+ * @swagger
+ * /admin/deposits/{orderId}/schedule:
+ *   put:
+ *     summary: Schedule meeting time and location for deposit order
+ *     description: Admin can set or update meeting information for a vehicle deposit order. At least one field (time, location, or address) is required.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The deposit order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               meetingTime:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Meeting date and time (ISO 8601 format)
+ *                 example: "2024-01-15T10:00:00Z"
+ *               meetingLocation:
+ *                 type: string
+ *                 description: Meeting location/venue name
+ *                 example: "Hanoi Center"
+ *               meetingAddress:
+ *                 type: string
+ *                 description: Full meeting address
+ *                 example: "123 Nguyen Trai Street, Thanh Xuan, Hanoi"
+ *             minProperties: 1
+ *           examples:
+ *             fullMeeting:
+ *               summary: Complete meeting information
+ *               value:
+ *                 meetingTime: "2024-01-15T10:00:00Z"
+ *                 meetingLocation: "Hanoi Center"
+ *                 meetingAddress: "123 Nguyen Trai Street, Thanh Xuan, Hanoi"
+ *             timeOnly:
+ *               summary: Update time only
+ *               value:
+ *                 meetingTime: "2024-01-15T14:00:00Z"
+ *             locationOnly:
+ *               summary: Update location only
+ *               value:
+ *                 meetingLocation: "District 1 Office"
+ *                 meetingAddress: "456 Le Loi Street, District 1, HCMC"
+ *     responses:
+ *       200:
+ *         description: Meeting scheduled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Meeting scheduled successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     orderId:
+ *                       type: string
+ *                     meeting:
+ *                       type: object
+ *                       properties:
+ *                         time:
+ *                           type: string
+ *                           format: date-time
+ *                         location:
+ *                           type: string
+ *                         address:
+ *                           type: string
+ *                         updatedBy:
+ *                           type: string
+ *                         isSuggestion:
+ *                           type: boolean
+ *                           description: false after admin confirms
+ *                     previousSuggestion:
+ *                       type: object
+ *                       nullable: true
+ *                       description: Original buyer suggestion if it existed
+ *       400:
+ *         description: Validation failed or scheduling conflict
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Conflict: One of the participants already has a deposit meeting scheduled at this time"
+ *                 conflictingOrder:
+ *                   type: string
+ *                   example: "DEPOSIT-1234567890"
+ *       404:
+ *         description: Order not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Order not found"
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
+router.put(
+  '/admin/deposits/:orderId/schedule',
+  authenticate,
+  requireAdmin,
+  scheduleDepositMeeting
+);
 
 // User management routes removed - use /api/users/* instead
 

@@ -7,6 +7,7 @@ interface OrderTabsProps {
   ordersCount: number;
   ghnCount?: number;
   depositCount?: number;
+  sellerDepositCount?: number;
   children: React.ReactNode;
 }
 
@@ -16,11 +17,12 @@ export const OrderTabs: React.FC<OrderTabsProps> = ({
   ordersCount,
   ghnCount = 0,
   depositCount = 0,
+  sellerDepositCount = 0,
   children
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="mb-8">
-      <TabsList className="grid grid-cols-2 md:grid-cols-8 w-full bg-white shadow-sm border border-gray-200 rounded-xl p-1">
+      <TabsList className="grid grid-cols-2 md:grid-cols-9 w-full bg-white shadow-sm border border-gray-200 rounded-xl p-1">
         <TabsTrigger
           value="all"
           className="data-[state=active]:bg-gray-800 data-[state=active]:text-white font-semibold transition-all duration-200"
@@ -38,6 +40,12 @@ export const OrderTabs: React.FC<OrderTabsProps> = ({
           className="data-[state=active]:bg-green-600 data-[state=active]:text-white font-semibold transition-all duration-200"
         >
           Đơn đặt cọc ({depositCount})
+        </TabsTrigger>
+        <TabsTrigger
+          value="seller-deposits"
+          className="data-[state=active]:bg-purple-600 data-[state=active]:text-white font-semibold transition-all duration-200"
+        >
+          Đơn bán ({sellerDepositCount})
         </TabsTrigger>
         <TabsTrigger
           value="pending"

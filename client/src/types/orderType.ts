@@ -1,9 +1,36 @@
 export interface Order {
-  // Meeting info for deposit orders
+  // Meeting info for deposit orders (actual field name from server is 'meeting')
+  meeting?: {
+    location?: string | null;
+    address?: string | null;
+    time?: string | null;
+    isSuggestion?: boolean;
+    updatedBy?:
+      | {
+          _id: string;
+          name: string;
+          email: string;
+          role: string;
+        }
+      | string
+      | null;
+  } | null;
+  // Alias for backwards compatibility (maps to 'meeting')
   meetingInfo?: {
-    location: string;
-    time: string;
-  };
+    location?: string | null;
+    address?: string | null;
+    time?: string | null;
+    isSuggestion?: boolean;
+    updatedBy?:
+      | {
+          _id: string;
+          name: string;
+          email: string;
+          role: string;
+        }
+      | string
+      | null;
+  } | null;
   _id: string;
   orderNumber: string;
 
@@ -38,6 +65,7 @@ export interface Order {
   finalAmount: number;
   status:
     | "pending"
+    | "deposit"
     | "confirmed"
     | "shipping"
     | "shipped"
@@ -48,42 +76,42 @@ export interface Order {
     | "deposit_pending"
     | "deposit_confirmed"
     | "deposit_cancelled"
-    | "deposit_refunded"
-    ;
+    | "deposit_refunded";
 
-  // Shipping info
-  shipping: {
-    method: string;
-    trackingNumber: string;
-    carrier: string;
-    estimatedDelivery: string | null;
-    actualDelivery: string | null;
-  };
+  // Shipping info (may be absent or minimal for deposit/in-person orders)
+  shipping?: {
+    method?: string | null;
+    trackingNumber?: string | null;
+    carrier?: string | null;
+    estimatedDelivery?: string | null;
+    actualDelivery?: string | null;
+    ghnShopId?: string | null;
+  } | null;
 
-  shippingAddress: {
-    fullName: string;
-    phone: string;
-    address: string;
-    city: string;
-    province: string;
-    zipCode: string | null;
-  };
+  shippingAddress?: {
+    fullName?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    city?: string | null;
+    province?: string | null;
+    zipCode?: string | null;
+  } | null;
 
   // Payment info
   payment: {
     method: "wallet" | "vnpay" | "zalopay" | "cod" | "bank_transfer";
     status: "pending" | "paid" | "refunded" | "failed";
-    transactionId: string;
-    paidAt: string;
+    transactionId?: string | null;
+    paidAt?: string | null;
   };
 
   // Contract info
-  contract: {
-    contractId: string;
-    pdfUrl: string;
-    signedAt: string;
-    contractNumber: string | null;
-  };
+  contract?: {
+    contractId?: string | null;
+    pdfUrl?: string | null;
+    signedAt?: string | null;
+    contractNumber?: string | null;
+  } | null;
 
   // Timeline
   timeline: Array<{

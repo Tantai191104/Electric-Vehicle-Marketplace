@@ -48,5 +48,9 @@ import type { User } from "@/types/authType";
   async fetchOwnedProducts(params?: { page?: number; limit?: number; status?: string; category?: string; sort?: string; q?: string }) {
     const response = await API.get("/products/my/products", { params });
     return response.data;
+  },
+  async fetchSellerDeposits(params?: { page?: number; limit?: number }) {
+    const response = await API.get("/seller/deposits", { params });
+    return response.data;
   }
 };

@@ -8,6 +8,7 @@ import VehicleSpecificationsForm from "./components/VehicleSpecificationsForm";
 import BatterySpecificationsForm from "./components/BatterySpecificationsForm";
 import LocationForm from "./components/LocationForm";
 import ImagesForm from "./components/ImagesForm";
+import PostSuccessDialog from "./components/PostSuccessDialog";
 import { Car, Bike, BatteryCharging } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { productServices } from "@/services/productServices";
@@ -90,6 +91,7 @@ const CATEGORY_LIST = [
 const EditorPage: React.FC = () => {
   const [form, setForm] = useState<VehicleFormData | BatteryFormData | null>(null);
   const [showTypeDialog, setShowTypeDialog] = useState(true);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [contractHtml, setContractHtml] = useState<string>("");
@@ -153,15 +155,23 @@ const EditorPage: React.FC = () => {
       console.log("Submitting data:", form);
       if (!form) return;
 
+      // Add images to form data (can be empty array)
+      const formWithImages = {
+        ...form,
+        images: images,
+      };
+
       // gọi API
-      const res = await productServices.createProduct(form);
+      const res = await productServices.createProduct(formWithImages);
       console.log("API response:", res);
 
       // assume res.data._id or res.data.product._id depending on backend
       const productId = res?.data?._id || res?.data?.product?._id || res?.product?._id || res?._id;
 
       if (form?.category === "vehicle") {
+        // Show success dialog for vehicle
         toast.success("Đăng tin xe điện thành công!");
+        setShowSuccessDialog(true);
       } else {
         toast.success("Đăng tin pin thành công! Chuyển sang tạo hợp đồng...");
         // prepare contract HTML and open dialog for extra terms + signature
@@ -482,6 +492,12 @@ const EditorPage: React.FC = () => {
             </div>
           </DialogContent2>
         </Dialog>
+
+        {/* Success Dialog */}
+        <PostSuccessDialog
+          open={showSuccessDialog}
+          onOpenChange={setShowSuccessDialog}
+        />
 
         {/* Nút đăng tin cố định */}
         {form && (
