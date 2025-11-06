@@ -48,15 +48,38 @@ const OrderPage: React.FC = () => {
 
   // Tách đơn GHN và đơn đặt cọc
   const ghnOrders = useMemo(() => orders.filter(o => o.shipping?.method === "GHN"), [orders]);
-  const depositOrders = useMemo(() => orders.filter(o => o.shipping?.method !== "GHN"), [orders]);
 
-  // Tabs: all, ghn, deposit, status
+  // Đơn đặt cọc: chỉ lấy đơn deposit mà mình là người mua
+  const depositOrders = useMemo(() => {
+    if (!user?._id) return [];
+    return orders.filter(order => {
+      const isDepositOrder = order.shipping?.method !== "GHN";
+      const buyerId = typeof order.buyerId === 'string' ? order.buyerId : order.buyerId?._id;
+      const isBuyer = buyerId === user._id;
+      return isDepositOrder && isBuyer;
+    });
+  }, [orders, user]);
+
+  // Lọc đơn bán (đơn deposit mà mình là người bán)
+  const sellerOrders = useMemo(() => {
+    if (!user?._id) return [];
+    return orders.filter(order => {
+      // Chỉ lấy đơn deposit (không phải GHN)
+      const isDepositOrder = order.shipping?.method !== "GHN";
+      // Kiểm tra mình có phải là người bán không
+      const sellerId = typeof order.sellerId === 'string' ? order.sellerId : order.sellerId?._id;
+      const isSeller = sellerId === user._id;
+
+      return isDepositOrder && isSeller;
+    });
+  }, [orders, user]);  // Tabs: all, ghn, deposit, seller-deposits, status
   const tabOrders = useMemo(() => {
     if (activeTab === "all") return orders;
     if (activeTab === "ghn") return ghnOrders;
     if (activeTab === "deposit") return depositOrders;
+    if (activeTab === "seller-deposits") return sellerOrders;
     return orders.filter((order: Order) => order.status === activeTab);
-  }, [activeTab, orders, ghnOrders, depositOrders]);
+  }, [activeTab, orders, ghnOrders, depositOrders, sellerOrders]);
 
   // Pagination
   const paginatedOrders = useMemo(() => {
@@ -80,6 +103,7 @@ const OrderPage: React.FC = () => {
           ordersCount={orders.length}
           ghnCount={ghnOrders.length}
           depositCount={depositOrders.length}
+          sellerDepositCount={sellerOrders.length}
         >
           {paginatedOrders.length === 0 ? (
             <EmptyState activeTab={activeTab} navigate={navigate} />
@@ -87,7 +111,11 @@ const OrderPage: React.FC = () => {
             <>
               <div className="space-y-6">
                 {paginatedOrders.map((order: Order) => (
-                  <OrderCard key={order._id} order={order} navigate={navigate} />
+                  <OrderCard
+                    key={order._id}
+                    order={order}
+                    navigate={navigate}
+                  />
                 ))}
               </div>
               {/* Modern Pagination */}

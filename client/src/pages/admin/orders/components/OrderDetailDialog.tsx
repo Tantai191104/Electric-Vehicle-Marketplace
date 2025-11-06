@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Info, RefreshCw } from "lucide-react";
+import { FiFileText } from "react-icons/fi";
 import { formatVND } from "@/utils/formatVND";
 import type { Order } from "@/types/orderType";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -201,7 +202,10 @@ export function OrderDetailDialog({
 
   // Early return after all hooks
   if (!order) return null;
-
+  
+  console.log("Rendering OrderDetailDialog for order:", order);
+  console.log("Meeting data:", order.meeting || order.meetingInfo);
+  
   const getStatusBadge = (status: Order['status']) => {
     type BadgeConfig = { label: string; variant: 'secondary' | 'default' | 'outline' | 'destructive' };
     const statusConfig: Record<string, BadgeConfig> = {
@@ -287,6 +291,23 @@ export function OrderDetailDialog({
                   <span className="text-gray-600">Mã đơn hàng:</span>
                   <span className="font-medium">{order.orderNumber}</span>
                 </div>
+                {order.contract?.pdfUrl && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Hợp đồng:</span>
+                    <span>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="border-gray-300 text-gray-700"
+                      >
+                        <a href={order.contract.pdfUrl} target="_blank" rel="noreferrer">
+                          <FiFileText className="w-4 h-4 mr-2 inline" /> Xem hợp đồng
+                        </a>
+                      </Button>
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Trạng thái:</span>
                   {getStatusBadge(order.status)}
@@ -308,10 +329,10 @@ export function OrderDetailDialog({
                   <span className="text-gray-600">Ngày tạo:</span>
                   <span className="font-medium">{formatDate(order.createdAt)}</span>
                 </div>
-                {order.shipping.trackingNumber && (
+                {order.shipping?.trackingNumber && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tracking:</span>
-                    <span className="font-medium">{order.shipping.trackingNumber}</span>
+                    <span className="font-medium">{order.shipping?.trackingNumber}</span>
                   </div>
                 )}
               </div>
@@ -329,7 +350,7 @@ export function OrderDetailDialog({
                   <span className="text-gray-600">Số lượng:</span>
                   <span className="font-medium">{order.quantity}</span>
                 </div>
-                {order.shipping.method === 'GHN' && (
+                {order.shipping?.method === 'GHN' && (
                   <>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tạm tính:</span>
@@ -345,7 +366,7 @@ export function OrderDetailDialog({
                     </div>
                   </>
                 )}
-                {order.shipping.method !== 'GHN' && (
+                {order.shipping?.method !== 'GHN' && (
                   <>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Phí đặt cọc:</span>
@@ -399,22 +420,22 @@ export function OrderDetailDialog({
             </div>
 
             {/* Shipping or Meeting Info */}
-            {order.shipping.method === 'GHN' ? (
+            {order.shipping?.method === 'GHN' ? (
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-3">Địa chỉ giao hàng</h3>
                 <div className="space-y-2 text-sm">
                   <div>
                     <span className="text-gray-600">Người nhận:</span>
-                    <p className="font-medium">{order.shippingAddress.fullName}</p>
+                    <p className="font-medium">{order.shippingAddress?.fullName}</p>
                   </div>
                   <div>
                     <span className="text-gray-600">Số điện thoại:</span>
-                    <p className="font-medium">{order.shippingAddress.phone}</p>
+                    <p className="font-medium">{order.shippingAddress?.phone}</p>
                   </div>
                   <div>
                     <span className="text-gray-600">Địa chỉ:</span>
                     <p className="font-medium">
-                      {order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.province}
+                      {order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.province}
                     </p>
                   </div>
                 </div>
@@ -423,14 +444,55 @@ export function OrderDetailDialog({
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-3">Thông tin gặp mặt</h3>
                 <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-gray-600">Địa điểm gặp mặt:</span>
-                    <p className="font-medium">{order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.province}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Thời gian gặp mặt:</span>
-                    <p className="font-medium">{order.shipping.estimatedDelivery ? formatDate(order.shipping.estimatedDelivery) : '…'}</p>
-                  </div>
+                  {(() => {
+                    // Use 'meeting' field from server (preferred), fallback to 'meetingInfo'
+                    const meetingData = order.meeting || order.meetingInfo;
+                    
+                    if (meetingData) {
+                      const hasAnyData = meetingData.location || meetingData.address || meetingData.time;
+                      
+                      if (hasAnyData) {
+                        return (
+                          <>
+                            {meetingData.location && (
+                              <div>
+                                <span className="text-gray-600">Địa điểm:</span>
+                                <p className="font-medium">{meetingData.location}</p>
+                              </div>
+                            )}
+                            {meetingData.address && (
+                              <div>
+                                <span className="text-gray-600">Địa chỉ chi tiết:</span>
+                                <p className="font-medium">{meetingData.address}</p>
+                              </div>
+                            )}
+                            {meetingData.time && (
+                              <div>
+                                <span className="text-gray-600">Thời gian gặp mặt:</span>
+                                <p className="font-medium">{formatDate(meetingData.time)}</p>
+                              </div>
+                            )}
+                            {meetingData.updatedBy && typeof meetingData.updatedBy === 'object' && (
+                              <div className="mt-3 pt-3 border-t border-gray-300">
+                                <span className="text-gray-600">Được lên lịch bởi:</span>
+                                <p className="font-medium text-gray-900">{meetingData.updatedBy.name}</p>
+                                <p className="text-sm text-gray-600">{meetingData.updatedBy.email}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Vai trò: {meetingData.updatedBy.role === 'admin' ? 'Quản trị viên' : meetingData.updatedBy.role}
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        );
+                      }
+                    }
+                    
+                    return (
+                      <div className="text-gray-500 italic">
+                        Chưa có thông tin cuộc hẹn. Vui lòng lên lịch cuộc hẹn.
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}

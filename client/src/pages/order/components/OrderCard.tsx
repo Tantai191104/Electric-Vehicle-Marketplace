@@ -16,7 +16,6 @@ import {
   FiMapPin,
   FiUser,
   FiPhone,
-  FiMail,
   FiCreditCard,
   FiCalendar,
   FiFileText
@@ -37,6 +36,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
     confirmCancelOrder,
     closeCancelModal
   } = useCancelOrder();
+
   const statusConfig = {
     pending: {
       label: "Chờ xử lý",
@@ -128,6 +128,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
     const statusMap: Record<string, string> = {
       'pending': 'Chờ xử lý',
       'deposit': 'Chờ xử lý',
+      'scheduled': 'Đã lên lịch',
       'confirmed': 'Đã xác nhận',
       'shipping': 'Đang giao',
       'delivered': 'Đã giao',
@@ -145,6 +146,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
   const getStatusBadgeClass = (status: string): string => {
     const colorMap: Record<string, string> = {
       'pending': 'bg-gray-100 text-gray-700 border-gray-300',
+      'scheduled': 'bg-green-100 text-green-700 border-green-300',
       'deposit': 'bg-gray-100 text-gray-700 border-gray-300',
       'confirmed': 'bg-blue-100 text-blue-700 border-blue-300',
       'shipping': 'bg-yellow-100 text-yellow-700 border-yellow-300',
@@ -159,7 +161,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
     return colorMap[status.toLowerCase()] || 'bg-gray-100 text-gray-700 border-gray-300';
   };
 
-  const isDepositOrder = order.shipping?.method !== "GHN";
+  // Determine order type: GHN shipping orders vs deposit/in-person orders.
+  // GHN orders: shipping.method === 'GHN'
+  // Deposit orders: NOT GHN (everything else is deposit/in-person)
+  const isGHNOrder = order.shipping?.method === "GHN";
+  const isDepositOrder = !isGHNOrder;
+  // Use 'meeting' (server field name) or 'meetingInfo' (alias) for backwards compatibility
+  const meetingData = order.meeting || order.meetingInfo;
   return (
     <Card className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 pb-4">
@@ -170,7 +178,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
               <CardTitle className="text-lg font-bold text-black">
                 Đơn hàng #{order.orderNumber}
               </CardTitle>
-              {!isDepositOrder && order.shipping?.trackingNumber && (
+              {isGHNOrder && order.shipping?.trackingNumber && (
                 <Badge variant="outline" className="text-xs border-blue-500 text-blue-600 bg-blue-50">
                   GHN
                 </Badge>
@@ -192,17 +200,19 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
             </div>
             {/* Nếu là đơn đặt cọc */}
             {isDepositOrder && (
-              order.meetingInfo ? (
+              meetingData ? (
                 <div className="flex flex-col gap-1 ml-4">
                   <div className="flex items-center gap-1">
                     <FiMapPin className="w-4 h-4" />
                     <span className="font-semibold">Địa điểm gặp mặt:</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{order.meetingInfo.location}</span>
+                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{meetingData.location}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <FiCalendar className="w-4 h-4" />
                     <span className="font-semibold">Thời gian:</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{order.meetingInfo.time}</span>
+                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                      {meetingData.time ? new Date(meetingData.time).toLocaleString('vi-VN') : 'Chưa xác định'}
+                    </span>
                   </div>
                 </div>
               ) : (
@@ -214,7 +224,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
               )
             )}
             {/* Nếu là đơn GHN thì hiện tracking như cũ */}
-            {!isDepositOrder && order.shipping?.trackingNumber && (
+            {isGHNOrder && order.shipping?.trackingNumber && (
               <div className="flex items-center gap-1">
                 <MdLocalShipping className="w-4 h-4" />
                 <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
@@ -232,14 +242,16 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
           <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
               <img
-                src={order.productId.images?.[0] || "/images/placeholder.jpg"}
-                alt={order.productId.title}
+                src={typeof order.productId === 'object' ? (order.productId.images?.[0] || "/images/placeholder.jpg") : "/images/placeholder.jpg"}
+                alt={typeof order.productId === 'object' ? order.productId.title : "Sản phẩm"}
                 className="w-full h-full object-cover"
               />
             </div>
 
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-black truncate">{order.productId.title}</h4>
+              <h4 className="font-semibold text-black truncate">
+                {typeof order.productId === 'object' ? order.productId.title : "Sản phẩm"}
+              </h4>
               <div className="flex items-center gap-4 text-sm text-gray-700 mt-1">
                 <span>Số lượng: {order.quantity}</span>
                 <span className="font-semibold text-black">
@@ -247,7 +259,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
                 </span>
               </div>
               <div className="text-sm text-gray-600 mt-1">
-                Người bán: {order.sellerId.name}
+                Người bán: {typeof order.sellerId === 'object' ? order.sellerId.name : "N/A"}
               </div>
             </div>
 
@@ -269,18 +281,39 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
             </h4>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
               {isDepositOrder ? (
-                order.meetingInfo ? (
+                meetingData ? (
                   <>
                     <div className="flex items-center gap-2 text-sm">
                       <FiMapPin className="w-4 h-4 text-gray-600" />
                       <span className="font-medium text-black">Địa điểm gặp mặt:</span>
-                      <span className="text-gray-700">{order.meetingInfo.location}</span>
+                      <span className="text-gray-700">{meetingData.location}</span>
                     </div>
+                    {meetingData.address && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <FiMapPin className="w-4 h-4 text-gray-600" />
+                        <span className="font-medium text-black">Địa chỉ chi tiết:</span>
+                        <span className="text-gray-700">{meetingData.address}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-sm">
                       <FiCalendar className="w-4 h-4 text-gray-600" />
                       <span className="font-medium text-black">Thời gian:</span>
-                      <span className="text-gray-700">{order.meetingInfo.time}</span>
+                      <span className="text-gray-700">
+                        {meetingData.time ? new Date(meetingData.time).toLocaleString('vi-VN') : 'Chưa xác định'}
+                      </span>
                     </div>
+                    {meetingData.updatedBy && typeof meetingData.updatedBy === 'object' && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex items-start gap-2 text-xs text-gray-600">
+                          <FiUser className="w-3 h-3 mt-0.5" />
+                          <div>
+                            <p className="font-medium text-gray-700">Được lên lịch bởi:</p>
+                            <p className="text-gray-600">{meetingData.updatedBy.name}</p>
+                            <p className="text-gray-500">{meetingData.updatedBy.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -301,23 +334,21 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
                 <>
                   <div className="flex items-center gap-2 text-sm">
                     <FiUser className="w-4 h-4 text-gray-600" />
-                    <span className="font-medium text-black">{order.shippingAddress.fullName}</span>
+                    <span className="font-medium text-black">{order.shippingAddress?.fullName}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <FiPhone className="w-4 h-4 text-gray-600" />
-                    <span className="text-gray-700">{order.shippingAddress.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <FiMail className="w-4 h-4 text-gray-600" />
-                    <span className="text-gray-700">{order.buyerId.email}</span>
+                    <span className="text-gray-700">{order.shippingAddress?.phone}</span>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
                     <FiMapPin className="w-4 h-4 text-gray-600 mt-0.5" />
-                    <span className="text-gray-700">{order.shippingAddress.address}</span>
+                    <span className="text-gray-700">
+                      {order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.province}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-800">
                     <MdLocalShipping className="w-4 h-4" />
-                    <span>Vận chuyển: {order.shipping.carrier} - {order.shipping.method}</span>
+                    <span>Vận chuyển: {order.shipping?.carrier} - {order.shipping?.method}</span>
                   </div>
                 </>
               )}
@@ -349,7 +380,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
                   {order.payment.status === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
                 </Badge>
               </div>
-              {order.shipping.method === "GHN" && (
+              {isGHNOrder && (
 
                 <div className="space-y-1 text-sm text-gray-700">
                   <div className="flex justify-between">
@@ -362,7 +393,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
                   </div>
                 </div>
               )}
-              {order.shipping.method !== "GHN" && (
+              {isDepositOrder && (
                 <div className="space-y-1 text-sm text-gray-700">
                   <div className="flex justify-between">
                     <span>Phí đặt cọc:</span>
@@ -374,7 +405,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-black">Tổng thanh toán:</span>
                 <span className="text-xl font-bold text-black">
-                  {formatNumberWithDots(order.shipping.method === "GHN" ? order.totalAmount : order.finalAmount)} VNĐ
+                  {formatNumberWithDots(isGHNOrder ? order.totalAmount : order.finalAmount)} VNĐ
                 </span>
               </div>
             </div>
@@ -413,7 +444,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
             <Button
               variant="outline"
               className="flex-1 border-black text-black hover:bg-black hover:text-white transition-all duration-200"
-              onClick={() => window.open(order.contract.pdfUrl, '_blank')}
+              onClick={() => window.open(order.contract!.pdfUrl!, '_blank')}
             >
               <FiFileText className="w-4 h-4 mr-2" />
               Xem hợp đồng đã ký
@@ -461,7 +492,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
           {order.shipping?.trackingNumber && (
             <Button
               className="flex-1 bg-gray-700 hover:bg-gray-800 text-white font-semibold transition-all duration-200"
-              onClick={() => handleTrackOrder(order.shipping.trackingNumber, order.shipping.carrier)}
+              onClick={() => handleTrackOrder(order.shipping!.trackingNumber!, order.shipping!.carrier!)}
             >
               <FiTruck className="w-4 h-4 mr-2" />
               Theo dõi với {order.shipping.carrier}

@@ -14,7 +14,8 @@ interface BatteryCardProps {
 
 const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
     const navigate = useNavigate();
-    const isHighPriority = battery.priorityLevel === "high" || battery.isPriorityBoosted === true;
+    const isHighPriority = battery.priorityLevel === "high";
+    const isLowPriority = battery.priorityLevel === "low";
     
     console.log('Battery Priority Info:', {
         id: battery._id,
@@ -28,38 +29,39 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
     return (
         <Card
             onClick={() => navigate(`/detail/${battery._id}`)}
-            className={`relative overflow-hidden flex flex-col cursor-pointer group transition-all duration-500 rounded-3xl border
-        ${isHighPriority
-                    ? "border-blue-400 shadow-[0_0_30px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_0_45px_-10px_rgba(59,130,246,0.6)]"
-                    : "border-gray-100 hover:border-blue-300 hover:shadow-[0_4px_20px_-8px_rgba(59,130,246,0.3)]"
-                } bg-white`}
+            className={`relative overflow-hidden flex flex-col cursor-pointer group transition-all duration-300 rounded-2xl ${
+                isHighPriority
+                        ? 'bg-gradient-to-br from-amber-50 to-amber-100 border-0 shadow-2xl hover:-translate-y-1 hover:shadow-2xl'
+                        : isLowPriority
+                            ? 'bg-white border-black text-black opacity-95 shadow-sm hover:shadow-md'
+                            : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-lg'
+            }`}
         >
-            {/* Animated Glow Border for High Priority */}
-            {isHighPriority && (
-                <>
-                    <div className="absolute -inset-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 rounded-3xl opacity-25 blur-lg group-hover:opacity-40 transition-opacity"></div>
-                </>
-            )}
 
             {/* Image Section */}
-            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-3xl">
+            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-2xl">
+                {isHighPriority && (
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-amber-400 to-amber-600" />
+                )}
                 <img
                     src={battery.images[0] || "/images/placeholder.jpg"}
                     alt={`${battery.brand} ${battery.model}`}
-                    className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                 />
 
                 {/* Badges top-right */}
                 <div className="absolute top-3 right-3 flex gap-2">
                     {isHighPriority && (
-                        <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md border-0 backdrop-blur-md flex items-center gap-1 animate-pulse">
-                            <Crown className="w-3.5 h-3.5" />
-                            Ưu tiên cao
-                        </Badge>
+                        <div>
+                            <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg flex items-center gap-2 rounded-full px-3 py-1">
+                                <Crown className="w-3.5 h-3.5" />
+                                Ưu tiên
+                            </Badge>
+                        </div>
                     )}
                     <Badge
                         variant={battery.status ? "default" : "destructive"}
-                        className="backdrop-blur-md shadow-sm border-0 text-white font-semibold px-2"
+                        className="shadow-md border-0 text-white font-semibold"
                     >
                         {battery.status ? "Còn hàng" : "Đã bán"}
                     </Badge>
@@ -70,7 +72,7 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
                     <div className="absolute top-3 left-3">
                         <Badge
                             variant="secondary"
-                            className="bg-white/80 text-gray-700 border border-gray-100 backdrop-blur-md shadow-sm"
+                            className="bg-white/90 text-gray-700 shadow-md"
                         >
                             {getConditionLabel(battery.condition)}
                         </Badge>
@@ -80,7 +82,7 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
 
             {/* Content */}
             <CardContent className="relative flex flex-col flex-1 p-5">
-                <CardTitle className="text-lg font-semibold text-gray-900 leading-tight mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[3rem]">
+                <CardTitle className={`text-lg font-semibold leading-tight mb-2 line-clamp-2 min-h-[3rem] transition-colors ${isLowPriority ? 'text-black' : 'text-gray-900 group-hover:text-amber-600'}`}>
                     {battery.title || `${battery.brand} ${battery.model}`}
                 </CardTitle>
 
@@ -108,19 +110,14 @@ const BatteryCard: React.FC<BatteryCardProps> = ({ battery }) => {
 
                 {/* Price */}
                 <div className="mt-auto pt-3 border-t border-gray-100">
-                    <div
-                        className={`text-2xl font-bold ${isHighPriority
-                            ? "bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-600 bg-clip-text text-transparent animate-pulse"
-                            : "bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent"
-                            }`}
-                    >
+                    <div className={`text-xl font-bold ${isHighPriority ? 'text-amber-600' : isLowPriority ? 'text-black' : 'text-gray-900'}`}>
                         {formatNumberWithDots(battery.price)} đ
                     </div>
 
                     {isHighPriority && (
-                        <div className="text-xs text-blue-600 font-medium mt-2 flex items-center gap-1">
+                        <div className="text-xs text-amber-600 font-medium mt-1 flex items-center gap-1">
                             <Crown className="w-3.5 h-3.5" />
-                            <span>Sản phẩm được đẩy ưu tiên</span>
+                            <span>Sản phẩm ưu tiên</span>
                         </div>
                     )}
                 </div>

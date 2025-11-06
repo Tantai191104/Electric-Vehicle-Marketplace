@@ -65,7 +65,7 @@ const LocationForm: React.FC<Props> = ({ form, setForm }) => {
           </svg>
         </div>
         <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-          Địa điểm
+          Địa chỉ 
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
