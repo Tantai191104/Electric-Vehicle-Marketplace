@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import WalletTransaction from '../models/WalletTransaction.js';
 import Config from '../models/Config.js';
 import cloudinary from '../config/cloudinary.js';
+import { sendMeetingScheduleNotification } from '../services/emailService.js';
 
 // Deposit schema for vehicles - no shipping, just deposit payment
 const depositSchema = z.object({
@@ -13,7 +14,26 @@ const depositSchema = z.object({
   buyer_name: z.string().min(1, 'Buyer name is required'),
   buyer_phone: z.string().min(6, 'Valid phone number is required'),
   buyer_address: z.string().min(5, 'Valid address is required'),
+  // Optional: buyer can suggest meeting time/location
+  suggestedMeetingTime: z.string().optional(),
+  suggestedMeetingLocation: z.string().optional(),
+  suggestedMeetingAddress: z.string().optional(),
 });
+
+// Schema for admin scheduling meeting
+const scheduleMeetingSchema = z
+  .object({
+    meetingTime: z.string().optional(),
+    meetingLocation: z.string().min(1).optional(),
+    meetingAddress: z.string().min(1).optional(),
+  })
+  .refine(
+    (data) => data.meetingTime || data.meetingLocation || data.meetingAddress,
+    {
+      message:
+        'At least one field (meetingTime, meetingLocation, or meetingAddress) is required',
+    }
+  );
 
 // Helper function to get deposit amount from config
 // Returns first amount from array or default 500k VND
@@ -45,8 +65,16 @@ export async function createVehicleDeposit(req, res) {
       });
     }
 
-    const { product_id, seller_id, buyer_name, buyer_phone, buyer_address } =
-      validation.data;
+    const {
+      product_id,
+      seller_id,
+      buyer_name,
+      buyer_phone,
+      buyer_address,
+      suggestedMeetingTime,
+      suggestedMeetingLocation,
+      suggestedMeetingAddress,
+    } = validation.data;
     const buyerId = req.user?.sub || req.user?.id;
 
     if (!buyerId) {
@@ -148,10 +176,37 @@ export async function createVehicleDeposit(req, res) {
           transactionId: `DEPOSIT-${Date.now()}`,
           paidAt: new Date(),
         },
+        // Store buyer's suggested meeting info (not confirmed yet)
+        meeting:
+          suggestedMeetingTime ||
+          suggestedMeetingLocation ||
+          suggestedMeetingAddress
+            ? {
+                time: suggestedMeetingTime
+                  ? new Date(suggestedMeetingTime)
+                  : null,
+                location: suggestedMeetingLocation || null,
+                address: suggestedMeetingAddress || null,
+                updatedBy: buyerId,
+                isSuggestion: true, // Flag to indicate this is buyer's suggestion, not admin confirmation
+              }
+            : undefined,
         timeline: [
           {
             status: 'deposit',
-            description: `Đã đặt cọc ${DEPOSIT_AMOUNT} VND - Chờ admin xác nhận giao dịch`,
+            description: `Đã đặt cọc ${DEPOSIT_AMOUNT} VND - Chờ admin xác nhận giao dịch${
+              suggestedMeetingTime ||
+              suggestedMeetingLocation ||
+              suggestedMeetingAddress
+                ? ` (Buyer suggested: ${suggestedMeetingLocation || ''} ${
+                    suggestedMeetingAddress || ''
+                  } ${
+                    suggestedMeetingTime
+                      ? 'at ' + new Date(suggestedMeetingTime).toISOString()
+                      : ''
+                  })`
+                : ''
+            }`,
             updatedBy: buyerId,
           },
         ],
@@ -214,6 +269,163 @@ export async function createVehicleDeposit(req, res) {
       error: 'Internal server error',
       message: error.message,
     });
+  }
+}
+
+/**
+ * Admin schedules meeting time and place for a deposit order
+ * PUT /admin/deposits/:orderId/schedule
+ */
+export async function scheduleDepositMeeting(req, res) {
+  try {
+    const { orderId } = req.params;
+
+    // Validate request body with zod
+    const validation = scheduleMeetingSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues,
+      });
+    }
+
+    const { meetingTime, meetingLocation, meetingAddress } = validation.data;
+    const adminId = req.user?.sub || req.user?.id;
+
+    const order = await Order.findById(orderId).populate('productId');
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    // Only allow scheduling while order is in deposit status
+    if (order.status !== 'deposit') {
+      return res
+        .status(400)
+        .json({ error: 'Order must be in deposit status to schedule meeting' });
+    }
+
+    // Parse meeting time if provided
+    let time = null;
+    if (meetingTime) {
+      time = new Date(meetingTime);
+      if (isNaN(time.getTime())) {
+        return res
+          .status(400)
+          .json({ error: 'Invalid meetingTime. Use ISO date string.' });
+      }
+
+      // Check conflict: buyer or seller cannot have 2 deposit meetings at same time
+      const conflictingOrder = await Order.findOne({
+        _id: { $ne: order._id }, // Exclude current order
+        status: 'deposit',
+        'meeting.time': time,
+        $or: [
+          { buyerId: order.buyerId },
+          { sellerId: order.buyerId },
+          { buyerId: order.sellerId },
+          { sellerId: order.sellerId },
+        ],
+      });
+
+      if (conflictingOrder) {
+        return res.status(400).json({
+          error:
+            'Conflict: One of the participants already has a deposit meeting scheduled at this time',
+          conflictingOrder: conflictingOrder.orderNumber,
+        });
+      }
+    }
+
+    // Store previous suggestion info for timeline
+    const wasSuggestion = order.meeting?.isSuggestion || false;
+    const previousSuggestion = wasSuggestion ? { ...order.meeting } : null;
+
+    order.meeting = order.meeting || {};
+    if (time) order.meeting.time = time;
+    if (meetingLocation !== undefined) order.meeting.location = meetingLocation;
+    if (meetingAddress !== undefined) order.meeting.address = meetingAddress;
+    order.meeting.updatedBy = adminId;
+    order.meeting.isSuggestion = false; // Admin confirmed, no longer a suggestion
+
+    const timelineDesc = wasSuggestion
+      ? `Admin confirmed meeting (was buyer suggestion): ${
+          meetingLocation || ''
+        } ${meetingAddress || ''} ${time ? 'at ' + time.toISOString() : ''}`
+      : `Admin scheduled meeting: ${meetingLocation || ''} ${
+          meetingAddress || ''
+        } ${time ? 'at ' + time.toISOString() : ''}`;
+
+    order.timeline.push({
+      status: 'scheduled',
+      description: timelineDesc.trim(),
+      updatedBy: adminId,
+    });
+
+    await order.save();
+
+    // Send email notifications to buyer and seller
+    try {
+      // Populate buyer and seller information
+      await order.populate('buyerId', 'name email');
+      await order.populate('sellerId', 'name email');
+      await order.populate('productId', 'title');
+
+      const emailPromises = [];
+
+      // Send to buyer
+      if (order.buyerId?.email) {
+        emailPromises.push(
+          sendMeetingScheduleNotification({
+            recipientEmail: order.buyerId.email,
+            recipientName: order.buyerId.name || 'Khách hàng',
+            recipientRole: 'buyer',
+            productTitle: order.productId?.title || 'Xe',
+            orderNumber: order.orderNumber,
+            meetingTime: order.meeting.time,
+            meetingLocation: order.meeting.location,
+            meetingAddress: order.meeting.address,
+            wasSuggestion,
+          })
+        );
+      }
+
+      // Send to seller
+      if (order.sellerId?.email) {
+        emailPromises.push(
+          sendMeetingScheduleNotification({
+            recipientEmail: order.sellerId.email,
+            recipientName: order.sellerId.name || 'Người bán',
+            recipientRole: 'seller',
+            productTitle: order.productId?.title || 'Xe',
+            orderNumber: order.orderNumber,
+            meetingTime: order.meeting.time,
+            meetingLocation: order.meeting.location,
+            meetingAddress: order.meeting.address,
+            wasSuggestion,
+          })
+        );
+      }
+
+      // Send emails in parallel
+      await Promise.allSettled(emailPromises);
+      console.log('Meeting schedule notification emails sent');
+    } catch (emailError) {
+      console.error('Error sending meeting schedule emails:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    return res.json({
+      success: true,
+      message: wasSuggestion
+        ? 'Buyer suggestion confirmed and meeting scheduled successfully. Notification emails sent.'
+        : 'Meeting scheduled successfully. Notification emails sent.',
+      data: {
+        orderId: order._id,
+        meeting: order.meeting,
+        previousSuggestion,
+      },
+    });
+  } catch (error) {
+    console.error('scheduleDepositMeeting error:', error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 }
 
@@ -381,6 +593,7 @@ export async function getAllDeposits(req, res) {
         .populate('productId', 'title price category brand model year')
         .populate('buyerId', 'name email phone')
         .populate('sellerId', 'name email phone')
+        .populate('meeting.updatedBy', 'name email role')
         .sort({ createdAt: -1 })
         .skip(parseInt(skip))
         .limit(parseInt(limit)),

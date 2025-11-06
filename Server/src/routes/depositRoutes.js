@@ -287,7 +287,12 @@ router.get('/deposit-amount', getDepositAmountConfig);
  *       500:
  *         description: Server error
  */
-router.put('/admin/deposit-amount', authenticate, requireAdmin, updateDepositAmountConfig);
+router.put(
+  '/admin/deposit-amount',
+  authenticate,
+  requireAdmin,
+  updateDepositAmountConfig
+);
 
 /**
  * @swagger
@@ -351,6 +356,12 @@ router.put('/admin/deposit-amount', authenticate, requireAdmin, updateDepositAmo
  *       500:
  *         description: Server error
  */
-router.post('/deposit/:orderId/upload-contract', authenticate, requireAdmin, upload.single('file'), uploadContractPdf);
+router.post(
+  '/deposit/:orderId/upload-contract',
+  authenticate,
+  requireAdmin,
+  upload.single('file'),
+  uploadContractPdf
+);
 
 export default router;

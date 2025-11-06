@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import OrderConfirmDialog from "./OrderConfirmDialog";
+import { ScheduleMeetingDialog } from "./ScheduleMeetingDialog";
 import { contractServices } from '@/services/contractServices';
 import { toast } from 'sonner';
 import OrderActionMenuItems from "./OrderActionMenuItems";
@@ -29,6 +30,7 @@ export function OrderActions({
   onStatusChange,
 }: OrderActionsProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [scheduleMeetingOpen, setScheduleMeetingOpen] = useState(false);
   const [actionType, setActionType] = useState<Order['status'] | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -51,7 +53,7 @@ export function OrderActions({
     if (actionType === 'confirmed') {
       try {
         console.log('Uploading contract PDF for order', order);
-        
+
         if (file) {
           setIsUploading(true);
           // Use the new upload API endpoint
@@ -76,6 +78,11 @@ export function OrderActions({
     onStatusChange(order._id, actionType);
     setConfirmOpen(false);
     setActionType(null);
+  };
+
+  const handleMeetingSuccess = () => {
+    toast.success('Đã lên lịch cuộc hẹn thành công');
+    // Optionally refresh the order or trigger a refetch
   };
   return (
     <div className="flex justify-end relative">
@@ -104,8 +111,11 @@ export function OrderActions({
             const method = typeof order.shipping?.method === 'string' ? order.shipping.method.toLowerCase() : '';
             const isGHN = method.includes('ghn');
             const isInPerson = method === 'in-person' || method === 'in_person' || method.includes('in person') || method.includes('pickup') || method.includes('store');
+            // Use 'meeting' (server field) or 'meetingInfo' (alias) for backwards compatibility
+            const meetingData = order.meeting || order.meetingInfo;
+            const isDepositOrder = String(order.status).startsWith('deposit') || Boolean(meetingData);
             const allowActions = isInPerson && order.status != 'delivered' && order.status != 'cancelled' && order.status != 'refunded';
-            console.log({ method, isGHN, isInPerson, allowActions, status: order.status });
+            console.log({ method, isGHN, isInPerson, isDepositOrder, allowActions, status: order.status });
             if (isGHN) {
               return (
                 <DropdownMenuItem
@@ -123,18 +133,30 @@ export function OrderActions({
 
             // For non-GHN orders, only allow confirm/refund when explicitly in-person and status is pending
             return (
-              <OrderActionMenuItems allowActions={allowActions} onOpenConfirm={openConfirm} />
+              <OrderActionMenuItems
+                allowActions={allowActions}
+                isDepositOrder={isDepositOrder}
+                onOpenConfirm={openConfirm}
+                onScheduleMeeting={() => setScheduleMeetingOpen(true)}
+              />
             );
           })()}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <OrderConfirmDialog 
-        open={confirmOpen} 
-        setOpen={handleCloseDialog} 
-        actionType={actionType} 
+      <OrderConfirmDialog
+        open={confirmOpen}
+        setOpen={handleCloseDialog}
+        actionType={actionType}
         onConfirm={handleConfirm}
         isUploading={isUploading}
+      />
+
+      <ScheduleMeetingDialog
+        order={order}
+        isOpen={scheduleMeetingOpen}
+        onClose={() => setScheduleMeetingOpen(false)}
+        onSuccess={handleMeetingSuccess}
       />
     </div>
   );

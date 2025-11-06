@@ -176,4 +176,18 @@ export const adminServices = {
     });
     return response.data;
   },
+  async scheduleDepositMeeting(
+    orderId: string,
+    payload: {
+      meetingTime?: string;
+      meetingLocation?: string;
+      meetingAddress?: string;
+    }
+  ) {
+    const response = await API.put(
+      `/admin/deposits/${orderId}/schedule`,
+      payload
+    );
+    return response.data;
+  },
 };
