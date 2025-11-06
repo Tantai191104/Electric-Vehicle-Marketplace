@@ -65,13 +65,13 @@ export const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
                 </Badge>
               )}
             </div>
-            
+
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Mã đơn hàng:</span>
                 <span className="font-medium text-gray-900">#{order.orderNumber}</span>
               </div>
-              
+
               <div className="flex justify-between">
                 <span className="text-gray-600">Sản phẩm:</span>
                 <span className="font-medium text-gray-900 text-right max-w-60 truncate">
@@ -90,7 +90,7 @@ export const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
                 <div className="flex justify-between">
                   <span className="text-gray-600">Mã vận đơn:</span>
                   <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                    {order.shipping.trackingNumber}
+                    {order.shipping?.trackingNumber}
                   </span>
                 </div>
               )}
