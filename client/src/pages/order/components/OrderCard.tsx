@@ -1,11 +1,10 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+// Button not used directly in OrderCard after refactor
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { formatNumberWithDots } from "@/utils/numberFormatter";
+// formatNumberWithDots used in PaymentInfo component
 import { toast } from "sonner";
-import { CancelOrderModal } from "./CancelOrderModal";
 import { useCancelOrder } from "@/hooks/useCancelOrder";
 import type { Order } from "@/types/orderType";
 import {
@@ -16,11 +15,15 @@ import {
   FiMapPin,
   FiUser,
   FiPhone,
-  FiCreditCard,
   FiCalendar,
   FiFileText
 } from "react-icons/fi";
-import { MdPayment, MdLocalShipping } from "react-icons/md";
+import { MdLocalShipping } from "react-icons/md";
+import MeetingInfo from "./MeetingInfo";
+import OrderItem from "./OrderItem";
+import PaymentInfo from "./PaymentInfo";
+import OrderTimeline from "./OrderTimeline";
+import OrderActions from "./OrderActions";
 
 interface OrderCardProps {
   order: Order;
@@ -122,52 +125,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
       console.error(err);
     }
   };
-
-  // Helper function to translate status to Vietnamese
-  const getStatusLabel = (status: string): string => {
-    const statusMap: Record<string, string> = {
-      'pending': 'Chờ xử lý',
-      'deposit': 'Chờ xử lý',
-      'scheduled': 'Đã lên lịch',
-      'confirmed': 'Đã xác nhận',
-      'shipping': 'Đang giao',
-      'delivered': 'Đã giao',
-      'cancelled': 'Đã hủy',
-      'refunded': 'Đã hoàn tiền',
-      'paid': 'Đã thanh toán',
-      'unpaid': 'Chưa thanh toán',
-      'processing': 'Đang xử lý',
-      'completed': 'Hoàn thành'
-    };
-    return statusMap[status.toLowerCase()] || status;
-  };
-
-  // Helper function to get badge color for status
-  const getStatusBadgeClass = (status: string): string => {
-    const colorMap: Record<string, string> = {
-      'pending': 'bg-gray-100 text-gray-700 border-gray-300',
-      'scheduled': 'bg-green-100 text-green-700 border-green-300',
-      'deposit': 'bg-gray-100 text-gray-700 border-gray-300',
-      'confirmed': 'bg-blue-100 text-blue-700 border-blue-300',
-      'shipping': 'bg-yellow-100 text-yellow-700 border-yellow-300',
-      'delivered': 'bg-green-100 text-green-700 border-green-300',
-      'cancelled': 'bg-red-100 text-red-700 border-red-300',
-      'refunded': 'bg-purple-100 text-purple-700 border-purple-300',
-      'paid': 'bg-emerald-100 text-emerald-700 border-emerald-300',
-      'unpaid': 'bg-orange-100 text-orange-700 border-orange-300',
-      'processing': 'bg-indigo-100 text-indigo-700 border-indigo-300',
-      'completed': 'bg-teal-100 text-teal-700 border-teal-300'
-    };
-    return colorMap[status.toLowerCase()] || 'bg-gray-100 text-gray-700 border-gray-300';
-  };
-
-  // Determine order type: GHN shipping orders vs deposit/in-person orders.
-  // GHN orders: shipping.method === 'GHN'
-  // Deposit orders: NOT GHN (everything else is deposit/in-person)
   const isGHNOrder = order.shipping?.method === "GHN";
   const isDepositOrder = !isGHNOrder;
   // Use 'meeting' (server field name) or 'meetingInfo' (alias) for backwards compatibility
   const meetingData = order.meeting || order.meetingInfo;
+  // Debug helper: add `?forceNoMeeting=1` to the URL to force the "no meeting" UI for testing
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const forceNoMeeting = urlParams?.get('forceNoMeeting') === '1';
   return (
     <Card className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 pb-4">
@@ -200,28 +164,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
             </div>
             {/* Nếu là đơn đặt cọc */}
             {isDepositOrder && (
-              meetingData ? (
-                <div className="flex flex-col gap-1 ml-4">
-                  <div className="flex items-center gap-1">
-                    <FiMapPin className="w-4 h-4" />
-                    <span className="font-semibold">Địa điểm gặp mặt:</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{meetingData.location}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <FiCalendar className="w-4 h-4" />
-                    <span className="font-semibold">Thời gian:</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                      {meetingData.time ? new Date(meetingData.time).toLocaleString('vi-VN') : 'Chưa xác định'}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 ml-4">
-                  <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">
-                    Thông tin sẽ được liên hệ trực tiếp với bạn sau
-                  </Badge>
-                </div>
-              )
+              <MeetingInfo meetingData={forceNoMeeting ? null : meetingData} compact isDepositOrder={isDepositOrder} />
             )}
             {/* Nếu là đơn GHN thì hiện tracking như cũ */}
             {isGHNOrder && order.shipping?.trackingNumber && (
@@ -239,34 +182,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
       <CardContent className="p-6">
         {/* Order Items */}
         <div className="space-y-4 mb-6">
-          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-              <img
-                src={typeof order.productId === 'object' ? (order.productId.images?.[0] || "/images/placeholder.jpg") : "/images/placeholder.jpg"}
-                alt={typeof order.productId === 'object' ? order.productId.title : "Sản phẩm"}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-black truncate">
-                {typeof order.productId === 'object' ? order.productId.title : "Sản phẩm"}
-              </h4>
-              <div className="flex items-center gap-4 text-sm text-gray-700 mt-1">
-                <span>Số lượng: {order.quantity}</span>
-                <span className="font-semibold text-black">
-                  {formatNumberWithDots(order.unitPrice)} VNĐ
-                </span>
-              </div>
-              <div className="text-sm text-gray-600 mt-1">
-                Người bán: {typeof order.sellerId === 'object' ? order.sellerId.name : "N/A"}
-              </div>
-            </div>
-
-            <Badge variant="outline" className="shrink-0 border-gray-300 text-gray-700">
-              Sản phẩm
-            </Badge>
-          </div>
+          <OrderItem order={order} />
         </div>
 
         <Separator className="my-6 bg-gray-200" />
@@ -281,55 +197,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
             </h4>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
               {isDepositOrder ? (
-                meetingData ? (
-                  <>
-                    <div className="flex items-center gap-2 text-sm">
-                      <FiMapPin className="w-4 h-4 text-gray-600" />
-                      <span className="font-medium text-black">Địa điểm gặp mặt:</span>
-                      <span className="text-gray-700">{meetingData.location}</span>
-                    </div>
-                    {meetingData.address && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <FiMapPin className="w-4 h-4 text-gray-600" />
-                        <span className="font-medium text-black">Địa chỉ chi tiết:</span>
-                        <span className="text-gray-700">{meetingData.address}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-sm">
-                      <FiCalendar className="w-4 h-4 text-gray-600" />
-                      <span className="font-medium text-black">Thời gian:</span>
-                      <span className="text-gray-700">
-                        {meetingData.time ? new Date(meetingData.time).toLocaleString('vi-VN') : 'Chưa xác định'}
-                      </span>
-                    </div>
-                    {meetingData.updatedBy && typeof meetingData.updatedBy === 'object' && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex items-start gap-2 text-xs text-gray-600">
-                          <FiUser className="w-3 h-3 mt-0.5" />
-                          <div>
-                            <p className="font-medium text-gray-700">Được lên lịch bởi:</p>
-                            <p className="text-gray-600">{meetingData.updatedBy.name}</p>
-                            <p className="text-gray-500">{meetingData.updatedBy.email}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <FiClock className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-blue-900 text-sm mb-1">Đang xử lý thông tin</p>
-                        <p className="text-xs text-blue-700">
-                          Thông tin lịch hẹn sẽ được liên hệ trực tiếp với bạn sau. Vui lòng kiểm tra email và điện thoại thường xuyên.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )
+                <MeetingInfo meetingData={forceNoMeeting ? null : meetingData} isDepositOrder={isDepositOrder} />
               ) : (
                 <>
                   <div className="flex items-center gap-2 text-sm">
@@ -356,169 +224,28 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, navigate }) => {
           </div>
 
           {/* Payment & Total */}
-          <div className="space-y-3">
-            <h4 className="font-semibold text-black flex items-center gap-2">
-              <MdPayment className="w-4 h-4" />
-              Thanh toán
-            </h4>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-700">Phương thức:</span>
-                <div className="flex items-center gap-1">
-                  <FiCreditCard className="w-4 h-4" />
-                  <span className="font-medium text-black">
-                    {order.payment.method === "wallet" ? "Ví hệ thống" :
-                      order.payment.method === "vnpay" ? "VNPay" :
-                        order.payment.method === "zalopay" ? "ZaloPay" :
-                          order.payment.method === "bank_transfer" ? "Chuyển khoản" : "COD"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-700">Trạng thái:</span>
-                <Badge className={order.payment.status === "paid" ? "bg-black text-white" : "bg-gray-100 text-gray-700"}>
-                  {order.payment.status === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
-                </Badge>
-              </div>
-              {isGHNOrder && (
-
-                <div className="space-y-1 text-sm text-gray-700">
-                  <div className="flex justify-between">
-                    <span>Tạm tính:</span>
-                    <span>{formatNumberWithDots(order.totalAmount)} VNĐ</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Phí vận chuyển:</span>
-                    <span>{formatNumberWithDots(order.shippingFee)} VNĐ</span>
-                  </div>
-                </div>
-              )}
-              {isDepositOrder && (
-                <div className="space-y-1 text-sm text-gray-700">
-                  <div className="flex justify-between">
-                    <span>Phí đặt cọc:</span>
-                    <span>{formatNumberWithDots(order.finalAmount)} VNĐ</span>
-                  </div>
-                </div>
-              )}
-              <Separator className="bg-gray-300" />
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-black">Tổng thanh toán:</span>
-                <span className="text-xl font-bold text-black">
-                  {formatNumberWithDots(isGHNOrder ? order.totalAmount : order.finalAmount)} VNĐ
-                </span>
-              </div>
-            </div>
-          </div>
+          <PaymentInfo order={order} isGHNOrder={isGHNOrder} isDepositOrder={isDepositOrder} />
         </div>
 
         {/* Timeline */}
-        {order.timeline && order.timeline.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <h4 className="font-semibold text-black mb-3 flex items-center gap-2">
-              <FiClock className="w-4 h-4" />
-              Lịch sử đơn hàng
-            </h4>
-            <div className="space-y-2">
-              {order.timeline.map((timeline) => (
-                <div key={timeline._id} className="flex items-start gap-3 p-2 bg-gray-50 rounded-lg border border-gray-100">
-                  <div className="w-2 h-2 bg-gray-600 rounded-full mt-2 flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-black">{timeline.description}</p>
-                    <p className="text-xs text-gray-600">
-                      {new Date(timeline.timestamp).toLocaleString('vi-VN')}
-                    </p>
-                  </div>
-                  <Badge className={`text-xs font-semibold border ${getStatusBadgeClass(timeline.status)}`}>
-                    {getStatusLabel(timeline.status)}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <OrderTimeline timeline={order.timeline} />
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-gray-200">
-          {order.contract && order.contract.pdfUrl ? (
-            <Button
-              variant="outline"
-              className="flex-1 border-black text-black hover:bg-black hover:text-white transition-all duration-200"
-              onClick={() => window.open(order.contract!.pdfUrl!, '_blank')}
-            >
-              <FiFileText className="w-4 h-4 mr-2" />
-              Xem hợp đồng đã ký
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              disabled
-              className="flex-1 border-gray-300 text-gray-400 bg-gray-50 cursor-not-allowed"
-            >
-              <FiFileText className="w-4 h-4 mr-2" />
-              Chưa có hợp đồng
-            </Button>
-          )}
-
-          {/* Button for GHN orders with status delivered_fail */}
-          {order.shipping?.method === "GHN" && order.status === "delivered_fail" && (
-            <Button
-              variant="outline"
-              className="flex-1 border-yellow-400 text-yellow-700 hover:bg-yellow-400 hover:text-white transition-all duration-200"
-              onClick={handleReturnOrder}
-            >
-              Trả hàng
-            </Button>
-          )}
-
-          {order.status === "pending" && (
-            <Button
-              variant="outline"
-              className="flex-1 border-red-400 text-red-600 hover:bg-red-400 hover:text-white transition-all duration-200 disabled:opacity-50"
-              onClick={() => initiateCancelOrder(order)}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></div>
-                  Đang hủy...
-                </>
-              ) : (
-                order.shipping?.trackingNumber ? "Hủy đơn GHN" : "Hủy đơn hàng"
-              )}
-            </Button>
-          )}
-
-          {order.shipping?.trackingNumber && (
-            <Button
-              className="flex-1 bg-gray-700 hover:bg-gray-800 text-white font-semibold transition-all duration-200"
-              onClick={() => handleTrackOrder(order.shipping!.trackingNumber!, order.shipping!.carrier!)}
-            >
-              <FiTruck className="w-4 h-4 mr-2" />
-              Theo dõi với {order.shipping.carrier}
-            </Button>
-          )}
-
-          {order.payment.status !== "paid" && (
-            <Button
-              className="flex-1 bg-black hover:bg-gray-800 text-white transition-all duration-200"
-              onClick={() => handlePayOrder(order._id)}
-            >
-              <MdPayment className="w-4 h-4 mr-2" />
-              Thanh toán
-            </Button>
-          )}
-        </div>
+        <OrderActions
+          order={order}
+          navigate={navigate}
+          isLoading={isLoading}
+          initiateCancelOrder={initiateCancelOrder}
+          confirmCancelOrder={confirmCancelOrder}
+          closeCancelModal={closeCancelModal}
+          showConfirmModal={showConfirmModal}
+          orderToCancel={orderToCancel}
+          handleTrackOrder={handleTrackOrder}
+          handlePayOrder={handlePayOrder}
+          handleReturnOrder={handleReturnOrder}
+        />
       </CardContent>
 
-      {/* Cancel Order Modal */}
-      <CancelOrderModal
-        isOpen={showConfirmModal}
-        onClose={closeCancelModal}
-        onConfirm={confirmCancelOrder}
-        order={orderToCancel}
-        isLoading={isLoading}
-      />
     </Card>
   );
 };

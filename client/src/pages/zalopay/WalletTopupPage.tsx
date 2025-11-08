@@ -98,7 +98,6 @@ const WalletTopupPage: React.FC = () => {
       });
       setAmount("");
       setDisplayAmount("");
-      toast.success("Thanh toán thành công! Ví đã được cộng tiền.");
     }
 
     if (status === "fail") {
@@ -107,8 +106,9 @@ const WalletTopupPage: React.FC = () => {
   }, [status, amount]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-4 px-4 mt-[120px]">
-      <div className="max-w-md mx-auto h-[calc(100vh-120px)] flex flex-col">
+    // Use padding-top instead of margin-top so the layout can shrink and the inner container can grow.
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 pt-[120px] pb-4 px-4">
+      <div className="max-w-md mx-auto flex-1 flex flex-col">
         {/* Header compact */}
         <div className="text-center mb-6">
           <div className="relative inline-flex items-center justify-center w-12 h-12 bg-gray-900 rounded-xl shadow-lg mb-4 group transition-all duration-300 hover:scale-105">
@@ -123,8 +123,9 @@ const WalletTopupPage: React.FC = () => {
         </div>
 
         {/* Main Card - Flexible height */}
-        <Card className="rounded-2xl shadow-lg border border-gray-200/50 bg-white/90 backdrop-blur-sm overflow-hidden flex-1 flex flex-col">
-          <CardContent className="p-6 flex-1 flex flex-col space-y-5">
+        {/* Allow the card to scroll on small screens instead of clipping content */}
+        <Card className="rounded-2xl shadow-lg border border-gray-200/50 bg-white/90 backdrop-blur-sm overflow-auto flex-1 flex flex-col">
+          <CardContent className="p-6 flex-1 flex flex-col space-y-5 min-h-0">
             {/* Tabs compact */}
             <Tabs value={tab} onValueChange={setTab} className="w-full">
               <TabsList className="w-full grid grid-cols-2 bg-gray-100 rounded-xl p-1 h-10">
