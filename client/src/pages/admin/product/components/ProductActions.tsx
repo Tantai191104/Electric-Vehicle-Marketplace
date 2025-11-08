@@ -7,25 +7,25 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { FiMoreVertical, FiEye, FiStar } from "react-icons/fi";
+import { FiMoreVertical, FiEye, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import type { Product } from "@/types/productType";
 
-interface Props {
+type Props = {
     product: Product;
     onView: (product: Product) => void;
-    onToggleFeatured: (productId: string, featured: boolean) => void;
-}
-
-export const ProductActions: React.FC<Props> = ({
-    product,
-    onView,
-    onToggleFeatured,
-}) => {
+    onApprove?: (productId: string) => void;
+    onReject?: (productId: string) => void;
+};
+export const ProductActions: React.FC<Props> = ({ product, onView, onApprove, onReject }) => {
     const [isOpen, setIsOpen] = useState(false);
 
 
-    const handleToggleFeatured = () => {
-        onToggleFeatured(product._id, !product.isFeatured);
+    const handleApprove = () => {
+        if (onApprove) onApprove(product._id);
+        setIsOpen(false);
+    };
+    const handleReject = () => {
+        if (onReject) onReject(product._id);
         setIsOpen(false);
     };
 
@@ -42,24 +42,20 @@ export const ProductActions: React.FC<Props> = ({
                     Xem chi tiết
                 </DropdownMenuItem>
 
-                <DropdownMenuSeparator />
+                {product.status === "pending" && (
+                    <>
+                        <DropdownMenuSeparator />
 
-                <DropdownMenuItem onClick={handleToggleFeatured}>
-                    {product.isFeatured ? (
-                        <>
-                            <FiStar className="w-4 h-4 mr-2 text-gray-400" />
-                            Bỏ nổi bật
-                        </>
-                    ) : (
-                        <>
-                            <FiStar className="w-4 h-4 mr-2 text-yellow-500" />
-                            Đặt nổi bật
-                        </>
-                    )}
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
+                        <DropdownMenuItem onClick={handleApprove}>
+                            <FiCheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                            Duyệt
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleReject}>
+                            <FiXCircle className="w-4 h-4 mr-2 text-red-600" />
+                            Từ chối
+                        </DropdownMenuItem>
+                    </>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );

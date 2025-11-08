@@ -6,7 +6,8 @@ import { formatVND } from "@/utils/formatVND";
 
 export const getProductColumns = (
   onViewProduct: (product: Product) => void,
-  onToggleFeatured: (productId: string, featured: boolean) => void
+  onApproveProduct: (productId: string) => void,
+  onRejectProduct: (productId: string) => void
 ): ColumnDef<Product>[] => [
     {
       accessorKey: "images",
@@ -144,6 +145,8 @@ export const getProductColumns = (
               return { label: "Bị từ chối", color: "bg-red-100 text-red-800" };
             case "sold":
               return { label: "Đã bán", color: "bg-blue-100 text-blue-800" };
+            case "deposit":
+              return { label: "Đã cọc", color: "bg-purple-100 text-purple-800" };
             default:
               return { label: status, color: "bg-gray-100 text-gray-800" };
           }
@@ -212,7 +215,8 @@ export const getProductColumns = (
         <ProductActions
           product={row.original}
           onView={onViewProduct}
-          onToggleFeatured={onToggleFeatured}
+          onApprove={onApproveProduct}
+          onReject={onRejectProduct}
         />
       ),
       size: 120,

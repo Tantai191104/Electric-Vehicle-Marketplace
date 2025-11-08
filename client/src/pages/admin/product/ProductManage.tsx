@@ -52,7 +52,9 @@ export default function ProductManage() {
         error
     } = productsQuery;
 
-    const productsData = productsResponse?.data || [];
+    const productsData = useMemo(() => {
+        return productsResponse?.data || [];
+    }, [productsResponse?.data]);
     // Total from server is the total after status filter
     // But we need to show total after all filters (status + category + condition)
     // So we'll use filteredData length for accurate count
@@ -120,41 +122,44 @@ export default function ProductManage() {
         },
     });
 
-    // Filter data based on filters
+    // Filter and sort data based on filters
     const filteredData = useMemo(() => {
         if (!Array.isArray(productsData)) return [];
-        return productsData.filter((product) => {
+
+        // Filter first
+        const filtered = productsData.filter((product) => {
             // Category filter (client-side only)
             const matchesCategory =
                 categoryFilter === "all" || product.category === categoryFilter;
-            
-            
+
             // Condition filter (client-side only)
             const matchesCondition =
                 conditionFilter === "all" || product.condition === conditionFilter;
-            
+
             return matchesCategory && matchesCondition;
         });
-    }, [productsData, categoryFilter, conditionFilter]);
 
-    // Calculate display total
-    // If no client-side filters (category/condition = all), show server total
-    // If client-side filters applied, show filtered count from available data
+        // Sort: pending products first (sorted by newest), then other statuses
+        return filtered.sort((a, b) => {
+            // If both are pending, sort by createdAt (newest first)
+            if (a.status === "pending" && b.status === "pending") {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+            // If only a is pending, a comes first
+            if (a.status === "pending") return -1;
+            // If only b is pending, b comes first
+            if (b.status === "pending") return 1;
+            // For other statuses, sort by createdAt (newest first)
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+    }, [productsData, categoryFilter, conditionFilter]);
     const totalProductsFromServer = productsResponse?.pagination?.total || 0;
     const hasClientSideFilters = categoryFilter !== "all" || conditionFilter !== "all";
-    
-    const displayTotal = hasClientSideFilters 
+
+    const displayTotal = hasClientSideFilters
         ? filteredData.length  // Client-side filtered count (may be incomplete if server limited results)
         : (totalProductsFromServer > 0 ? totalProductsFromServer : filteredData.length); // Server total or fallback
 
-    const handleToggleFeatured = useCallback(
-        (productId: string, featured: boolean) => {
-            console.log(`Product: ${productId}, Featured: ${featured}`);
-            // TODO: Add mutation for toggling featured status
-            refetch();
-        },
-        [refetch]
-    );
     // Handle refresh
     const handleRefresh = useCallback(() => {
         refetch();
@@ -194,7 +199,8 @@ export default function ProductManage() {
 
     const columns = getProductColumns(
         (product) => setSelectedProduct(product),
-        handleToggleFeatured
+        handleApproveProduct,
+        handleRejectProduct
     );
 
     const table = useReactTable({
@@ -283,7 +289,7 @@ export default function ProductManage() {
                         <ProductTable table={table} columns={columns} />
                     </div>
                 </div>
-                
+
                 {/* Pagination outside of pointer-events-none div - always interactive */}
                 <ProductTablePagination
                     table={table}
