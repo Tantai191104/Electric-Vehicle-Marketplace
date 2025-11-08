@@ -17,6 +17,9 @@ interface AuthPageProps {
 }
 const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
     const [isLogin, setIsLogin] = useState(mode === "login");
+        React.useEffect(() => {
+            setIsLogin(mode === "login");
+        }, [mode]);
     const navigation = useNavigate();
 
     // Gọi mutation

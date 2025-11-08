@@ -82,7 +82,7 @@ const FixedHeader: React.FC = () => {
               className="w-48 bg-white shadow-lg border border-yellow-400 rounded-md z-50"
             >
               {!user ? (
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="text-black font-semibold"
                   onClick={() => navigate("/auth/login")}
                 >
@@ -90,13 +90,14 @@ const FixedHeader: React.FC = () => {
                 </DropdownMenuItem>
               ) : (
                 <>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-black font-semibold"
-                    onClick={() => navigate("/articles/new")}
+                    onClick={() => navigate("/articles/create")}
                   >
                     Đăng tin mới
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-black font-semibold">
+                  <DropdownMenuItem className="text-black font-semibold"
+                    onClick={() => navigate("/own/product")}>
                     Quản lý tin đăng
                   </DropdownMenuItem>
                 </>
@@ -219,13 +220,13 @@ const FixedHeader: React.FC = () => {
                   sideOffset={4}
                   className="w-48 bg-white shadow-lg border border-yellow-400 rounded-md z-50"
                 >
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-black font-semibold"
                     onClick={() => navigate("/profile")}
                   >
                     Tài khoản của tôi
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-black font-semibold"
                     onClick={() => navigate("/wishlist")}
                   >
@@ -234,7 +235,7 @@ const FixedHeader: React.FC = () => {
                   <DropdownMenuItem className="text-black font-semibold">
                     Cài đặt
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-black font-semibold"
                     onClick={handleLogout}
                   >
@@ -244,7 +245,7 @@ const FixedHeader: React.FC = () => {
               </Portal>
             </DropdownMenu>
           ) : (
-            <Button 
+            <Button
               variant="outline"
               onClick={() => navigate("/auth/login")}
               className="bg-white border-yellow-400 text-black hover:bg-yellow-100 font-semibold flex-shrink-0"

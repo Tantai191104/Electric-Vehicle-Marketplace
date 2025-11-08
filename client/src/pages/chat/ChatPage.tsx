@@ -34,14 +34,58 @@ export const ChatPage: React.FC = () => {
 
     const messages = useMemo(() => {
         if (!fetchedMessages) return optimisticMessages;
-        const tempMessages = optimisticMessages.filter(tempMsg =>
-            !fetchedMessages.some((realMsg: Message) =>
-                realMsg.text === tempMsg.text &&
-                realMsg.senderId === tempMsg.senderId &&
-                Math.abs(new Date(realMsg.createdAt).getTime() - new Date(tempMsg.createdAt).getTime()) < 60000
-            )
-        );
-        return [...fetchedMessages, ...tempMessages];
+        const tempMessages = optimisticMessages.filter((tempMsg) => {
+            // if any real message matches this temp optimistic message, filter it out
+            return !fetchedMessages.some((realMsg: Message) => {
+                if (realMsg.senderId !== tempMsg.senderId) return false;
+
+                // If both have text and equal, treat as duplicate
+                if (realMsg.text && tempMsg.text && realMsg.text === tempMsg.text) return true;
+
+                // If both have files, match by count and names (handles image uploads)
+                const tFiles = (tempMsg as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+                const rFiles = (realMsg as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+                if (tFiles && rFiles && tFiles.length > 0 && rFiles.length > 0 && tFiles.length === rFiles.length) {
+                    const namesMatch = tFiles.every((tf, idx) => {
+                        const tn = tf?.name || '';
+                        const rn = rFiles[idx]?.name || '';
+                        return tn && rn && tn === rn;
+                    });
+                    if (namesMatch) return true;
+                }
+
+                // fallback: timestamps close together => consider duplicate
+                if (Math.abs(new Date(realMsg.createdAt).getTime() - new Date(tempMsg.createdAt).getTime()) < 60000) return true;
+
+                return false;
+            });
+        });
+        // Merge fetched + temp and dedupe by signature (sender + text OR files + close timestamp)
+        const merged = [...fetchedMessages, ...tempMessages];
+        const unique: Message[] = [];
+        const isSimilar = (a: Message, b: Message) => {
+            if (a.senderId !== b.senderId) return false;
+            if (a.text && b.text && a.text === b.text) return true;
+            const aFiles = (a as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+            const bFiles = (b as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+            if (aFiles && bFiles && aFiles.length === bFiles.length && aFiles.length > 0) {
+                const namesMatch = aFiles.every((af, idx) => {
+                    const an = af?.name || '';
+                    const bn = bFiles[idx]?.name || '';
+                    return an && bn && an === bn;
+                });
+                if (namesMatch) return true;
+            }
+            if (Math.abs(new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) < 1000) return true;
+            return false;
+        };
+
+        for (const m of merged) {
+            const exists = unique.some(u => isSimilar(u, m));
+            if (!exists) unique.push(m);
+        }
+
+        return unique;
     }, [fetchedMessages, optimisticMessages]);
 
     const selectedConversation = useMemo(() => {
@@ -138,29 +182,50 @@ export const ChatPage: React.FC = () => {
             toast.error("Không thể gửi file");
             return;
         }
-
         const tempId = `temp-${Date.now()}-${Math.random()}`;
+
+        // Create preview URLs for optimistic display
+        const tempFiles = files.map((f, i) => ({
+            _id: `tempfile-${Date.now()}-${i}-${Math.random()}`,
+            url: URL.createObjectURL(f),
+            name: f.name,
+            type: f.type
+        }));
+
         const tempMessage: Message = {
             _id: tempId,
             conversationId: selectedConversationId,
             senderId: user?._id || "",
-            text: text || "Đang gửi file...",
+            text: text || "",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            files: [],
-            type: "file",
-            isRead: false
+            files: tempFiles as unknown as import("@/types/chatType").FileMeta[],
+            type: files[0]?.type.startsWith('image/') ? 'image' : 'file',
+            isRead: false,
+            isPending: true
         };
 
+        // Add optimistic message for immediate UI (with previews)
         setOptimisticMessages(prev => [...prev, tempMessage]);
 
+        // Call sendMessage with tempId so hook does not add duplicate temp message in cache
         const success = await socketSendMessage({
             conversationId: String(selectedConversationId),
             text: text || "",
-            files
+            files,
+            tempId
         });
 
-        setOptimisticMessages(prev => prev.filter(msg => msg._id !== tempId));
+        // Remove optimistic message and revoke preview URLs
+        setOptimisticMessages(prev => {
+            const removed = prev.find(m => m._id === tempId);
+            if (removed && removed.files) {
+                removed.files.forEach((f: import("@/types/chatType").FileMeta) => {
+                    try { URL.revokeObjectURL(f.url); } catch { /* ignore */ }
+                });
+            }
+            return prev.filter(msg => msg._id !== tempId);
+        });
 
         if (!success) toast.error("Gửi file thất bại");
     }, [selectedConversationId, isConnected, socketSendMessage, user?._id]);

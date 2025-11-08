@@ -46,11 +46,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       return;
     }
 
+    // Auto-send files immediately (no preview/confirm step)
+    const fileArray = Array.from(files);
+    e.target.value = '';
     try {
       setIsUploading(true);
-      await onSendFile(Array.from(files), value);
-      onChange(''); // Clear input after sending
-      e.target.value = ''; // Reset file input
+      await onSendFile(fileArray, value);
+      onChange('');
     } catch (error) {
       console.error('Error uploading file:', error);
       toast.error('Không thể tải file lên');
@@ -130,6 +132,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       >
         <Paperclip className="w-4 h-4" />
       </Button>
+
+      {/* files are sent immediately on selection; no preview UI */}
 
       <textarea
         ref={textareaRef}

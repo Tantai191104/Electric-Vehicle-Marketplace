@@ -79,9 +79,10 @@ export const productServices = {
     return response.data;
   },
   async addWishlist(productId: string): Promise<null> {
-    const response = await API.post("/profile/wishlist", { productId });
+    const response = await API.post(`/profile/wishlist/${productId}`);
     return response.data;
   },
+
   async removeWishlist(productId: string): Promise<null> {
     const response = await API.delete(`/profile/wishlist/${productId}`);
     return response.data;

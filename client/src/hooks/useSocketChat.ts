@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { chatKeys } from "./useChat";
+import { chatService } from "@/services/chatServices";
 import type { Conversation, Message } from "@/types/chatType";
 
 // Thêm onMessageStatusChange vào events
@@ -71,34 +72,90 @@ export const useSocketChat = (
           chatKeys.messages(msg.conversationId),
           (old: Message[] = []) => {
             // Kiểm tra nếu có tin nhắn trùng nội dung (do optimistic update)
-            const hasSimilarTemp = old.some(
-              (m) =>
-                m._id.includes("temp-") &&
-                m.text === msg.text &&
-                m.senderId === msg.senderId &&
-                Math.abs(
-                  new Date(m.createdAt).getTime() -
-                    new Date(msg.createdAt).getTime()
-                ) < 30000
-            );
+            const hasSimilarTemp = old.some((m) => {
+              // match by temp id pattern and same sender
+              if (!m._id.includes("temp-")) return false;
+              if (m.senderId !== msg.senderId) return false;
+
+              // If both have text and text matches, consider similar
+              if (m.text && msg.text && m.text === msg.text) return true;
+
+              // If both have files, try to match by file count and file names (covers image uploads)
+              const mFiles = (m as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+              const msgFiles = (msg as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+              if (mFiles && msgFiles && mFiles.length > 0 && msgFiles.length > 0) {
+                if (mFiles.length === msgFiles.length) {
+                  const allNamesMatch = mFiles.every((mf, idx) => {
+                    const mfName = mf?.name || '';
+                    const rfName = msgFiles[idx]?.name || '';
+                    return mfName && rfName && mfName === rfName;
+                  });
+                  if (allNamesMatch) return true;
+                }
+              }
+
+              // Fallback: if timestamps are close (30s) and no other mismatch, treat as similar
+              if (
+                Math.abs(new Date(m.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 30000
+              ) {
+                return true;
+              }
+
+              return false;
+            });
 
             if (hasSimilarTemp) {
               // Thay thế tin nhắn tạm bằng tin nhắn thật
               return old
-                .filter(
-                  (m) =>
-                    !(
-                      m._id.includes("temp-") &&
-                      m.text === msg.text &&
-                      m.senderId === msg.senderId
-                    )
-                )
+                .filter((m) => {
+                  if (!m._id.includes("temp-")) return true;
+                  if (m.senderId !== msg.senderId) return true;
+
+                  // same logic to identify the temp to remove
+                  if (m.text && msg.text && m.text === msg.text) return false;
+                  const mFiles = (m as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+                  const msgFiles = (msg as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+                  if (mFiles && msgFiles && mFiles.length === msgFiles.length) {
+                    const allNamesMatch = mFiles.every((mf, idx) => {
+                      const mfName = mf?.name || '';
+                      const rfName = msgFiles[idx]?.name || '';
+                      return mfName && rfName && mfName === rfName;
+                    });
+                    if (allNamesMatch) return false;
+                  }
+
+                  if (Math.abs(new Date(m.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 30000) return false;
+
+                  return true;
+                })
                 .concat(msg);
             }
 
             // Nếu không có tin nhắn tạm trùng khớp, kiểm tra ID
             const exists = old.some((m) => m._id === msg._id);
             if (exists) return old;
+
+            // Additional dedupe: if an existing REAL message has same signature (sender + text OR same files) and timestamps close, skip adding
+            const hasSimilarReal = old.some((m) => {
+              if (m._id.startsWith("temp-")) return false; // only compare with real stored messages
+              if (m.senderId !== msg.senderId) return false;
+              if (m.text && msg.text && m.text === msg.text) return true;
+              const mFiles = (m as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+              const msgFiles = (msg as unknown as { files?: import("@/types/chatType").FileMeta[] })?.files;
+              if (mFiles && msgFiles && mFiles.length === msgFiles.length && mFiles.length > 0) {
+                const allNamesMatch = mFiles.every((mf, idx) => {
+                  const mfName = mf?.name || '';
+                  const rfName = msgFiles[idx]?.name || '';
+                  return mfName && rfName && mfName === rfName;
+                });
+                if (allNamesMatch) return true;
+              }
+              if (Math.abs(new Date(m.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 2000) return true;
+              return false;
+            });
+
+            if (hasSimilarReal) return old;
+
             return [...old, msg];
           }
         );
@@ -273,9 +330,11 @@ export const useSocketChat = (
       conversationId: string;
       text: string;
       files?: File[];
+      // allow caller to provide a tempId (so caller-side optimistic messages can share the same id)
+      tempId?: string;
     }): Promise<boolean> => {
       const conversationId = String(message.conversationId);
-      const tempId = `temp-${Date.now()}-${Math.random()}`;
+      const tempId = message.tempId ?? `temp-${Date.now()}-${Math.random()}`;
 
       // Đảm bảo callback được gọi trước khi thực hiện bất kỳ thao tác nào khác
       events?.onMessageStatusChange?.({ isSending: true, messageId: tempId });
@@ -295,11 +354,13 @@ export const useSocketChat = (
         isPending: true,
       };
 
-      // Cập nhật cache messages ngay lập tức
-      queryClient.setQueryData(
-        chatKeys.messages(conversationId),
-        (old: Message[] = []) => [...old, tempMessage]
-      );
+      // Only insert tempMessage into cache if caller didn't already provide one (i.e. no tempId passed)
+      if (!message.tempId) {
+        queryClient.setQueryData(
+          chatKeys.messages(conversationId),
+          (old: Message[] = []) => [...old, tempMessage]
+        );
+      }
 
       // Cập nhật lastMessage trong conversations list
       queryClient.setQueryData(
@@ -353,7 +414,67 @@ export const useSocketChat = (
         }
       }, 2000);
 
-      // Gửi tin nhắn qua socket
+      // If files are provided, upload via REST endpoint before emitting socket
+      if (message.files && message.files.length > 0) {
+        try {
+          // Upload files using chatService
+          const res = await chatService.sendFileMessage(conversationId, message.files, message.text);
+
+          // Normalize returned messages
+          let returnedMessages: Message[] = [];
+          if (Array.isArray(res)) returnedMessages = res as Message[];
+          else if (res?.items) returnedMessages = res.items as Message[];
+          else if (res?.messages) returnedMessages = res.messages as Message[];
+          else if (res?.message) returnedMessages = [res.message] as Message[];
+          else if (res) returnedMessages = [res] as Message[];
+
+          // Update messages cache
+          queryClient.setQueryData(
+            chatKeys.messages(conversationId),
+            (old: Message[] = []) => [...old.filter(m => m._id !== tempId), ...returnedMessages]
+          );
+
+          // Update conversations lastMessage
+          if (returnedMessages.length > 0) {
+            const last = returnedMessages[returnedMessages.length - 1];
+            queryClient.setQueryData(
+              chatKeys.conversations(),
+              (old: Conversation[] = []) =>
+                old.map((conv) =>
+                  conv._id === conversationId
+                    ? {
+                        ...conv,
+                        lastMessage: {
+                          text: last.text || (last.files && last.files.length ? 'File' : ''),
+                          sentBy: last.senderId,
+                          sentAt: last.createdAt,
+                        },
+                        updatedAt: last.createdAt,
+                      }
+                    : conv
+                )
+            );
+          }
+
+          events?.onMessageStatusChange?.({ isSending: false, messageId: tempId });
+          return true;
+        } catch (err) {
+          console.error("File upload failed", err);
+          // Mark temp message as failed
+          queryClient.setQueryData(
+            chatKeys.messages(conversationId),
+            (old: Message[] = []) =>
+              (old || []).map((msg) =>
+                msg._id === tempId ? { ...msg, isPending: false, error: true } : msg
+              )
+          );
+          events?.onMessageStatusChange?.({ isSending: false, messageId: tempId });
+          toast.error("Gửi file thất bại");
+          return false;
+        }
+      }
+
+      // Otherwise send text via socket as before
       return new Promise((resolve) => {
         socketRef.current!.emit(
           "send_message",

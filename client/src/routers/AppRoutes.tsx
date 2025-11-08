@@ -16,6 +16,7 @@ import { ChatPage } from "@/pages/chat/ChatPage";
 import EditorPage from "@/pages/article/EditorPage";
 import SignContractPage from "@/pages/contract/SignContractPage";
 import ProductDetailPage from "@/pages/detail/ProductDetailPage";
+import WishlistPage from "@/pages/profile/WishlistPage";
 import OrderPage from "@/pages/order/OrderPage";
 import CheckoutPage from "@/pages/checkout/CheckoutPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -88,6 +89,7 @@ export default function App() {
             <Route path="/contracts/edit/:productId" element={animatePage(<ContractEditorPage />)} />
             <Route path="/profile" element={animatePage(<ProfilePage />)} />
             <Route path="/wallet/recharge" element={animatePage(<WalletTopupPage />)} />
+            <Route path="/wishlist" element={animatePage(<WishlistPage />)} />
             <Route path="/orders" element={animatePage(<OrderPage />)} />
             <Route path="/transactions" element={animatePage(<TransactionsPage />)} />
             <Route path="/own/product" element={animatePage(<OwnProduct />)} />
