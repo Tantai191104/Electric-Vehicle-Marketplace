@@ -95,19 +95,36 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                                             {message.text}
 
                                             {message.files && message.files.length > 0 && (
-                                                <div className="mt-2 space-y-2">
-                                                    {message.files.map((file, index) => (
-                                                        <div key={index} className="flex items-center">
-                                                            <a
-                                                                href={file.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-blue-300 hover:underline text-sm"
-                                                            >
-                                                                {file.name || 'File đính kèm'}
-                                                            </a>
-                                                        </div>
-                                                    ))}
+                                                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    {message.files.map((file, index) => {
+                                                        const f = file as unknown as { url?: string; name?: string; type?: string };
+                                                        const fileType = f.type || '';
+                                                        const isImage = fileType.startsWith?.('image/') || /\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i.test(f.url || '');
+
+                                                        return (
+                                                            <div key={index} className="flex items-center">
+                                                                {isImage ? (
+                                                                    <a href={f.url} target="_blank" rel="noopener noreferrer" className="block">
+                                                                        <img
+                                                                            src={f.url}
+                                                                            alt={f.name || 'image'}
+                                                                            className="max-w-full max-h-48 rounded-md object-cover border border-gray-700"
+                                                                        />
+                                                                        <div className="text-xs text-gray-300 mt-1">{f.name}</div>
+                                                                    </a>
+                                                                ) : (
+                                                                    <a
+                                                                        href={f.url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-blue-300 hover:underline text-sm"
+                                                                    >
+                                                                        {f.name || 'File đính kèm'}
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>

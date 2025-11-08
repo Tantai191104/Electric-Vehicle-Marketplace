@@ -179,9 +179,32 @@ const EditorPage: React.FC = () => {
         // navigate to full-page contract editor where user can sign on-screen
         navigate(`/contracts/edit/${productId}`);
       }
-    } catch (error) {
-      console.error("Error creating product:", error);
-      toast.error("Có lỗi xảy ra khi đăng tin!");
+    } catch (err: unknown) {
+      console.error("Error creating product:", err);
+
+      // Try to read API error payload: { success: false, error: '...' }
+      const respData = (err as { response?: { data?: unknown } })?.response?.data;
+
+      if (respData) {
+        if (typeof respData === "string") {
+          toast.error(respData);
+        } else if (typeof respData === "object" && respData !== null) {
+          const obj = respData as Record<string, unknown>;
+          if (typeof obj.error === "string") {
+            toast.error(obj.error);
+          } else if (typeof obj.message === "string") {
+            toast.error(obj.message);
+          } else {
+            toast.error("Có lỗi xảy ra khi đăng tin!");
+          }
+        } else {
+          toast.error("Có lỗi xảy ra khi đăng tin!");
+        }
+      } else if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Có lỗi xảy ra khi đăng tin!");
+      }
     }
   };
 
