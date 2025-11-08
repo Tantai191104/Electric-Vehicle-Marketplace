@@ -67,7 +67,7 @@ export default function ProductManage() {
     const approveMutation = useMutation({
         mutationFn: adminServices.approveProduct,
         onSuccess: (_, productId) => {
-            toast.success("✅ Sản phẩm đã được phê duyệt thành công!", {
+            toast.success("Sản phẩm đã được phê duyệt thành công!", {
                 description: "Người bán sẽ nhận được thông báo về việc phê duyệt",
                 duration: 4000,
             });
