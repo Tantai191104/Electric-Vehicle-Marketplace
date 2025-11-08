@@ -11,6 +11,7 @@ import {
   AiOutlineClockCircle,
   AiOutlineSetting,
 } from "react-icons/ai";
+import { FiHeart } from "react-icons/fi";
 import { FaStore, FaGift, FaSearch, FaCarSide } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/auth";
@@ -128,6 +129,11 @@ const UserDropdown = () => {
                 Tiện ích
               </div>
               <div className="flex flex-col gap-2">
+                <Link to="/wishlist">
+                  <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
+                    <FiHeart /> Tin được yêu thích
+                  </DropdownMenuItem>
+                </Link>
                 <Link to="/orders">
                   <DropdownMenuItem className="flex items-center gap-3 rounded-md hover:bg-yellow-50 cursor-pointer">
                     <FaStore /> Đơn hàng của tôi

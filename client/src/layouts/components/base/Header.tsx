@@ -5,6 +5,7 @@ import {
   AiOutlinePlusCircle,
   AiOutlineMessage,
 } from "react-icons/ai";
+import { FiHeart } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import SellerDropdown from "../header/SellerDropdown";
@@ -83,6 +84,15 @@ const Header: React.FC = () => {
             className="text-yellow-900 h-12 w-12"
           >
             <IoCartOutline size={32} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-yellow-900 h-12 w-12"
+            onClick={() => navigate("/wishlist")}
+            aria-label="Wishlist"
+          >
+            <FiHeart size={30} />
           </Button>
           <Button
             variant="ghost"
