@@ -1,5 +1,8 @@
-import { FiZap, FiShoppingBag, FiFileText, FiSettings } from "react-icons/fi";
+import { FiZap, FiShoppingBag, FiFileText, FiSettings, FiHeart } from "react-icons/fi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAddToWishlist, useRemoveFromWishlist, wishlistKeys } from "@/hooks/useWishlist";
 
 interface ActionButtonsProps {
     onContact: () => void;
@@ -14,6 +17,8 @@ interface ActionButtonsProps {
     category?: "vehicle" | "battery";
     isOwner?: boolean;
     onManage?: () => void;
+    productId?: string;
+    onToggleWishlist?: () => void;
 }
 
 export function ActionButtons({
@@ -29,7 +34,33 @@ export function ActionButtons({
     category = "vehicle",
     isOwner = false,
     onManage,
+    productId,
+    onToggleWishlist,
 }: ActionButtonsProps) {
+        // wishlist mutations - keep hooks at top level
+        const qc = useQueryClient();
+    const addMutation = useAddToWishlist();
+    const removeMutation = useRemoveFromWishlist();
+    const isWishlistPending = addMutation.status === "pending" || removeMutation.status === "pending";
+
+        const handleToggleWishlist = async () => {
+            if (onToggleWishlist) return onToggleWishlist();
+            if (!productId) return toast.error("Không có sản phẩm để thêm vào yêu thích");
+
+            try {
+                if (isInWishlist) {
+                    await removeMutation.mutateAsync(productId);
+                    toast.success("Đã bỏ yêu thích");
+                } else {
+                    await addMutation.mutateAsync(productId);
+                    toast.success("Đã thêm vào yêu thích");
+                }
+                qc.invalidateQueries({ queryKey: wishlistKeys.list() });
+            } catch (_error) {
+                console.error("Wishlist toggle error:", _error);
+                toast.error("Thao tác thất bại. Vui lòng thử lại.");
+            }
+        };
     const ButtonWithIcon = ({
         onClick,
         isLoading,
@@ -84,6 +115,8 @@ export function ActionButtons({
         );
     }
 
+        
+
     // Layout cho battery: Xem hợp đồng, Mua ngay, Liên hệ
     if (category === "battery") {
         return (
@@ -105,6 +138,15 @@ export function ActionButtons({
                     fullWidth
                 >
                     {isBuyNowLoading ? "Đang xử lý..." : "Mua ngay"}
+                </ButtonWithIcon>
+                <ButtonWithIcon
+                    onClick={handleToggleWishlist}
+                    isLoading={isWishlistPending}
+                    icon={<FiHeart className="w-4 h-4" />}
+                    type="secondary"
+                    fullWidth
+                >
+                    {isInWishlist ? "Bỏ yêu thích" : "Yêu thích"}
                 </ButtonWithIcon>
                 <ButtonWithIcon
                     onClick={onContact}
@@ -140,6 +182,15 @@ export function ActionButtons({
             >
                 {isContractLoading ? "Đang xử lý..." : "Lên lịch hẹn (đặt cọc)"}
             </ButtonWithIcon>
+                    <ButtonWithIcon
+                        onClick={handleToggleWishlist}
+                        isLoading={isWishlistPending}
+                        icon={<FiHeart className="w-4 h-4" />}
+                        type="secondary"
+                        fullWidth
+                    >
+                        {isInWishlist ? "Bỏ yêu thích" : "Yêu thích"}
+                    </ButtonWithIcon>
         </div>
     );
 }

@@ -173,6 +173,7 @@ export default function ProductDetailPage({ className = "" }: ProductDetailPageP
                         onContract={product.category === "battery" ? () => setContractModalOpen(true) : handleScheduleAppointment}
                         isContactLoading={createConversation.isPending}
                         isInWishlist={product.isInWishlist || false}
+                        productId={product._id}
                         category={product.category}
                         isOwner={isOwner}
                         onManage={() => navigate('/own/product')}
