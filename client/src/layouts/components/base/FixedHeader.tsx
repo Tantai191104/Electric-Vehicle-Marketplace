@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   AiOutlineMenu,
   AiOutlineBell,
@@ -6,7 +6,6 @@ import {
   AiOutlineShopping,
 } from "react-icons/ai";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +20,6 @@ import { useAuthStore } from "@/store/auth";
 import { authServices } from "@/services/authServices";
 
 const FixedHeader: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const categories = [
     { name: "Xe điện", path: "/cars" },
     { name: "Xe máy điện", path: "/motorbikes" },
@@ -44,13 +42,6 @@ const FixedHeader: React.FC = () => {
     clearAuth();
     authServices.logout();
     navigate("/");
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery)}`);
-    }
   };
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-yellow-300 to-yellow-400 backdrop-blur-md shadow-lg border-b border-yellow-400 px-2 md:px-6">
@@ -162,20 +153,6 @@ const FixedHeader: React.FC = () => {
             </Portal>
           </DropdownMenu>
         </div>
-
-        {/* Search bar */}
-        <form onSubmit={handleSearch} className="flex items-center flex-1 mx-2 md:mx-6 max-w-lg md:max-w-2xl">
-          <Input
-            type="text"
-            placeholder="Tìm kiếm sản phẩm..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-full px-4 border-yellow-400 focus:border-yellow-500 focus:ring-yellow-200 text-black font-medium placeholder:text-yellow-700"
-          />
-          <Button type="submit" className="ml-2 rounded-full bg-yellow-300 hover:bg-yellow-500 text-black font-extrabold shadow">
-            Tìm
-          </Button>
-        </form>
 
         {/* Right icons & user */}
         <div className="flex items-center gap-2 md:gap-3">
