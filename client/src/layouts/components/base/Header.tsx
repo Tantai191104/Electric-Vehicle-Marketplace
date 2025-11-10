@@ -25,13 +25,35 @@ const navLinks = [
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [location, setLocation] = useState<string>("");
   const [showStickySearch, setShowStickySearch] = useState(false);
   const { isAuthenticated } = useAuthStore();
+
   useEffect(() => {
     const handleScroll = () => setShowStickySearch(window.scrollY > 140);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (searchQuery) params.append("search", searchQuery);
+    if (location) params.append("location", location);
+
+    // Always navigate to homepage with category param for filtering
+    if (selected === "vehicle") {
+      params.append("category", "vehicle");
+      navigate(`/?${params.toString()}`);
+    } else if (selected === "battery") {
+      params.append("category", "battery");
+      navigate(`/?${params.toString()}`);
+    } else {
+      // If no category selected, don't add category param (show all on homepage)
+      navigate(`/?${params.toString()}`);
+    }
+  };
 
   return (
     <header className="w-full bg-gradient-to-r from-yellow-300 to-yellow-400 py-2 px-2 md:py-4 md:px-6 flex flex-col gap-2 md:gap-4 shadow-lg mb-4 relative z-50 ">
@@ -137,14 +159,16 @@ const Header: React.FC = () => {
           Nền tảng mua bán xe điện cũ uy tín, nhanh chóng
         </h2>
         <div className="absolute left-1/2 -translate-x-1/2 top-24 md:top-28 w-full max-w-lg md:max-w-2xl lg:max-w-4xl z-10">
-          <form className="flex flex-col sm:flex-row items-center gap-2 w-full bg-white rounded-xl shadow-lg px-2 py-4 md:px-4 md:py-6">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-center gap-2 w-full bg-white rounded-xl shadow-lg px-2 py-4 md:px-4 md:py-6">
             <CategoryDropdown selected={selected} setSelected={setSelected} />
             <input
               type="text"
               placeholder="Tìm sản phẩm..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full sm:flex-1 px-3 py-2 md:px-4 md:py-2 rounded border border-yellow-400 focus:outline-none text-sm md:text-base"
             />
-            <LocationDropdown />
+            <LocationDropdown value={location} onChange={setLocation} />
             <button
               type="submit"
               className="px-4 py-2 rounded-lg bg-yellow-300 text-black font-bold hover:bg-yellow-600 text-sm md:text-base w-full sm:w-auto"

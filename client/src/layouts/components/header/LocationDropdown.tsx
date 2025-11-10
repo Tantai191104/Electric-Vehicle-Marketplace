@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,16 +6,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const locations = ["Tp Hồ Chí Minh", "Hà Nội", "Đà Nẵng", "Cần Thơ"];
+const locations = ["Tất cả", "Hồ Chí Minh", "Hà Nội", "Đà Nẵng", "Cần Thơ"];
 
-const LocationDropdown = () => (
+interface LocationDropdownProps {
+  value?: string;
+  onChange?: (value: string) => void;
+}
+
+const LocationDropdown: React.FC<LocationDropdownProps> = ({ value = "Tất cả", onChange }) => (
   <DropdownMenu modal={false}>
     <DropdownMenuTrigger asChild>
       <Button
         variant="outline"
         className="px-3 py-2 rounded border border-yellow-400 text-black font-bold bg-yellow-200 flex items-center gap-2 flex-shrink-0"
       >
-        Tp Hồ Chí Minh
+        {value || "Tất cả"}
         <svg
           width="16"
           height="16"
@@ -34,7 +38,9 @@ const LocationDropdown = () => (
     </DropdownMenuTrigger>
     <DropdownMenuContent className="w-40 bg-white shadow-lg border border-gray-300 rounded-md ">
       {locations.map((loc) => (
-        <DropdownMenuItem key={loc}>{loc}</DropdownMenuItem>
+        <DropdownMenuItem key={loc} onClick={() => onChange?.(loc === "Tất cả" ? "" : loc)}>
+          {loc}
+        </DropdownMenuItem>
       ))}
     </DropdownMenuContent>
   </DropdownMenu>
