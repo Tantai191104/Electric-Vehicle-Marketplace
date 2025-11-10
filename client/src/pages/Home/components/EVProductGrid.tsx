@@ -6,14 +6,24 @@ import { formatNumberWithDots } from "@/utils/numberFormatter";
 import { useVehicleProducts } from "@/hooks/useProduct";
 import { getConditionLabel, getProductType } from "@/utils/productHelper";
 import type { Product } from "@/types/productType";
-import { FiEye, FiHeart, FiCalendar } from "react-icons/fi";
+import { FiEye, FiHeart, FiCalendar, FiMapPin } from "react-icons/fi";
 import { BiErrorCircle } from "react-icons/bi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { Crown } from "lucide-react";
 
-export default function EVProductGrid() {
+interface EVProductGridProps {
+  search?: string;
+  location?: string;
+}
+
+export default function EVProductGrid({ search, location }: EVProductGridProps) {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useVehicleProducts({ page: 1, limit: 8 });
+  const { data, isLoading, error } = useVehicleProducts({
+    page: 1,
+    limit: 8,
+    search,
+    // Note: Backend cần hỗ trợ filter theo location/seller address
+  });
 
   if (isLoading) {
     return (
@@ -63,6 +73,21 @@ export default function EVProductGrid() {
       const aPriority = priorityOrder[a.priorityLevel as keyof typeof priorityOrder] || 99;
       const bPriority = priorityOrder[b.priorityLevel as keyof typeof priorityOrder] || 99;
       return aPriority - bPriority;
+    })
+    .filter((p: Product) => {
+      // Client-side location filter (check province only)
+      if (location && p.seller?.address) {
+        const province = typeof p.seller.address === 'string'
+          ? p.seller.address
+          : (p.seller.address.province || '');
+        
+        // Normalize location strings for comparison
+        const normalizedProvince = province.toLowerCase().replace(/tp\s+|thành phố\s+/g, '').trim();
+        const normalizedLocation = location.toLowerCase().replace(/tp\s+|thành phố\s+/g, '').trim();
+        
+        return normalizedProvince.includes(normalizedLocation);
+      }
+      return true;
     })
     .slice(0, 8);
 
@@ -175,6 +200,18 @@ export default function EVProductGrid() {
                         <span>{product.likes}</span>
                       </div>
                     </div>
+
+                    {/* Seller Location */}
+                    {product.seller?.address && (
+                      <div className="mt-2 text-xs text-gray-600 flex items-center gap-1">
+                        <FiMapPin className="w-3 h-3" />
+                        <span className="truncate">
+                          {typeof product.seller.address === 'string'
+                            ? product.seller.address
+                            : `${product.seller.address.province || ''}, ${product.seller.address.district || ''}`.replace(/^,\s*/, '')}
+                        </span>
+                      </div>
+                    )}
 
                     {isHighPriority && (
                       <div className="mt-2 text-xs text-amber-600 font-medium flex items-center gap-1">

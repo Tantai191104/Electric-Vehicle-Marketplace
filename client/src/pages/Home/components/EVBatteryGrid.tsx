@@ -9,12 +9,21 @@ import { BiErrorCircle } from "react-icons/bi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import { Crown, Battery, Zap } from "lucide-react";
-import { FiUser } from "react-icons/fi";
+import { FiUser, FiMapPin } from "react-icons/fi";
 import { TbWeight, TbBattery2, TbCalendarTime, TbRecycle } from "react-icons/tb";
 
-export default function EVBatteryGrid() {
+interface EVBatteryGridProps {
+  search?: string;
+  location?: string;
+}
+
+export default function EVBatteryGrid({ search, location }: EVBatteryGridProps) {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useBatteryProducts({ page: 1, limit: 8 });
+  const { data, isLoading, error } = useBatteryProducts({
+    page: 1,
+    limit: 8,
+    search,
+  });
 
   // Loading state
   if (isLoading) {
@@ -61,6 +70,21 @@ export default function EVBatteryGrid() {
       const aPriority = priorityOrder[a.priorityLevel as keyof typeof priorityOrder] || 99;
       const bPriority = priorityOrder[b.priorityLevel as keyof typeof priorityOrder] || 99;
       return aPriority - bPriority; // "high" first
+    })
+    .filter((p: Product) => {
+      // Client-side location filter (check province only)
+      if (location && p.seller?.address) {
+        const province = typeof p.seller.address === 'string'
+          ? p.seller.address
+          : (p.seller.address.province || '');
+        
+        // Normalize location strings for comparison
+        const normalizedProvince = province.toLowerCase().replace(/tp\s+|thành phố\s+/g, '').trim();
+        const normalizedLocation = location.toLowerCase().replace(/tp\s+|thành phố\s+/g, '').trim();
+        
+        return normalizedProvince.includes(normalizedLocation);
+      }
+      return true;
     })
     .slice(0, 8);
 
@@ -203,9 +227,21 @@ export default function EVBatteryGrid() {
 
                   {/* Seller Info */}
                   {product.seller?.name && (
-                    <div className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+                    <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
                       <FiUser className="w-3.5 h-3.5" />
                       <span>Người bán: {product.seller.name}</span>
+                    </div>
+                  )}
+
+                  {/* Seller Location */}
+                  {product.seller?.address && (
+                    <div className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+                      <FiMapPin className="w-3.5 h-3.5" />
+                      <span className="truncate">
+                        {typeof product.seller.address === 'string'
+                          ? product.seller.address
+                          : `${product.seller.address.province || ''}, ${product.seller.address.district || ''}`.replace(/^,\s*/, '')}
+                      </span>
                     </div>
                   )}
 

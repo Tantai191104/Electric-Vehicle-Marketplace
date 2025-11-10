@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineMenu, AiOutlineHeart, AiOutlineUser, AiOutlineBell } from "react-icons/ai";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,15 @@ import SellerDropdown from "./SellerDropdown";
 
 const StickySearchBar: React.FC = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
     <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-yellow-300 to-yellow-400 z-50">
       <div className="flex items-center gap-2 px-2 md:px-6 py-4">
@@ -22,10 +31,12 @@ const StickySearchBar: React.FC = () => {
           <SellerDropdown />
         </div>
         {/* Search bar chiếm giữa */}
-        <form className="flex items-center gap-2 flex-1 bg-white rounded-full shadow px-3 py-2">
+        <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 bg-white rounded-full shadow px-3 py-2">
           <input
             type="text"
             placeholder="Tìm sản phẩm..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 px-2 md:px-3 py-1 text-sm md:text-base focus:outline-none"
           />
           <button
