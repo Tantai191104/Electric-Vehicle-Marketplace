@@ -29,12 +29,12 @@ export function ScheduleMeetingDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!order) return;
 
-    // Validate at least one field is filled
-    if (!meetingTime && !meetingLocation && !meetingAddress) {
-      toast.error("Vui lòng nhập ít nhất một thông tin cuộc hẹn");
+    // Require all fields to be filled
+    if (!meetingTime || !meetingLocation || !meetingAddress) {
+      toast.error("Vui lòng nhập đầy đủ thời gian, địa điểm và địa chỉ cuộc hẹn");
       return;
     }
 
@@ -46,22 +46,27 @@ export function ScheduleMeetingDialog({
         meetingAddress?: string;
       } = {};
 
-      if (meetingTime) payload.meetingTime = meetingTime;
+      if (meetingTime) {
+        payload.meetingTime = meetingTime.includes("T") ? meetingTime.replace("T", " ") : meetingTime;
+      }
       if (meetingLocation) payload.meetingLocation = meetingLocation;
       if (meetingAddress) payload.meetingAddress = meetingAddress;
 
       const response = await adminServices.scheduleDepositMeeting(order._id, payload);
 
-      if (response.success) {
+      // support both axios-style response.data.success and direct object
+      const ok = (response && (response.data?.success ?? response.success)) ?? false;
+
+      if (ok) {
         toast.success("Lên lịch cuộc hẹn thành công", {
           description: "Thông tin đã được gửi đến người mua và người bán qua email",
         });
-        
+
         // Reset form
         setMeetingTime("");
         setMeetingLocation("");
         setMeetingAddress("");
-        
+
         if (onSuccess) onSuccess();
         onClose();
       }
@@ -75,7 +80,7 @@ export function ScheduleMeetingDialog({
         };
         message?: string;
       };
-      
+
       const errorMessage = err?.response?.data?.message || err?.response?.data?.error || err.message || "Có lỗi xảy ra";
       toast.error("Không thể lên lịch cuộc hẹn", {
         description: errorMessage,
@@ -155,7 +160,7 @@ export function ScheduleMeetingDialog({
           {/* Info Note */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-700">
-              <strong>Lưu ý:</strong> Bạn cần nhập ít nhất một thông tin (thời gian, địa điểm hoặc địa chỉ). 
+              <strong>Lưu ý:</strong> Vui lòng nhập đầy đủ Thời gian, Địa điểm và Địa chỉ chi tiết.
               Thông tin sẽ được gửi đến cả người mua và người bán qua email.
             </p>
           </div>

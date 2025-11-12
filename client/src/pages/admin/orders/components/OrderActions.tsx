@@ -22,12 +22,14 @@ interface OrderActionsProps {
     newStatus: Order['status'],
     reason?: string
   ) => void;
+  onRefresh?: () => void;
 }
 
 export function OrderActions({
   order,
   onView,
   onStatusChange,
+  onRefresh,
 }: OrderActionsProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [scheduleMeetingOpen, setScheduleMeetingOpen] = useState(false);
@@ -82,7 +84,8 @@ export function OrderActions({
 
   const handleMeetingSuccess = () => {
     toast.success('Đã lên lịch cuộc hẹn thành công');
-    // Optionally refresh the order or trigger a refetch
+    // trigger a refresh if provided so parent data reflects the scheduled meeting
+    if (typeof onRefresh === 'function') onRefresh();
   };
   return (
     <div className="flex justify-end relative">
@@ -111,11 +114,30 @@ export function OrderActions({
             const method = typeof order.shipping?.method === 'string' ? order.shipping.method.toLowerCase() : '';
             const isGHN = method.includes('ghn');
             const isInPerson = method === 'in-person' || method === 'in_person' || method.includes('in person') || method.includes('pickup') || method.includes('store');
-            // Use 'meeting' (server field) or 'meetingInfo' (alias) for backwards compatibility
-            const meetingData = order.meeting || order.meetingInfo;
-            const isDepositOrder = String(order.status).startsWith('deposit') || Boolean(meetingData);
-            const allowActions = isInPerson && order.status != 'delivered' && order.status != 'cancelled' && order.status != 'refunded';
-            console.log({ method, isGHN, isInPerson, isDepositOrder, allowActions, status: order.status });
+            type Meeting = Partial<{ time: string | null; location: string | null; address: string | null }>;
+            const meetingData = (order.meeting || order.meetingInfo) as Meeting | undefined;
+            const isDepositOrder = String(order.status).startsWith('deposit');
+            // Consider a meeting as "present" only if it contains meaningful fields
+            const hasMeeting = Boolean(
+              meetingData && (meetingData.time || meetingData.location || meetingData.address)
+            );
+
+            // allowConfirm: requires meeting for deposit orders
+            const allowConfirm =
+              isInPerson &&
+              order.status !== 'delivered' &&
+              order.status !== 'cancelled' &&
+              order.status !== 'refunded' &&
+              (!isDepositOrder || hasMeeting);
+
+            // allowRefund: allow refund even if deposit order doesn't have meeting
+            const allowRefund =
+              isInPerson &&
+              order.status !== 'delivered' &&
+              order.status !== 'cancelled' &&
+              order.status !== 'refunded';
+
+            console.log({ method, isGHN, isInPerson, isDepositOrder, hasMeeting, allowConfirm, allowRefund, status: order.status, meetingData });
             if (isGHN) {
               return (
                 <DropdownMenuItem
@@ -134,7 +156,8 @@ export function OrderActions({
             // For non-GHN orders, only allow confirm/refund when explicitly in-person and status is pending
             return (
               <OrderActionMenuItems
-                allowActions={allowActions}
+                allowConfirm={allowConfirm}
+                allowRefund={allowRefund}
                 isDepositOrder={isDepositOrder}
                 onOpenConfirm={openConfirm}
                 onScheduleMeeting={() => setScheduleMeetingOpen(true)}

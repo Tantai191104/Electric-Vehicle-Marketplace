@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { VehicleFormData, BatteryFormData } from "@/types/productType";
@@ -9,7 +9,7 @@ import BatterySpecificationsForm from "./components/BatterySpecificationsForm";
 import LocationForm from "./components/LocationForm";
 import ImagesForm from "./components/ImagesForm";
 import PostSuccessDialog from "./components/PostSuccessDialog";
-import { Car, Bike, BatteryCharging } from "lucide-react";
+import { Car, BatteryCharging } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { productServices } from "@/services/productServices";
 import html2canvas from "html2canvas";
@@ -84,7 +84,6 @@ const initialBatteryData: BatteryFormData = {
 
 const CATEGORY_LIST = [
   { label: "Xe hơi điện", icon: <Car className="w-6 h-6" />, category: "vehicle" as const },
-  { label: "Xe máy điện", icon: <Bike className="w-6 h-6" />, category: "vehicle" as const },
   { label: "Pin xe điện", icon: <BatteryCharging className="w-6 h-6" />, category: "battery" as const },
 ];
 
@@ -121,6 +120,13 @@ const EditorPage: React.FC = () => {
     }
     setShowTypeDialog(false);
   };
+
+  // If dialog is closed without selection, fallback to vehicle posting
+  useEffect(() => {
+    if (!showTypeDialog && !form) {
+      setForm(initialVehicleData);
+    }
+  }, [showTypeDialog, form]);
 
   // Gợi ý giá AI: chỉ tính toán và cập nhật state, KHÔNG đăng tin
   const handleGetPriceSuggestion = async () => {

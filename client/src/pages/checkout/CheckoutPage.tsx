@@ -51,10 +51,13 @@ export default function CheckoutPage() {
         fullName: user?.name || "",
         phone: user?.phone || "",
         email: user?.email || "",
-        houseNumber: user?.profile.address.houseNumber || "",
-        city: product?.category === "vehicle" ? (user?.profile.address.province || "") : (user?.profile.address.province || ""),
-        district: product?.category === "vehicle" ? "" : (user?.profile.address.district || ""),
-        ward: product?.category === "vehicle" ? "" : (user?.profile.address.ward || ""),
+        // Use optional chaining to avoid runtime errors when profile or address is undefined
+        houseNumber: user?.profile?.address?.houseNumber || "",
+        // city/province comes from user's profile when available
+        city: user?.profile?.address?.province || "",
+        // For vehicle category we intentionally leave district/ward blank; otherwise use user's profile if present
+        district: product?.category === "vehicle" ? "" : (user?.profile?.address?.district || ""),
+        ward: product?.category === "vehicle" ? "" : (user?.profile?.address?.ward || ""),
         note: product?.category === "vehicle" ? "" : ""
     });
 

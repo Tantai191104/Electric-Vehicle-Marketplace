@@ -130,9 +130,14 @@ const ContractEditorPage: React.FC = () => {
     const buyerCanvas = iframe.contentDocument.getElementById("buyer-signature-canvas") as HTMLCanvasElement | null;
     let buyerPad: SignaturePad | null = null;
     if (buyerCanvas) {
+      // In the contract editor the buyer should NOT sign here — disable pointer events
+      // so admin cannot accidentally sign the buyer area. The buyer signs on the
+      // separate SignContractPage.
+      buyerCanvas.style.pointerEvents = "none";
       buyerPad = new SignaturePad(buyerCanvas, { backgroundColor: "#fff" });
       const updateBuyerPadClass = () => {
         if (buyerPadDiv) {
+          // Since buyer canvas is disabled in editor, treat it as not signed here
           if (buyerPad && !buyerPad.isEmpty()) {
             buyerPadDiv.classList.add("has-signature");
           } else {
@@ -154,8 +159,9 @@ const ContractEditorPage: React.FC = () => {
     }
     // Lưu chữ ký vào DB khi nhấn nút lưu hợp đồng
     (window as Window & { getSignatures?: () => { seller: string | null; buyer: string | null } }).getSignatures = () => ({
+      // For the editor we only return seller signature (buyer should sign separately)
       seller: sellerPad && !sellerPad.isEmpty() ? sellerPad.toDataURL() : null,
-      buyer: buyerPad && !buyerPad.isEmpty() ? buyerPad.toDataURL() : null,
+      buyer: null,
     });
     // Thêm logic cho nút thêm điều khoản phụ (đồng bộ id với template)
     const addTermBtn = iframe.contentDocument.getElementById("add-extra-term-btn");
@@ -164,7 +170,8 @@ const ContractEditorPage: React.FC = () => {
       addTermBtn.addEventListener("click", () => {
         if (!iframe.contentDocument) return;
         const li = iframe.contentDocument.createElement("li");
-        li.innerHTML = '<span contenteditable="true" style="padding:2px 8px;border-radius:4px;background:#fffbe6;border:1px solid #f59e42;">Điều khoản phụ mới...</span>';
+        // Add a plain editable list item for extra terms (remove badge styling)
+        li.innerHTML = '<span contenteditable="true">Điều khoản phụ mới...</span>';
         extraTermsList.appendChild(li);
       });
     }
@@ -191,11 +198,15 @@ const ContractEditorPage: React.FC = () => {
       // Lấy chữ ký từ window.getSignatures
       const win = window as Window & { getSignatures?: () => { seller: string | null; buyer: string | null } };
       const signatures = win.getSignatures ? win.getSignatures() : { seller: null, buyer: null };
+      // Require seller signature in the contract editor before saving
+      if (!signatures.seller) {
+        toast.error("Vui lòng ký vào phần chữ ký người bán trước khi lưu hợp đồng");
+        setLoading(false);
+        return;
+      }
       await productServices.updateContractTemplate(productId!, {
         htmlContent: newHtml,
         sellerSignature: signatures.seller,
-        // @ts-expect-error: allow buyerSignature for backend
-        buyerSignature: signatures.buyer,
       });
       toast.success("Đã lưu hợp đồng có chữ ký");
       navigate(-1);

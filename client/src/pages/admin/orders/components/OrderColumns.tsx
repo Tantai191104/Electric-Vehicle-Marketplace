@@ -17,7 +17,8 @@ const formatDate = (dateString: string) => {
 
 export const getOrderColumns = (
     onView: (order: Order) => void,
-    onStatusChange: (orderId: string, newStatus: Order['status'], reason?: string) => void
+    onStatusChange: (orderId: string, newStatus: Order['status'], reason?: string) => void,
+    onRefresh?: () => void
 ): ColumnDef<Order>[] => [
         {
             accessorKey: "orderNumber",
@@ -155,7 +156,8 @@ export const getOrderColumns = (
                 <OrderActions
                     order={row.original}
                     onView={onView}
-                    onStatusChange={onStatusChange}
+                            onStatusChange={onStatusChange}
+                            onRefresh={onRefresh}
                 />
             ),
         },

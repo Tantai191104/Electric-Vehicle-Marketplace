@@ -48,12 +48,12 @@ export default function OrderManage() {
             // Normalize status for filter matching system enum
             const orderStatus = order.status?.toLowerCase();
             let matchesStatus = false;
-            
+
             if (statusFilter === 'all') {
                 matchesStatus = true;
             } else {
                 const filterStatus = statusFilter.toLowerCase();
-                
+
                 // Map filter values to actual system statuses
                 if (filterStatus === 'pending') {
                     matchesStatus = orderStatus === 'pending' || orderStatus === 'deposit' || orderStatus === 'deposit_pending';
@@ -73,12 +73,12 @@ export default function OrderManage() {
                     matchesStatus = orderStatus === filterStatus;
                 }
             }
-            
+
             const matchesShippingMethod =
                 shippingMethodFilter === 'all' ||
                 (shippingMethodFilter === 'in-person' && (order.shipping?.method === 'in-person' || order.shipping?.method === 'in_person' || order.shipping?.method?.toLowerCase() === 'in person')) ||
                 (shippingMethodFilter === 'ghn' && (order.shipping?.method === 'ghn' || order.shipping?.method?.toLowerCase() === 'ghn'));
-            
+
             return matchesStatus && matchesShippingMethod;
         });
     }, [ordersData, statusFilter, shippingMethodFilter]);
@@ -91,7 +91,7 @@ export default function OrderManage() {
                 setSelectedOrder(updatedOrder);
             }
         }
-    }, [ordersData, selectedOrder?._id]);
+    }, [ordersData, selectedOrder?._id, selectedOrder]);
 
     // Handle refresh
     const handleRefresh = useCallback(() => {
@@ -137,7 +137,8 @@ export default function OrderManage() {
         (orderId, newStatus) => {
             setSelectedOrder(null);
             handleStatusChange(orderId, newStatus);
-        }
+        },
+        refetch
     );
 
     const table = useReactTable({
