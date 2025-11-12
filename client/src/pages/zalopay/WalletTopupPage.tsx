@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -45,6 +45,9 @@ const WalletTopupPage: React.FC = () => {
   const [open, setOpen] = useState(false);
 
   const { status } = useZaloPayOrder(orderId, open);
+
+  // track which orderId we've already notified about to avoid duplicate toasts
+  const lastNotifiedOrderRef = useRef<string | null>(null);
 
   const dongTot = parseNumberFromFormatted(amount) || 0;
 
@@ -96,14 +99,32 @@ const WalletTopupPage: React.FC = () => {
           totalDeposited: (useAuthStore.getState().user?.wallet.totalDeposited ?? 0) + depositAmount
         }
       });
+      // Show a single success toast per orderId so we don't spam duplicates
+      if (orderId && lastNotifiedOrderRef.current !== orderId) {
+        if (depositAmount > 0) {
+          toast.success(`Nạp tiền thành công: ${formatNumberWithDots(depositAmount)} đ`);
+        } else {
+          toast.success("Nạp tiền thành công");
+        }
+        lastNotifiedOrderRef.current = orderId;
+      }
+      // Clear order state and inputs
+      setOrderUrl(null);
+      setOrderId(null);
       setAmount("");
       setDisplayAmount("");
     }
 
     if (status === "fail") {
-      toast.error("Thanh toán thất bại. Vui lòng thử lại.");
+      // clear order state and notify (only once per orderId)
+      if (orderId && lastNotifiedOrderRef.current !== orderId) {
+        toast.error("Thanh toán thất bại. Vui lòng thử lại.");
+        lastNotifiedOrderRef.current = orderId;
+      }
+      setOrderUrl(null);
+      setOrderId(null);
     }
-  }, [status, amount]);
+  }, [status, amount, orderId]);
 
   return (
     // Use padding-top instead of margin-top so the layout can shrink and the inner container can grow.

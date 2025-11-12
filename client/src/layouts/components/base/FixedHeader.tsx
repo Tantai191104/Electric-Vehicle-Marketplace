@@ -22,19 +22,12 @@ import { authServices } from "@/services/authServices";
 const FixedHeader: React.FC = () => {
   const categories = [
     { name: "Xe điện", path: "/cars" },
-    { name: "Xe máy điện", path: "/motorbikes" },
     { name: "Pin xe điện", path: "/batteries" },
   ];
   const topLinks = [
     { name: "Trang chủ", path: "/" },
     { name: "Xe điện", path: "/cars" },
-    { name: "Xe máy điện", path: "/motorbikes" },
     { name: "Pin xe điện", path: "/batteries" }
-  ];
-  const rightTopLinks = [
-    { name: "Đóng góp ý kiến", path: "/feedback" },
-    { name: "Tải ứng dụng", path: "/download" },
-    { name: "Trợ giúp", path: "/help" }
   ];
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
@@ -59,15 +52,6 @@ const FixedHeader: React.FC = () => {
           ))}
         </div>
         <div className="flex gap-4 md:gap-6 items-center">
-          {rightTopLinks.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => navigate(item.path)}
-              className="hover:underline hover:text-yellow-800 transition-colors bg-transparent border-none cursor-pointer"
-            >
-              {item.name}
-            </button>
-          ))}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button className="rounded-full border-yellow-400 text-black bg-white hover:bg-yellow-100 font-semibold flex-shrink-0">
@@ -101,9 +85,6 @@ const FixedHeader: React.FC = () => {
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuItem className="text-black font-semibold">
-                Bảng giá dịch vụ
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

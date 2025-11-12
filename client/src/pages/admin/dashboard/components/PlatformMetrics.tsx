@@ -19,19 +19,48 @@ export const PlatformMetrics: React.FC<PlatformMetricsProps> = ({ timeRange }) =
         const fetchMetrics = async () => {
             try {
                 setLoading(true);
+                // Build params so both endpoints receive the same date window.
+                const buildParams = (range?: string) => {
+                    if (!range) return undefined;
+                    const m = /^([0-9]+)(d|y)$/.exec(range);
+                    if (!m) return { range };
+                    const n = parseInt(m[1], 10);
+                    const unit = m[2];
+                    const end = new Date();
+                    const start = new Date();
+                    if (unit === 'd') {
+                        start.setDate(end.getDate() - n + 1); // include today
+                    } else if (unit === 'y') {
+                        start.setFullYear(end.getFullYear() - n + 1);
+                    }
+                    const toDate = (d: Date) => d.toISOString().split('T')[0];
+                    return { startDate: toDate(start), endDate: toDate(end) };
+                };
+
+                const params = buildParams(timeRange);
+
                 const [metrics, subscription] = await Promise.all([
-                    adminServices.getPlatformMetrics(
-                        timeRange ? { range: timeRange } : undefined
-                    ),
-                    adminServices.getSubscriptionRevenue(
-                        timeRange ? { range: timeRange } : undefined
-                    )
+                    adminServices.getPlatformMetrics(params),
+                    adminServices.getSubscriptionRevenue(params),
                 ]);
                 setMetricsData(metrics);
                 setSubscriptionData({
                     totalRevenue: subscription.summary.totalRevenue,
                     totalPurchases: subscription.summary.totalPurchases,
                 });
+
+                // Debug: print full API responses so we can inspect why revenue/fees look off
+                // Check in browser console -> Network to see exact payloads as well.
+                try {
+                    console.debug("/admin/stats response (metrics):", metrics);
+                } catch (e) {
+                    console.debug("/admin/stats logging error", e);
+                }
+                try {
+                    console.debug("/admin/subscriptions/revenue response (subscription):", subscription);
+                } catch (e) {
+                    console.debug("/admin/subscriptions/revenue logging error", e);
+                }
             } catch (error) {
                 console.error("Failed to fetch metrics:", error);
             } finally {
